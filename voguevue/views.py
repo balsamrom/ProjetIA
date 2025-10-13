@@ -60,19 +60,31 @@ def signup(request):
         em = request.POST.get("email")
         con = request.POST.get("contact_number")
 
-        usr = User.objects.create_user(un , em, pwd)
+        # Vérifier si le username existe déjà
+        if User.objects.filter(username=un).exists():
+            return render(request, 'authentication/signup.html', {
+                "error": "Ce nom d'utilisateur existe déjà. Veuillez en choisir un autre."
+            })
+        
+        # Vérifier si l'email existe déjà
+        if User.objects.filter(email=em).exists():
+            return render(request, 'authentication/signup.html', {
+                "error": "Cet email est déjà utilisé."
+            })
+
+        # Créer l'utilisateur
+        usr = User.objects.create_user(un, em, pwd)
         usr.first_name = fname
         usr.last_name = last
         usr.save()
 
-        reg = register_table(user=usr , contact_number=con)
+        reg = register_table(user=usr, contact_number=con)
         reg.save()
 
-        return redirect('/signin' , {"status" : "{} Your Account is Created Successfully ".format(fname)}) 
-        
+        messages.success(request, f"{fname}, votre compte a été créé avec succès!")
+        return redirect('/signin')
 
-    return render(request , 'authentication/signup.html')
-
+    return render(request, 'authentication/signup.html')
 def logout(request):
     django_logout(request)
     return redirect("/signin" , {"logsign" : " Logged Out Successfully"})
