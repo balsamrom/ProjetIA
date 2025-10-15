@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ hotel.name }}</title>
+    <link rel="stylesheet" href="/static/css/Home CSS/style.css" />
+</head>
+<body>
+    <section class="nav-bar">
+        <div class="logo"><a href="/">VoyageVue</a></div>
+        <ul class="menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/hotels" class="active">Hotels</a></li>
+        </ul>
+    </section>
+    <div class="container" style="max-width:960px;margin:20px auto;display:grid;grid-template-columns: 340px 1fr;gap:22px;align-items:start;">
+        <img src="/static/assets/travels.jpg" alt="Hotel" style="width:100%;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,.08);">
+        <div style="background:#fff;padding:20px;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,.08);">
+            <h1 style="margin-top:0">{{ hotel.name }}</h1>
+            <p><strong>City:</strong> {{ hotel.city }}</p>
+            <p><strong>Address:</strong> {{ hotel.address }}</p>
+            <p><strong>Price / night:</strong> {{ hotel.price_per_night }}</p>
+            <p><strong>Rating:</strong> {{ hotel.rating }}</p>
+            <p><strong>Available:</strong> {{ hotel.is_available|yesno:"Yes,No" }}</p>
+            <p><strong>Eco-score:</strong> {{ eco_score }}</p>
+            <div style="margin-top:16px; display:flex; gap:10px;">
+                <a class="btn" href="/hotels/{{ hotel.id }}/edit">Edit</a>
+                <a class="btn" style="background:#e76f51" href="/hotels/{{ hotel.id }}/delete">Delete</a>
+                <a class="btn" style="background:#6c757d" href="/hotels">Back</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+

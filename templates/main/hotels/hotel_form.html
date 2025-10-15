@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{% if mode == 'create' %}Create Hotel{% else %}Update Hotel{% endif %}</title>
+    <link rel="stylesheet" href="/static/css/Home CSS/style.css" />
+    <style>
+        form { max-width: 640px; margin: 20px auto; display: grid; gap: 12px; }
+        label { font-weight: 600; }
+        input, textarea, select { padding: 8px; }
+        .btn { padding: 10px 16px; background: #2a9d8f; color: #fff; text-decoration: none; border: none; border-radius: 6px; cursor: pointer; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    </style>
+</head>
+<body>
+    <section class="nav-bar">
+        <div class="logo"><a href="/">VoyageVue</a></div>
+        <ul class="menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/hotels" class="active">Hotels</a></li>
+        </ul>
+    </section>
+    <h1 style="text-align:center">{% if mode == 'create' %}Create Hotel{% else %}Update Hotel{% endif %}</h1>
+    <form method="post" style="background:#fff;padding:20px;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,.08);">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="row">
+            <div>
+                <label for="id_name">Name</label>
+                {{ form.name }}
+            </div>
+            <div>
+                <label for="id_city">City</label>
+                {{ form.city }}
+            </div>
+        </div>
+        <label for="id_address">Address</label>
+        {{ form.address }}
+        <label for="id_description">Description</label>
+        {{ form.description }}
+        <div class="row">
+            <div>
+                <label for="id_price_per_night">Price per night</label>
+                {{ form.price_per_night }}
+            </div>
+            <div>
+                <label for="id_rating">Rating</label>
+                {{ form.rating }}
+            </div>
+        </div>
+        <label for="id_is_available">Available</label>
+        {{ form.is_available }}
+        <div>
+            <button type="submit" class="btn">Save</button>
+            <a class="btn" href="/hotels" style="background:#6c757d">Cancel</a>
+        </div>
+    </form>
+</body>
+</html>
+
+

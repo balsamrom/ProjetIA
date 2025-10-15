@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>New Reservation</title>
+    <link rel="stylesheet" href="/static/css/Home CSS/style.css" />
+</head>
+<body>
+    <section class="nav-bar">
+        <div class="logo"><a href="/">VoyageVue</a></div>
+        <ul class="menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/rooms">Rooms</a></li>
+        </ul>
+    </section>
+    <h1 style="text-align:center">Create Reservation</h1>
+    <form method="post" style="max-width:640px;margin:20px auto;background:#fff;padding:20px;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,.08);display:grid;gap:12px;">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div>
+            <button class="btn" type="submit">Save</button>
+            <a class="btn" href="/hotels" style="background:#6c757d">Cancel</a>
+        </div>
+    </form>
+</body>
+</html>
+
+

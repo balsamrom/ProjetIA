@@ -1,0 +1,111 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Hotels</title>
+    <link rel="stylesheet" href="/static/css/Home CSS/style.css" />
+    <link rel="stylesheet" href="/static/css/Home CSS/mobile.css" />
+    <style>
+        .table { width: 100%; border-collapse: collapse; }
+        .table th, .table td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
+        .actions a { margin-right: 8px; }
+        .topbar { display:flex; justify-content: space-between; align-items: center; margin: 20px 0; }
+        .btn { padding: 8px 14px; background: #2a9d8f; color: #fff; text-decoration: none; border-radius: 6px; }
+    </style>
+    </head>
+<body>
+    <section class="nav-bar">
+        <div class="logo"><a href="/">VoyageVue</a></div>
+        <ul class="menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/hotels" class="active">Hotels</a></li>
+            <li><a href="/travels">travels</a></li>
+            <li><a href="/contact">Contact</a></li>
+        </ul>
+    </section>
+
+    <div class="container" style="max-width:1200px;margin: 20px auto;">
+        <div class="topbar">
+            <h1>Hotels</h1>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <form method="get" style="display:flex; gap:8px; align-items:center;">
+                    <input type="text" name="city" placeholder="City" value="{{ q_city }}" style="padding:8px;border:1px solid #ddd;border-radius:6px;">
+                    <input type="number" step="0.01" name="budget" placeholder="Budget/night" value="{{ q_budget }}" style="padding:8px;border:1px solid #ddd;border-radius:6px; width:130px;">
+                    <button class="btn" type="submit">Filter</button>
+                    <a class="btn" href="/hotels" style="background:#6c757d">Reset</a>
+                </form>
+                <a class="btn" href="/rooms">Rooms</a>
+                <a class="btn" href="/reservations/new" style="background:#8ac926">New Reservation</a>
+                <a class="btn" href="/hotels/new">Add Hotel</a>
+            </div>
+        </div>
+        {% if messages %}
+        <ul>
+            {% for message in messages %}<li>{{ message }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if recommended %}
+        <h2 style="margin: 10px 0;">Recommended for you</h2>
+        <div class="cards" style="margin-bottom: 24px;">
+            {% for hotel in recommended %}
+            <div class="card">
+                <div class="zoom-img">
+                    <div class="img-card">
+                        <img src="/static/assets/travels.jpg" alt="Hotel image">
+                    </div>
+                </div>
+                <div class="text">
+                    <h2>{{ hotel.name }}</h2>
+                    <p class="cost">{{ hotel.price_per_night }} / night</p>
+                    <div class="card-box" style="cursor:pointer;">
+                        <p class="time">Availability: {{ hotel.is_available|yesno:"Available,Full" }}</p>
+                        <p class="location">📍 {{ hotel.city }}</p>
+                    </div>
+                    <div style="margin-top:6px;">
+                        <span style="background:#2a9d8f;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;">Eco-score: {{ hotel.eco_score }}</span>
+                    </div>
+                    <div style="margin-top:10px; display:flex; gap:10px;">
+                        <a class="btn" href="/hotels/{{ hotel.id }}">View</a>
+                        <a class="btn" style="background:#2a9d8f" href="/hotels/{{ hotel.id }}/reserve-cheapest">Reserve</a>
+                        <a class="btn" style="background:#457b9d" href="/hotels/{{ hotel.id }}/edit">Edit</a>
+                        <a class="btn" style="background:#e76f51" href="/hotels/{{ hotel.id }}/delete">Delete</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="cards">
+            {% for hotel in hotels %}
+            <div class="card">
+                <div class="zoom-img">
+                    <div class="img-card">
+                        <img src="/static/assets/travels.jpg" alt="Hotel image">
+                    </div>
+                </div>
+                <div class="text">
+                    <h2>{{ hotel.name }}</h2>
+                    <p class="cost">{{ hotel.price_per_night }} / night</p>
+                    <div class="card-box" style="cursor:pointer;">
+                        <p class="time">Availability: {{ hotel.is_available|yesno:"Available,Full" }}</p>
+                        <p class="location">📍 {{ hotel.city }}</p>
+                    </div>
+                    <div style="margin-top:10px; display:flex; gap:10px;">
+                        <a class="btn" href="/hotels/{{ hotel.id }}">View</a>
+                        <a class="btn" style="background:#457b9d" href="/hotels/{{ hotel.id }}/edit">Edit</a>
+                        <a class="btn" style="background:#e76f51" href="/hotels/{{ hotel.id }}/delete">Delete</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p>No hotels yet. <a href="/hotels/new">Create one</a>.</p>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
+
+
