@@ -21,7 +21,7 @@
             <p><strong>Address:</strong> {{ hotel.address }}</p>
             <p><strong>Price / night:</strong> {{ hotel.price_per_night }}</p>
             <p><strong>Rating:</strong> {{ hotel.rating }}</p>
-            <p><strong>Available:</strong> {{ hotel.is_available|yesno:"Yes,No" }}</p>
+            <p><strong>Rooms available:</strong> {{ hotel.available_rooms_count }}/{{ hotel.total_rooms }}</p>
             <p><strong>Eco-score:</strong> {{ eco_score }}</p>
             <div style="margin-top:16px; display:flex; gap:10px;">
                 <a class="btn" href="/hotels/{{ hotel.id }}/edit">Edit</a>

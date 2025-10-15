@@ -12,8 +12,21 @@ class Preference:
 
 def _score_hotel(hotel, pref: Preference) -> float:
     score = 0.0
-    if getattr(hotel, "is_available", False):
-        score += 1.0
+    # Room availability factor (uses helpers if present)
+    try:
+        total = hotel.total_rooms()
+        available = hotel.available_rooms_count()
+        if total > 0:
+            availability_ratio = available / float(total)
+            # reward hotels with more available rooms
+            score += min(availability_ratio * 2.0, 2.0)
+        else:
+            # fallback to boolean availability
+            if getattr(hotel, "is_available", False):
+                score += 0.5
+    except Exception:
+        if getattr(hotel, "is_available", False):
+            score += 0.5
     rating = getattr(hotel, "rating", None)
     if rating is not None:
         try:

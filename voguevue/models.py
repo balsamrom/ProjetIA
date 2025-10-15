@@ -42,6 +42,13 @@ class Hotel(models.Model):
     def __str__(self):
         return f"{self.name} - {self.city}"
 
+    # Computed helpers for room availability per hotel
+    def total_rooms(self):
+        return self.rooms.count()
+
+    def available_rooms_count(self):
+        return self.rooms.filter(is_available=True).count()
+
 
 class Room(models.Model):
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='rooms')

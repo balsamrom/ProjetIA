@@ -214,7 +214,13 @@ def reservation_create(request, room_id=None):
     if request.method == 'POST':
         form = ReservationForm(request.POST, initial=initial)
         if form.is_valid():
-            form.save()
+            reservation = form.save()
+            # Mark room unavailable after successful reservation
+            try:
+                reservation.room.is_available = False
+                reservation.room.save(update_fields=['is_available'])
+            except Exception:
+                pass
             messages.success(request, 'Reservation created')
             return redirect('hotel_list')
     else:

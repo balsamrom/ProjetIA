@@ -60,7 +60,7 @@
                     <h2>{{ hotel.name }}</h2>
                     <p class="cost">{{ hotel.price_per_night }} / night</p>
                     <div class="card-box" style="cursor:pointer;">
-                        <p class="time">Availability: {{ hotel.is_available|yesno:"Available,Full" }}</p>
+                        <p class="time">Rooms: {{ hotel.available_rooms_count|default:0 }}/{{ hotel.total_rooms|default:0 }} available</p>
                         <p class="location">📍 {{ hotel.city }}</p>
                     </div>
                     <div style="margin-top:6px;">
@@ -90,7 +90,7 @@
                     <h2>{{ hotel.name }}</h2>
                     <p class="cost">{{ hotel.price_per_night }} / night</p>
                     <div class="card-box" style="cursor:pointer;">
-                        <p class="time">Availability: {{ hotel.is_available|yesno:"Available,Full" }}</p>
+                        <p class="time">Rooms: {{ hotel.available_rooms_count|default:0 }}/{{ hotel.total_rooms|default:0 }} available</p>
                         <p class="location">📍 {{ hotel.city }}</p>
                     </div>
                     <div style="margin-top:10px; display:flex; gap:10px;">
