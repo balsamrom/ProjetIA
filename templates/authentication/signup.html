@@ -16,30 +16,7 @@
     <link rel="shortcut icon" href="/static/assets/favicon.svg" type="image/x-icon">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 
-    <script nonce="f76e373b-976d-4f33-93b5-fd5c40fcb0c7">
-        (function (w, d) {
-            ! function (a, e, t, r) {
-                a.zarazData = a.zarazData || {}, a.zarazData.executed = [], a.zarazData.tracks = [], a.zaraz = {
-                    deferred: []
-                }, a.zaraz.track = (e, t) => {
-                    for (key in a.zarazData.tracks.push(e), t) a.zarazData["z_" + key] = t[key]
-                }, a.zaraz._preSet = [], a.zaraz.set = (e, t, r) => {
-                    a.zarazData["z_" + e] = t, a.zaraz._preSet.push([e, t, r])
-                }, a.addEventListener("DOMContentLoaded", (() => {
-                    var t = e.getElementsByTagName(r)[0],
-                        z = e.createElement(r),
-                        n = e.getElementsByTagName("title")[0];
-                    n && (a.zarazData.t = e.getElementsByTagName("title")[0].text), a.zarazData.w = a
-                        .screen.width, a.zarazData.h = a.screen.height, a.zarazData.j = a.innerHeight, a
-                        .zarazData.e = a.innerWidth, a.zarazData.l = a.location.href, a.zarazData.r = e
-                        .referrer, a.zarazData.k = a.screen.colorDepth, a.zarazData.n = e.characterSet,
-                        a.zarazData.o = (new Date).getTimezoneOffset(), z.defer = !0, z.src =
-                        "/cdn-cgi/zaraz/s.js?z=" + btoa(encodeURIComponent(JSON.stringify(a
-                        .zarazData))), t.parentNode.insertBefore(z, t)
-                }))
-            }(w, d, 0, "script");
-        })(window, document);
-    </script>
+    
     <style>
         .mobile {
             display: none;
@@ -130,6 +107,12 @@
                                             </div>
                                             <div class="col-md-12">
                                                 <div class="form-group">
+                                                    <label class="label" for="city">City</label>
+                                                    <input type="text" id="city" name="city" class="form-control" placeholder="e.g. Paris">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <div class="form-group">
                                                     <label class="label" for="password">Password</label>
                                                     <input type="password" id="passw" required name="password" class="form-control">
                                                 </div>
@@ -196,24 +179,10 @@
     </div>
 
     
-    <script src="js/jquery.min.js"></script>
-    <script src="js/popper.js+bootstrap.min.js+main.js.pagespeed.jc.ebfeHZC_vZ.js"></script>
-    <script src="/static/js/home-js/index1.js"></script>
-    <script src="/static/js/home-js/index7.js"></script>
-    <script>
-        eval(mod_pagespeed_TJQAawIpSV);
-    </script>
-    <script>
-        eval(mod_pagespeed_cNZEFiVpCI);
-    </script>
-    <script>
-        eval(mod_pagespeed_nuKYYaiU6g);
-    </script>
-    <script defer
-        src="https://static.cloudflareinsights.com/beacon.min.js/v652eace1692a40cfa3763df669d7439c1639079717194"
-        integrity="sha512-Gi7xpJR8tSkrpF7aordPZQlW2DLtzUlZcumS8dMQjwDHEnw9I7ZLyiOj/6tZStRBGtGgN6ceN6cMH8z7etPGlw=="
-        data-cf-beacon='{"rayId":"6f90ecb069909362","token":"cd0b4b3a733644fc843ef0b185f98241","version":"2021.12.0","si":100}'
-        crossorigin="anonymous"></script>
+    <script src="/static/js/sign-js/bootstrap.min.js"></script>
+    <script src="/static/js/sign-js/jquery-3.3.1.min.js"></script>
+    <script src="/static/js/sign-js/main.js"></script>
+    <script src="/static/js/sign-js/popper.min.js"></script>
 </body>
 
 </html>

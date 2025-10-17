@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from admin_volt.forms import RegistrationForm, LoginForm, UserPasswordResetForm, UserPasswordChangeForm, UserSetPasswordForm, ActivityForm
-from voguevue.models import Activity
+from voguevue.models import Activity, Reservation
 from django.contrib.auth.views import LoginView, PasswordResetView, PasswordChangeView, PasswordResetConfirmView
 from django.contrib.auth import logout
 from django.contrib import messages
@@ -33,6 +33,26 @@ def activities(request):
     'activities': activities_qs,
   }
   return render(request, 'pages/activities/index.html', context)
+
+
+# ---------------- Reservations (Admin) ----------------
+def reservations(request):
+  qs = Reservation.objects.select_related('activity', 'user').order_by('-created_at')
+  context = {
+    'segment': 'reservations',
+    'reservations': qs,
+  }
+  return render(request, 'pages/reservations/index.html', context)
+
+
+def reservation_set_status(request, pk: int, status: str):
+  if status not in ['confirmed', 'cancelled']:
+    return redirect('admin_reservations')
+  r = Reservation.objects.select_related('activity', 'user').get(pk=pk)
+  r.status = status
+  r.save(update_fields=['status'])
+  messages.success(request, f"Réservation mise à jour: {r}")
+  return redirect('admin_reservations')
 
 def activity_create(request):
   if request.method == 'POST':

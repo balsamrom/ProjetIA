@@ -61,9 +61,12 @@
             <ul class="menu">
                 <li><a href="/">Home</a></li>
                 <li><a href="/travels">travels</a></li>
+                <li><a href="/weather">Météo</a></li>
+                <li><a href="/activities">Activités</a></li>
                 <li><a href="/contact">Contact</a></li>
                 {% if user.is_authenticated %}
                 <li><a href="/profile">Profile</a></li>
+                <li><a href="/my/reservations">Mes réservations</a></li>
                 <li><a href="/logout">logout</a></li>
                 {% else %}
                 <li><a href="/signin">Sign In</a></li>
@@ -76,6 +79,17 @@
             </div>
 
         </section>
+        {% if weather %}
+        <section style="margin: 16px auto; max-width: 960px; padding: 12px 16px; border: 1px solid #eee; border-radius: 12px; background: #fff;">
+            <div style="display:flex; align-items:center; gap: 12px;">
+                <div style="font-size: 28px;">🌦️</div>
+                <div>
+                    <div style="font-weight:600;">Météo à {{ weather.city }}</div>
+                    <div style="color:#555; font-size: 14px;">Temp: {{ weather.temp }}°C • Humidité: {{ weather.humidity }}% • Vent: {{ weather.wind_speed }} km/h</div>
+                </div>
+            </div>
+        </section>
+        {% endif %}
         <!--===============Banner================-->
         <section class="banner">
             <div class="banner-text-item">

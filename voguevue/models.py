@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 # Create your models here.
@@ -23,6 +25,7 @@ class updatemail(models.Model):
 class register_table(models.Model):
     user = models.OneToOneField(User , on_delete=models.CASCADE)
     contact_number = models.IntegerField()
+    city = models.CharField(max_length=120, blank=True)
 
     def __str__(self):
         return self.user.username
@@ -89,3 +92,15 @@ class Review(models.Model):
 
     def __str__(self) -> str:
         return f"{self.activity.name} - {self.rating}/5"
+
+
+# Ensure a profile entry exists for each user
+@receiver(post_save, sender=User)
+def ensure_user_profile_exists(sender, instance: User, created: bool, **kwargs):
+    if created:
+        # Create a minimal profile when a new user is created
+        try:
+            register_table.objects.create(user=instance, contact_number=0, city="")
+        except Exception:
+            # Avoid breaking user creation if profile creation fails
+            pass

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mes réservations</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/Home CSS/mobile.css">
+  <style>
+    .container{max-width:960px;margin:24px auto;padding:0 16px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:12px;border-bottom:1px solid #eee;text-align:left}
+    .badge{padding:4px 8px;border-radius:8px;font-size:12px}
+    .badge-pending{background:#fff7ed;color:#b45309;border:1px solid #fed7aa}
+    .badge-confirmed{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
+    .badge-cancelled{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+    .nav-bar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid #eee}
+    .menu{list-style:none;display:flex;gap:12px}
+    .menu a{text-decoration:none}
+  </style>
+</head>
+<body>
+  <section class="nav-bar">
+    <div class="logo"><a href="/">VoyageVue</a></div>
+    <ul class="menu">
+      <li><a href="/">Home</a></li>
+      <li><a href="/weather">Météo</a></li>
+      <li><a href="/activities">Activités</a></li>
+      <li><a href="/travels">travels</a></li>
+      {% if user.is_authenticated %}
+      <li><a href="/profile">Profile</a></li>
+      <li><a href="/logout">logout</a></li>
+      {% else %}
+      <li><a href="/signin">Sign In</a></li>
+      <li><a href="/signup">Sign Up</a></li>
+      {% endif %}
+    </ul>
+  </section>
+
+  <div class="container">
+    <h2>Mes réservations</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Activité</th>
+          <th>Lieu</th>
+          <th>Date</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in reservations %}
+        <tr>
+          <td>{{ r.activity.name }}</td>
+          <td>{{ r.activity.location }}</td>
+          <td>{{ r.date|date:"Y-m-d H:i" }}</td>
+          <td>
+            {% if r.status == 'pending' %}
+              <span class="badge badge-pending">En attente</span>
+            {% elif r.status == 'confirmed' %}
+              <span class="badge badge-confirmed">Confirmée</span>
+            {% else %}
+              <span class="badge badge-cancelled">Annulée</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="4">Aucune réservation.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>
+
+

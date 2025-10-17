@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Météo</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/Home CSS/mobile.css">
+  <style>
+    .container{max-width:720px;margin:24px auto;padding:16px;border:1px solid #eee;border-radius:12px;background:#fff}
+    .row{display:flex;gap:12px;align-items:center}
+    .muted{color:#6b7280}
+  </style>
+  </head>
+<body>
+  <section class="nav-bar">
+    <div class="logo"><a href="/">VoyageVue</a></div>
+    <ul class="menu">
+      <li><a href="/">Home</a></li>
+      <li><a href="/activities">Activités</a></li>
+      <li><a href="/travels">travels</a></li>
+      {% if user.is_authenticated %}
+      <li><a href="/profile">Profile</a></li>
+      <li><a href="/logout">logout</a></li>
+      {% else %}
+      <li><a href="/signin">Sign In</a></li>
+      <li><a href="/signup">Sign Up</a></li>
+      {% endif %}
+    </ul>
+  </section>
+
+  <div class="container">
+    <div class="row">
+      <div style="font-size:28px">🌦️</div>
+      <div>
+        {% if weather %}
+          <div style="font-weight:600">Météo à {{ weather.city }}</div>
+          <div class="muted">Temp: {{ weather.temp }}°C • Humidité: {{ weather.humidity }}% • Vent: {{ weather.wind_speed }} km/h</div>
+        {% else %}
+          <div style="font-weight:600">Météo</div>
+          <div class="muted">Aucune donnée. Assurez-vous que votre ville est définie dans votre profil.</div>
+        {% endif %}
+      </div>
+    </div>
+    <form method="post" style="margin-top:16px;display:flex;gap:8px;align-items:center">
+      {% csrf_token %}
+      <label for="city" class="muted">Ville</label>
+      <input id="city" name="city" type="text" value="{{ city|default:'' }}" placeholder="ex: Tunis" />
+      <button type="submit" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;background:#fcd600;color:#fff">Mettre à jour</button>
+    </form>
+  </div>
+</body>
+</html>
+
+

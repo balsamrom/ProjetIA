@@ -1,0 +1,57 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="py-4">
+  <div class="d-flex justify-content-between w-100 flex-wrap">
+    <div class="mb-3 mb-lg-0">
+      <h1 class="h4">Réservations</h1>
+      <p class="mb-0">Validez ou annulez les réservations des utilisateurs.</p>
+    </div>
+  </div>
+</div>
+
+<div class="card card-body border-0 shadow table-wrapper table-responsive">
+  <table class="table table-hover align-middle">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Utilisateur</th>
+        <th>Activité</th>
+        <th>Date</th>
+        <th>Statut</th>
+        <th class="text-end">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in reservations %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ r.user.username }}</td>
+        <td>{{ r.activity.name }}</td>
+        <td>{{ r.date|date:"Y-m-d H:i" }}</td>
+        <td>
+          {% if r.status == 'pending' %}
+            <span class="badge bg-warning">En attente</span>
+          {% elif r.status == 'confirmed' %}
+            <span class="badge bg-success">Confirmée</span>
+          {% else %}
+            <span class="badge bg-danger">Annulée</span>
+          {% endif %}
+        </td>
+        <td class="text-end">
+          <a href="{% url 'reservation_set_status' r.id 'confirmed' %}" class="btn btn-sm btn-outline-success" {% if r.status == 'confirmed' %}disabled{% endif %}>Valider</a>
+          <a href="{% url 'reservation_set_status' r.id 'cancelled' %}" class="btn btn-sm btn-outline-danger" {% if r.status == 'cancelled' %}disabled{% endif %}>Annuler</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" class="text-center text-muted py-5">Aucune réservation.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock content %}
+
+
