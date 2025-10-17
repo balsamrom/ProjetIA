@@ -1,5 +1,0 @@
-include LICENSE
-include README.rst
-recursive-include admin_volt/static *
-recursive-include admin_volt/templates *
-recursive-include docs *
