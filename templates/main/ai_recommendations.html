@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recommandations IA</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/Home CSS/mobile.css">
+  <style>
+    .container{max-width:1200px;margin:24px auto;padding:16px}
+    .weather-card{background:#f8f9fa;border:1px solid #dee2e6;border-radius:12px;padding:16px;margin-bottom:24px}
+    .ai-section{background:#e3f2fd;border:1px solid #2196f3;border-radius:12px;padding:20px;margin-bottom:24px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+    .card{border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.1)}
+    .card img{width:100%;height:200px;object-fit:cover}
+    .card-body{padding:16px}
+    .card h3{margin:0 0 8px 0;font-size:18px;color:#333}
+    .card p{color:#666;font-size:14px;margin:4px 0}
+    .badge{padding:4px 8px;border-radius:12px;font-size:12px;font-weight:500}
+    .badge-culturelle{background:#e8f5e8;color:#2e7d32}
+    .badge-sportive{background:#fff3e0;color:#f57c00}
+    .badge-gastronomique{background:#fce4ec;color:#c2185b}
+    .badge-artistique{background:#f3e5f5;color:#7b1fa2}
+    .badge-aventure{background:#e0f2f1;color:#00695c}
+    .badge-autre{background:#f5f5f5;color:#424242}
+    .btn{padding:8px 16px;border-radius:8px;border:1px solid #ddd;background:#fcd600;color:#fff;text-decoration:none;display:inline-block;margin-top:8px}
+    .nav-bar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid #eee}
+    .menu{list-style:none;display:flex;gap:12px}
+    .menu a{text-decoration:none;color:#333}
+  </style>
+</head>
+<body>
+  <section class="nav-bar">
+    <div class="logo"><a href="/">VoyageVue</a></div>
+    <ul class="menu">
+      <li><a href="/">Home</a></li>
+      <li><a href="/weather">Météo</a></li>
+      <li><a href="/activities">Activités</a></li>
+      <li><a href="/travels">travels</a></li>
+      {% if user.is_authenticated %}
+      <li><a href="/profile">Profile</a></li>
+      <li><a href="/my/reservations">Mes réservations</a></li>
+      {% else %}
+      <li><a href="/signin">Sign In</a></li>
+      <li><a href="/signup">Sign Up</a></li>
+      {% endif %}
+    </ul>
+  </section>
+
+  <div class="container">
+    <h1>🤖 Recommandations IA</h1>
+    
+    {% if weather %}
+    <div class="weather-card">
+      <h3>🌦️ Conditions météo actuelles</h3>
+      <p><strong>{{ weather.city }}</strong> - {{ weather.temp }}°C • Humidité: {{ weather.humidity }}% • Vent: {{ weather.wind_speed }} km/h</p>
+      <p><em>Nos recommandations s'adaptent aux conditions météo pour optimiser votre expérience.</em></p>
+    </div>
+    {% endif %}
+
+    <div class="ai-section">
+      <h2>🎯 Activités recommandées pour vous</h2>
+      <p>Basées sur vos préférences, votre localisation et les conditions météo actuelles.</p>
+      
+      {% if recommended_activities %}
+        <div class="grid">
+          {% for activity in recommended_activities %}
+          <div class="card">
+            {% if activity.image %}
+              <img src="{{ activity.image.url }}" alt="{{ activity.name }}">
+            {% else %}
+              <img src="/static/assets/img-01.png" alt="{{ activity.name }}">
+            {% endif %}
+            <div class="card-body">
+              <h3>{{ activity.name }}</h3>
+              <p><strong>Type:</strong> <span class="badge badge-{{ activity.type }}">{{ activity.get_type_display }}</span></p>
+              <p><strong>Lieu:</strong> {{ activity.location }}</p>
+              <p><strong>Durée:</strong> {{ activity.duration_minutes }} minutes</p>
+              <p><strong>Prix:</strong> {{ activity.price }} €</p>
+              <p>{{ activity.description|truncatewords:20 }}</p>
+              <a href="{% url 'reserve_activity' activity.id %}" class="btn">Réserver maintenant</a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>Aucune recommandation disponible pour le moment. <a href="/activities">Découvrez toutes nos activités</a></p>
+      {% endif %}
+    </div>
+
+    <div style="margin-top: 32px;">
+      <h3>🔍 Toutes les activités disponibles</h3>
+      <p>Explorez notre catalogue complet d'activités.</p>
+      <a href="/activities" class="btn">Voir toutes les activités</a>
+    </div>
+  </div>
+</body>
+</html>

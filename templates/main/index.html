@@ -62,6 +62,7 @@
                 <li><a href="/">Home</a></li>
                 <li><a href="/travels">travels</a></li>
                 <li><a href="/weather">Météo</a></li>
+                <li><a href="/recommendations">IA</a></li>
                 <li><a href="/activities">Activités</a></li>
                 <li><a href="/contact">Contact</a></li>
                 {% if user.is_authenticated %}
@@ -94,23 +95,13 @@
         <section class="banner">
             <div class="banner-text-item">
                 <div class="banner-heading" style="margin-bottom: 1rem;">
-                    <h1>Explore curated travel experiences!</h1>
+                    <h1>Bienvenue sur VoyageVue!</h1>
                     <span id="element" style="color: #ece49f; font-size: 48px; margin-bottom: 1.5rem;font-family: 'Roboto', sans-serif; margin-bottom: 1rem;"></span>
                 </div>
-                <form class="form">
-                    {% comment %} <input type="text" list="mylist" placeholder="Where would you like to go?">
-                    <datalist id="mylist">
-                        <option>Karnatak</option>
-                        <option>Delhi</option>
-                        <option>Punjab</option>
-                        <option>Jammu Kashmir</option>
-                        <option>Srinagar</option>
-                        <option>Assam</option>
-                        <option>Rajasthan</option>
-                    </datalist>
-                    <input type="date" class="date"> {% endcomment %}
-                    <a href="/travels" class="book">book your adventure in India</a>
-                </form>
+                <div class="form">
+                    <a href="/activities" class="book">Découvrir les activités</a>
+                    <a href="/my/reservations" class="book" style="margin-left: 10px;">Mes réservations</a>
+                </div>
             </div>
         </section>
 
@@ -133,11 +124,12 @@
                 <h2>98% Our Travelers are Happy</h2>
             </div>
         </section>
-        <!--==============Places===================-->
+        <!--==============Recommandations IA===================-->
         <section class="places">
             <div class="places-text">
-                <small>FEATURED TOURS PACKAGES</small>
-                <h2>Favourite Places</h2>
+                <small>🤖 RECOMMANDATIONS IA</small>
+                <h2>Activités recommandées pour vous</h2>
+                <p>Basées sur vos préférences et les conditions météo actuelles</p>
             </div>
 
             <div class="cards">

@@ -13,6 +13,7 @@ urlpatterns = [
     path('pages/activities/', views.activities, name="activities"),
     path('pages/reservations/', views.reservations, name="admin_reservations"),
     path('pages/reservations/<int:pk>/<str:status>/', views.reservation_set_status, name="reservation_set_status"),
+    path('pages/ai-recommendations/', views.ai_recommendations_admin, name="admin_ai_recommendations"),
     path('pages/activities/new/', views.activity_create, name="activity_create"),
     path('pages/activities/<int:pk>/edit/', views.activity_edit, name="activity_edit"),
     path('pages/activities/<int:pk>/delete/', views.activity_delete, name="activity_delete"),

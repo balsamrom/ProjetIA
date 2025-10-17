@@ -21,4 +21,7 @@ urlpatterns = [
 
     # Weather
     path("weather", views.weather, name="weather"),
+    
+    # AI Recommendations
+    path("recommendations", views.ai_recommendations, name="ai_recommendations"),
 ]

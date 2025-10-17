@@ -14,8 +14,28 @@ def index(request):
 
 # Dashboard
 def dashboard(request):
+  # Get statistics for admin dashboard
+  from voguevue.models import Activity, Reservation, User
+  
+  total_activities = Activity.objects.count()
+  total_reservations = Reservation.objects.count()
+  total_users = User.objects.count()
+  pending_reservations = Reservation.objects.filter(status='pending').count()
+  
+  # Recent activities
+  recent_activities = Activity.objects.order_by('-created_at')[:5]
+  
+  # Recent reservations
+  recent_reservations = Reservation.objects.select_related('activity', 'user').order_by('-created_at')[:5]
+  
   context = {
-    'segment': 'dashboard'
+    'segment': 'dashboard',
+    'total_activities': total_activities,
+    'total_reservations': total_reservations,
+    'total_users': total_users,
+    'pending_reservations': pending_reservations,
+    'recent_activities': recent_activities,
+    'recent_reservations': recent_reservations,
   }
   return render(request, 'pages/dashboard/dashboard.html', context)
 
@@ -53,6 +73,42 @@ def reservation_set_status(request, pk: int, status: str):
   r.save(update_fields=['status'])
   messages.success(request, f"Réservation mise à jour: {r}")
   return redirect('admin_reservations')
+
+
+def ai_recommendations_admin(request):
+  from voguevue.models import Activity, Reservation, User, register_table
+  
+  # Get AI statistics
+  total_activities = Activity.objects.count()
+  total_reservations = Reservation.objects.count()
+  total_users = User.objects.count()
+  
+  # Weather-based activity preferences
+  weather_preferences = {
+    'hot_weather': Activity.objects.filter(type__in=['culturelle', 'gastronomique']).count(),
+    'cold_weather': Activity.objects.filter(type__in=['culturelle', 'artistique']).count(),
+    'moderate_weather': Activity.objects.filter(type__in=['aventure', 'sportive']).count(),
+  }
+  
+  # Most popular activity types
+  activity_types = {}
+  for activity in Activity.objects.all():
+    activity_type = activity.get_type_display()
+    activity_types[activity_type] = activity_types.get(activity_type, 0) + 1
+  
+  # Users with weather data
+  users_with_weather = register_table.objects.exclude(city='').count()
+  
+  context = {
+    'segment': 'ai_recommendations',
+    'total_activities': total_activities,
+    'total_reservations': total_reservations,
+    'total_users': total_users,
+    'users_with_weather': users_with_weather,
+    'weather_preferences': weather_preferences,
+    'activity_types': activity_types,
+  }
+  return render(request, 'pages/ai-recommendations/index.html', context)
 
 def activity_create(request):
   if request.method == 'POST':

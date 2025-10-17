@@ -1,0 +1,194 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="py-4">
+  <div class="d-flex justify-content-between w-100 flex-wrap">
+    <div class="mb-3 mb-lg-0">
+      <h1 class="h4">🤖 Recommandations IA</h1>
+      <p class="mb-0">Supervision et analyse des recommandations intelligentes</p>
+    </div>
+  </div>
+</div>
+
+<!-- AI Statistics Cards -->
+<div class="row mb-4">
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card border-left-primary shadow h-100 py-2">
+      <div class="card-body">
+        <div class="row no-gutters align-items-center">
+          <div class="col mr-2">
+            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Utilisateurs avec météo</div>
+            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ users_with_weather }}</div>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-cloud-sun fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card border-left-success shadow h-100 py-2">
+      <div class="card-body">
+        <div class="row no-gutters align-items-center">
+          <div class="col mr-2">
+            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Activités</div>
+            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_activities }}</div>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card border-left-info shadow h-100 py-2">
+      <div class="card-body">
+        <div class="row no-gutters align-items-center">
+          <div class="col mr-2">
+            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Réservations</div>
+            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_reservations }}</div>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-bookmark fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card border-left-warning shadow h-100 py-2">
+      <div class="card-body">
+        <div class="row no-gutters align-items-center">
+          <div class="col mr-2">
+            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Utilisateurs</div>
+            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_users }}</div>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-users fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Weather-based Preferences -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">🌦️ Préférences basées sur la météo</h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-4">
+            <div class="card border-left-danger">
+              <div class="card-body">
+                <h6 class="card-title">☀️ Temps chaud (>25°C)</h6>
+                <p class="card-text">Activités recommandées: Culturelles, Gastronomiques</p>
+                <div class="h4 text-danger">{{ weather_preferences.hot_weather }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card border-left-info">
+              <div class="card-body">
+                <h6 class="card-title">❄️ Temps froid (<15°C)</h6>
+                <p class="card-text">Activités recommandées: Culturelles, Artistiques</p>
+                <div class="h4 text-info">{{ weather_preferences.cold_weather }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card border-left-success">
+              <div class="card-body">
+                <h6 class="card-title">🌤️ Temps modéré (15-25°C)</h6>
+                <p class="card-text">Activités recommandées: Aventure, Sportives</p>
+                <div class="h4 text-success">{{ weather_preferences.moderate_weather }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Activity Types Distribution -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">📊 Distribution des types d'activités</h6>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-bordered" width="100%" cellspacing="0">
+            <thead>
+              <tr>
+                <th>Type d'activité</th>
+                <th>Nombre</th>
+                <th>Pourcentage</th>
+                <th>Barre de progression</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for activity_type, count in activity_types.items %}
+              <tr>
+                <td>{{ activity_type }}</td>
+                <td>{{ count }}</td>
+                <td>{{ count|floatformat:1 }}%</td>
+                <td>
+                  <div class="progress">
+                    <div class="progress-bar" role="progressbar" style="width: {{ count|floatformat:1 }}%" aria-valuenow="{{ count }}" aria-valuemin="0" aria-valuemax="{{ total_activities }}"></div>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AI Model Status -->
+<div class="row">
+  <div class="col-12">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">🔧 État du système IA</h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <h6>✅ Modules actifs</h6>
+            <ul class="list-unstyled">
+              <li><i class="fas fa-check text-success"></i> Récupération météo (API Ninjas + Open-Meteo)</li>
+              <li><i class="fas fa-check text-success"></i> Géolocalisation utilisateur</li>
+              <li><i class="fas fa-check text-success"></i> Recommandations basées sur la météo</li>
+              <li><i class="fas fa-check text-success"></i> Analyse des préférences utilisateur</li>
+            </ul>
+          </div>
+          <div class="col-md-6">
+            <h6>🚀 Améliorations prévues</h6>
+            <ul class="list-unstyled">
+              <li><i class="fas fa-clock text-warning"></i> Machine Learning avancé</li>
+              <li><i class="fas fa-clock text-warning"></i> Analyse des avis utilisateurs</li>
+              <li><i class="fas fa-clock text-warning"></i> Prédiction des tendances</li>
+              <li><i class="fas fa-clock text-warning"></i> Optimisation des prix dynamiques</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

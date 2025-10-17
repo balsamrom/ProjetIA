@@ -53,16 +53,20 @@ def signin(request):
             if user is not None:
             # A backend authenticated the credentials
                 login(request, user)
-                # Ensure profile exists and fetch weather for user's city if available
-                weather_info = None
-                profile = register_table.objects.filter(user=user).first()
-                if profile is None:
-                    profile = register_table.objects.create(user=user, contact_number=0, city="")
-                user_city = (profile.city if profile and profile.city else '').strip()
-                if user_city:
-                    weather_info = _fetch_weather_for_city(user_city)
+                # Redirect based on user role
+                if user.is_superuser or user.is_staff:
+                    return redirect('/volt/')  # Admin dashboard
+                else:
+                    # Ensure profile exists and fetch weather for user's city if available
+                    weather_info = None
+                    profile = register_table.objects.filter(user=user).first()
+                    if profile is None:
+                        profile = register_table.objects.create(user=user, contact_number=0, city="")
+                    user_city = (profile.city if profile and profile.city else '').strip()
+                    if user_city:
+                        weather_info = _fetch_weather_for_city(user_city)
 
-                return render(request , 'main/index.html' , {"success" : " Logged in Successfully ", "weather": weather_info})
+                    return render(request , 'main/index.html' , {"success" : " Logged in Successfully ", "weather": weather_info})
                 
 
             else:
@@ -207,6 +211,44 @@ def weather(request):
         weather_info = _fetch_weather_for_city(user_city)
 
     return render(request, 'main/weather.html', {"weather": weather_info, "city": user_city})
+
+
+# --------------------- AI Recommendations ---------------------
+@login_required
+def ai_recommendations(request):
+    # Get user profile and weather
+    profile = register_table.objects.filter(user=request.user).first()
+    if profile is None:
+        profile = register_table.objects.create(user=request.user, contact_number=0, city="")
+    
+    user_city = (profile.city or '').strip()
+    weather_info = None
+    if user_city:
+        weather_info = _fetch_weather_for_city(user_city)
+    
+    # Get all available activities
+    activities = Activity.objects.filter(is_available=True).order_by('name')
+    
+    # Simple AI logic based on weather
+    recommended_activities = []
+    if weather_info:
+        temp = weather_info.get('temp', 20)
+        if temp > 25:  # Hot weather
+            recommended_activities = activities.filter(type__in=['culturelle', 'gastronomique'])[:3]
+        elif temp < 15:  # Cold weather
+            recommended_activities = activities.filter(type__in=['culturelle', 'artistique'])[:3]
+        else:  # Moderate weather
+            recommended_activities = activities.filter(type__in=['aventure', 'sportive'])[:3]
+    else:
+        recommended_activities = activities[:6]  # Default recommendations
+    
+    context = {
+        'weather': weather_info,
+        'city': user_city,
+        'recommended_activities': recommended_activities,
+        'all_activities': activities
+    }
+    return render(request, 'main/ai_recommendations.html', context)
 
 
 # --------------------- Helpers ---------------------
