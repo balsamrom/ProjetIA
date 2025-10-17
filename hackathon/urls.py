@@ -9,7 +9,8 @@ admin.site.index_title = "Welcome To VogueVue"
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('voguevue.urls'))
+    path('', include('voguevue.urls')),
+    path('volt/', include('admin_volt.urls')),
 ]
 
 handler404 = 'voguevue.views.error_404'

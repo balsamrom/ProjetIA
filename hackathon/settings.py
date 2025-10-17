@@ -11,12 +11,15 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 import os
+import sys
 from pathlib import Path
 from django.contrib.messages import constants as messages
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Ensure the admin dashboard app can be imported
+sys.path.insert(0, str(BASE_DIR / 'admin-dashboard'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -40,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'voguevue',
+    'admin_volt',
 ]
 
 MIDDLEWARE = [
@@ -128,3 +132,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
+
+# Auth redirects: ensure admin_volt routes are used
+LOGIN_URL = '/volt/accounts/login/'
+LOGIN_REDIRECT_URL = '/volt/'
+LOGOUT_REDIRECT_URL = '/volt/accounts/login/'

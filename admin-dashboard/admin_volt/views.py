@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from admin_volt.forms import RegistrationForm, LoginForm, UserPasswordResetForm, UserPasswordChangeForm, UserSetPasswordForm
 from django.contrib.auth.views import LoginView, PasswordResetView, PasswordChangeView, PasswordResetConfirmView
 from django.contrib.auth import logout
+from django.urls import reverse, reverse_lazy
 
 from django.contrib.auth.decorators import login_required
 
@@ -23,7 +24,7 @@ def transaction(request):
   }
   return render(request, 'pages/transactions.html', context)
 
-@login_required(login_url="/accounts/login/")
+@login_required(login_url=reverse_lazy('login'))
 def settings(request):
   context = {
     'segment': 'settings'
@@ -82,7 +83,7 @@ def register_view(request):
     if form.is_valid():
       print("Account created successfully!")
       form.save()
-      return redirect('/accounts/login/')
+      return redirect('login')
     else:
       print("Registration failed!")
   else:
@@ -109,7 +110,7 @@ class UserPasswrodResetConfirmView(PasswordResetConfirmView):
 
 def logout_view(request):
   logout(request)
-  return redirect('/accounts/login/')
+  return redirect('login')
 
 def lock(request):
   return render(request, 'accounts/lock.html')
