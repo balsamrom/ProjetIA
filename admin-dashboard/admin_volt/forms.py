@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm, UsernameField, PasswordResetForm, SetPasswordForm
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
+from voguevue.models import Activity
 
 
 class RegistrationForm(UserCreationForm):
@@ -62,3 +63,18 @@ class UserPasswordChangeForm(PasswordChangeForm):
     new_password2 = forms.CharField(max_length=50, widget=forms.PasswordInput(attrs={
         'class': 'form-control', 'placeholder': 'Confirm New Password'
     }), label="Confirm New Password")
+
+
+class ActivityForm(forms.ModelForm):
+  class Meta:
+    model = Activity
+    fields = ("name", "description", "type", "location", "price", "duration_minutes", "is_available", "image")
+    widgets = {
+      'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nom de l\'activité'}),
+      'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Description'}),
+      'type': forms.Select(attrs={'class': 'form-select'}),
+      'location': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ville / Lieu'}),
+      'price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+      'duration_minutes': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+      'is_available': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+    }

@@ -1,0 +1,43 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+
+  <div class="card border-0 shadow">
+    <div class="card-body">
+      <h5 class="card-title">Supprimer l'activité</h5>
+      <p>Voulez-vous vraiment supprimer « {{ activity.name }} » ? Cette action est irréversible.</p>
+      <form id="vvDelForm" method="post">
+        {% csrf_token %}
+        <a href="{% url 'activities' %}" class="btn btn-outline-secondary">Annuler</a>
+        <button type="button" id="vvDelBtn" class="btn btn-danger">Supprimer</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    const btn = document.getElementById('vvDelBtn');
+    const form = document.getElementById('vvDelForm');
+    if(btn){
+      btn.addEventListener('click', function(){
+        Swal.fire({
+          title: 'Confirmer la suppression',
+          text: 'Cette action est irréversible.',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#6b7280',
+          confirmButtonText: 'Oui, supprimer',
+          cancelButtonText: 'Annuler'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            form.submit();
+          }
+        })
+      });
+    }
+  </script>
+
+{% endblock content %}
+
+

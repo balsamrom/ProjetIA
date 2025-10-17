@@ -26,3 +26,66 @@ class register_table(models.Model):
 
     def __str__(self):
         return self.user.username
+
+
+class Activity(models.Model):
+    TYPE_CHOICES = (
+        ('culturelle', 'Culturelle'),
+        ('sportive', 'Sportive'),
+        ('gastronomique', 'Gastronomique'),
+        ('artistique', 'Artistique'),
+        ('aventure', 'Aventure'),
+        ('autre', 'Autre'),
+    )
+
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='autre')
+    location = models.CharField(max_length=120)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    duration_minutes = models.PositiveIntegerField()
+    is_available = models.BooleanField(default=True)
+    image = models.ImageField(upload_to='activities/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class Reservation(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('confirmed', 'Confirmed'),
+        ('cancelled', 'Cancelled'),
+    )
+
+    activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='reservations')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activity_reservations')
+    date = models.DateTimeField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date']
+
+    def __str__(self) -> str:
+        return f"{self.user.username} → {self.activity.name} ({self.status})"
+
+
+class Review(models.Model):
+    activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activity_reviews')
+    comment = models.TextField(blank=True)
+    rating = models.PositiveSmallIntegerField()  # 1..5
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('activity', 'user')
+        ordering = ['-created_at']
+
+    def __str__(self) -> str:
+        return f"{self.activity.name} - {self.rating}/5"

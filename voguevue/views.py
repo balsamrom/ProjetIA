@@ -29,6 +29,9 @@ def contact(request):
 def travels(request):
     return render(request, 'main/travels.html') 
 
+
+ 
+
 def signin(request):
 
         if request.method == "POST":

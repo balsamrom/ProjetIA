@@ -10,6 +10,10 @@ urlpatterns = [
     # Pages
     path('pages/dashboard/', views.dashboard, name="dashboard"),
     path('pages/transaction/', views.transaction, name="transaction"),
+    path('pages/activities/', views.activities, name="activities"),
+    path('pages/activities/new/', views.activity_create, name="activity_create"),
+    path('pages/activities/<int:pk>/edit/', views.activity_edit, name="activity_edit"),
+    path('pages/activities/<int:pk>/delete/', views.activity_delete, name="activity_delete"),
     path('pages/settings/', views.settings, name="settings"),
 
     # Tables

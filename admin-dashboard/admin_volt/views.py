@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect
-from admin_volt.forms import RegistrationForm, LoginForm, UserPasswordResetForm, UserPasswordChangeForm, UserSetPasswordForm
+from admin_volt.forms import RegistrationForm, LoginForm, UserPasswordResetForm, UserPasswordChangeForm, UserSetPasswordForm, ActivityForm
+from voguevue.models import Activity
 from django.contrib.auth.views import LoginView, PasswordResetView, PasswordChangeView, PasswordResetConfirmView
 from django.contrib.auth import logout
+from django.contrib import messages
 from django.urls import reverse, reverse_lazy
 
 from django.contrib.auth.decorators import login_required
@@ -23,6 +25,45 @@ def transaction(request):
     'segment': 'transactions'
   }
   return render(request, 'pages/transactions.html', context)
+
+def activities(request):
+  activities_qs = Activity.objects.all().order_by('name')
+  context = {
+    'segment': 'activities',
+    'activities': activities_qs,
+  }
+  return render(request, 'pages/activities/index.html', context)
+
+def activity_create(request):
+  if request.method == 'POST':
+    form = ActivityForm(request.POST, request.FILES)
+    if form.is_valid():
+      form.save()
+      messages.success(request, "Activité créée avec succès")
+      return redirect('activities')
+  else:
+    form = ActivityForm()
+  return render(request, 'pages/activities/form.html', { 'form': form, 'segment': 'activities', 'mode': 'create' })
+
+def activity_edit(request, pk: int):
+  activity = Activity.objects.get(pk=pk)
+  if request.method == 'POST':
+    form = ActivityForm(request.POST, request.FILES, instance=activity)
+    if form.is_valid():
+      form.save()
+      messages.success(request, "Activité mise à jour")
+      return redirect('activities')
+  else:
+    form = ActivityForm(instance=activity)
+  return render(request, 'pages/activities/form.html', { 'form': form, 'segment': 'activities', 'mode': 'edit', 'activity': activity })
+
+def activity_delete(request, pk: int):
+  activity = Activity.objects.get(pk=pk)
+  if request.method == 'POST':
+    activity.delete()
+    messages.success(request, "Activité supprimée")
+    return redirect('activities')
+  return render(request, 'pages/activities/confirm_delete.html', { 'segment': 'activities', 'activity': activity })
 
 @login_required(login_url=reverse_lazy('login'))
 def settings(request):

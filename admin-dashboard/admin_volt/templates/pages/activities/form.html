@@ -1,0 +1,70 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block content %}
+
+  <style>
+    .vv-hero{background:linear-gradient(135deg,#0ea5e9 0%,#22c55e 100%);border-radius:14px;color:#fff;padding:18px 20px;margin-bottom:10px}
+    .vv-hero h2{color:#fff;margin:0}
+    .vv-card{border:0;border-radius:14px}
+    .vv-btn-primary{background:#22c55e;border-color:#22c55e}
+    .vv-btn-primary:hover{background:#16a34a;border-color:#16a34a}
+    .vv-file{position:relative}
+    .vv-file input[type=file]{display:block}
+    .vv-preview{border:1px dashed #d1d5db;border-radius:10px;display:flex;align-items:center;justify-content:center;min-height:140px;background:#f8fafc}
+  </style>
+
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-2">
+    <div class="d-block mb-4 mb-md-0">
+      <div class="vv-hero">
+        <h2 class="h4 mb-0">{% if mode == 'create' %}Nouvelle activité{% else %}Modifier l'activité{% endif %}</h2>
+      </div>
+    </div>
+  </div>
+
+  <div class="card card-body border-0 shadow vv-card">
+    <form method="post" novalidate enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-6">{{ form.name.label_tag }} {{ form.name }}</div>
+        <div class="col-md-6">{{ form.type.label_tag }} {{ form.type }}</div>
+        <div class="col-md-6">{{ form.location.label_tag }} {{ form.location }}</div>
+        <div class="col-md-3">{{ form.price.label_tag }} {{ form.price }}</div>
+        <div class="col-md-3">{{ form.duration_minutes.label_tag }} {{ form.duration_minutes }}</div>
+        <div class="col-12">{{ form.description.label_tag }} {{ form.description }}</div>
+        <div class="col-12 form-check">{{ form.is_available }} {{ form.is_available.label_tag }}</div>
+        <div class="col-md-6 vv-file">{{ form.image.label_tag }} {{ form.image }}</div>
+        <div class="col-md-6">
+          <label class="form-label d-block">Aperçu</label>
+          <div class="vv-preview">
+            {% if activity and activity.image %}
+            <img id="vvImgPreview" src="{{ activity.image.url }}" alt="apercu" class="img-fluid rounded" style="max-height:140px;object-fit:cover;">
+            {% else %}
+            <img id="vvImgPreview" alt="apercu" class="img-fluid rounded" style="max-height:140px;object-fit:cover;display:none;">
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="mt-4">
+        <a href="{% url 'activities' %}" class="btn btn-outline-secondary">Annuler</a>
+        <button class="btn vv-btn-primary text-white" type="submit">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+  <script>
+    const fileInput = document.getElementById('id_image');
+    if(fileInput){
+      fileInput.addEventListener('change', function(){
+        const [file] = this.files;
+        const img = document.getElementById('vvImgPreview');
+        if(file){
+          img.src = URL.createObjectURL(file);
+          img.style.display = '';
+        }
+      });
+    }
+  </script>
+
+{% endblock content %}
+
+

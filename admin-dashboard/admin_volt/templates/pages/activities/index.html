@@ -1,0 +1,121 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block content %}
+
+  <style>
+    /* Themed styles scoped to activities page */
+    .vv-hero{background:linear-gradient(135deg,#0ea5e9 0%,#10b981 100%);border-radius:14px;color:#fff;padding:18px 20px}
+    .vv-hero h2{color:#fff;margin:0}
+    .vv-hero p{opacity:.95;margin:0}
+    .vv-toolbar{display:flex;gap:.5rem;align-items:center}
+    .vv-search{border:1px solid #d1d5db;border-radius:10px;padding:.4rem .75rem}
+    .vv-btn-primary{background:#0ea5e9;border-color:#0ea5e9}
+    .vv-btn-primary:hover{background:#0284c7;border-color:#0284c7}
+    .vv-badge{background:#10b981}
+    .vv-card{border:0;border-radius:14px}
+    .table thead th{background:#f8fafc;color:#0f172a;border-bottom:0}
+    .table-hover tbody tr:hover{background:#f1f5f9}
+  </style>
+
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
+    <div class="d-block mb-4 mb-md-0">
+      <div class="vv-hero">
+        <h2 class="h4 mb-1">Activités</h2>
+        <p class="mb-0">Gérez vos expériences de voyage: photos, prix, disponibilité</p>
+      </div>
+    </div>
+    <div class="vv-toolbar mb-2 mb-md-0">
+      <input id="vvSearch" class="vv-search" type="search" placeholder="Rechercher activité..." oninput="vvFilter()" />
+      <a href="{% url 'activity_create' %}" class="btn btn-sm vv-btn-primary text-white d-inline-flex align-items-center">
+        <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        </svg>
+        Nouvelle activité
+      </a>
+    </div>
+  </div>
+
+  <div class="card card-body border-0 shadow table-wrapper table-responsive vv-card">
+    <table class="table table-hover align-middle" id="vvTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Image</th>
+          <th>Nom</th>
+          <th>Type</th>
+          <th>Lieu</th>
+          <th>Prix</th>
+          <th>Durée (min)</th>
+          <th>Disponible</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in activities %}
+        <tr class="vv-row">
+          <td>{{ forloop.counter }}</td>
+          <td>
+            {% if a.image %}
+              <img src="{{ a.image.url }}" alt="{{ a.name }}" class="rounded" style="width:56px;height:40px;object-fit:cover;">
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td>{{ a.name }}</td>
+          <td>{{ a.get_type_display }}</td>
+          <td>{{ a.location }}</td>
+          <td>{{ a.price }}</td>
+          <td>{{ a.duration_minutes }}</td>
+          <td>
+            {% if a.is_available %}
+              <span class="badge vv-badge">Oui</span>
+            {% else %}
+              <span class="badge bg-secondary">Non</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'activity_edit' a.pk %}">Modifier</a>
+            <a class="btn btn-sm btn-outline-danger" href="{% url 'activity_delete' a.pk %}">Supprimer</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="9" class="text-center text-muted py-5">Aucune activité pour le moment.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    {% if messages %}
+      {% for m in messages %}
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 2200,
+          timerProgressBar: true,
+          icon: '{{ m.tags|default:"success" }}',
+          title: '{{ m|escapejs }}'
+        });
+      {% endfor %}
+    {% endif %}
+  </script>
+  <script>
+    function vvFilter(){
+      const q = document.getElementById('vvSearch').value.toLowerCase();
+      const rows = document.querySelectorAll('#vvTable tbody tr.vv-row');
+      rows.forEach(r => {
+        const text = r.innerText.toLowerCase();
+        r.style.display = text.includes(q) ? '' : 'none';
+      });
+    }
+  </script>
+
+{% endblock content %}
+
+
