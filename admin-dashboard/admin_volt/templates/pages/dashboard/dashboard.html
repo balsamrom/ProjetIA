@@ -2,14 +2,14 @@
 {% load static %}
 
 {% block content %}
-<div class="py-4">
+  <div class="py-4">
   <div class="d-flex justify-content-between w-100 flex-wrap">
     <div class="mb-3 mb-lg-0">
       <h1 class="h4">Tableau de bord Admin</h1>
       <p class="mb-0">Vue d'ensemble du système VoyageVue</p>
     </div>
   </div>
-</div>
+            </div>
 
 <!-- Statistics Cards -->
 <div class="row mb-4">
@@ -31,12 +31,12 @@
 
   <div class="col-xl-3 col-md-6 mb-4">
     <div class="card border-left-success shadow h-100 py-2">
-      <div class="card-body">
+        <div class="card-body">
         <div class="row no-gutters align-items-center">
           <div class="col mr-2">
             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Réservations</div>
             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_reservations }}</div>
-          </div>
+              </div>
           <div class="col-auto">
             <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
           </div>
@@ -47,12 +47,12 @@
 
   <div class="col-xl-3 col-md-6 mb-4">
     <div class="card border-left-info shadow h-100 py-2">
-      <div class="card-body">
+        <div class="card-body">
         <div class="row no-gutters align-items-center">
           <div class="col mr-2">
             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Utilisateurs</div>
             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_users }}</div>
-          </div>
+              </div>
           <div class="col-auto">
             <i class="fas fa-users fa-2x text-gray-300"></i>
           </div>
@@ -63,12 +63,12 @@
 
   <div class="col-xl-3 col-md-6 mb-4">
     <div class="card border-left-warning shadow h-100 py-2">
-      <div class="card-body">
+        <div class="card-body">
         <div class="row no-gutters align-items-center">
           <div class="col mr-2">
             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">En attente</div>
             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_reservations }}</div>
-          </div>
+              </div>
           <div class="col-auto">
             <i class="fas fa-clock fa-2x text-gray-300"></i>
           </div>
@@ -79,16 +79,16 @@
 </div>
 
 <!-- Content Row -->
-<div class="row">
+  <div class="row">
   <!-- Recent Activities -->
   <div class="col-lg-6 mb-4">
     <div class="card shadow mb-4">
       <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
         <h6 class="m-0 font-weight-bold text-primary">Activités récentes</h6>
         <a href="{% url 'activities' %}" class="btn btn-sm btn-primary">Voir tout</a>
-      </div>
+                </div>
       <div class="card-body">
-        <div class="table-responsive">
+            <div class="table-responsive">
           <table class="table table-bordered" width="100%" cellspacing="0">
             <thead>
               <tr>
@@ -96,9 +96,9 @@
                 <th>Type</th>
                 <th>Prix</th>
                 <th>Disponible</th>
-              </tr>
-            </thead>
-            <tbody>
+                  </tr>
+                </thead>
+                <tbody>
               {% for activity in recent_activities %}
               <tr>
                 <td>{{ activity.name }}</td>
@@ -110,19 +110,19 @@
                   {% else %}
                     <span class="badge badge-danger">Non</span>
                   {% endif %}
-                </td>
-              </tr>
+                    </td>
+                  </tr>
               {% empty %}
               <tr>
                 <td colspan="4" class="text-center">Aucune activité</td>
-              </tr>
+                  </tr>
               {% endfor %}
-            </tbody>
-          </table>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
+            </div>
 
   <!-- Recent Reservations -->
   <div class="col-lg-6 mb-4">
@@ -130,8 +130,8 @@
       <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
         <h6 class="m-0 font-weight-bold text-primary">Réservations récentes</h6>
         <a href="{% url 'admin_reservations' %}" class="btn btn-sm btn-primary">Voir tout</a>
-      </div>
-      <div class="card-body">
+            </div>
+            <div class="card-body">
         <div class="table-responsive">
           <table class="table table-bordered" width="100%" cellspacing="0">
             <thead>
@@ -168,8 +168,8 @@
         </div>
       </div>
     </div>
-  </div>
-</div>
+              </div>
+            </div>
 
 <!-- AI Recommendations Section -->
 <div class="row">
@@ -177,7 +177,7 @@
     <div class="card shadow mb-4">
       <div class="card-header py-3">
         <h6 class="m-0 font-weight-bold text-primary">🤖 Recommandations IA</h6>
-      </div>
+              </div>
       <div class="card-body">
         <p class="text-muted">Section en développement - Les recommandations IA basées sur les préférences utilisateur et la météo seront disponibles ici.</p>
         <div class="row">
@@ -191,7 +191,7 @@
           </div>
           <div class="col-md-4">
             <div class="card border-left-success">
-              <div class="card-body">
+          <div class="card-body">
                 <h6 class="card-title">Impact météo</h6>
                 <p class="card-text small">Ajustement des recommandations selon les conditions météo</p>
               </div>
@@ -199,7 +199,7 @@
           </div>
           <div class="col-md-4">
             <div class="card border-left-warning">
-              <div class="card-body">
+          <div class="card-body">
                 <h6 class="card-title">Taux de satisfaction</h6>
                 <p class="card-text small">Analyse des retours utilisateurs et amélioration continue</p>
               </div>
