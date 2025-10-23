@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.db.models.signals import post_save
-from django.dispatch import receiver
+from django.utils import timezone
 
 
 # Create your models here.
@@ -25,82 +24,44 @@ class updatemail(models.Model):
 class register_table(models.Model):
     user = models.OneToOneField(User , on_delete=models.CASCADE)
     contact_number = models.IntegerField()
-    city = models.CharField(max_length=120, blank=True)
 
     def __str__(self):
         return self.user.username
-
-
+    
 class Activity(models.Model):
-    TYPE_CHOICES = (
-        ('culturelle', 'Culturelle'),
-        ('sportive', 'Sportive'),
-        ('gastronomique', 'Gastronomique'),
-        ('artistique', 'Artistique'),
-        ('aventure', 'Aventure'),
-        ('autre', 'Autre'),
+    """Modèle pour les activités touristiques"""
+    
+    activity_name = models.CharField(max_length=255, verbose_name="Nom de l'activité")
+    category = models.CharField(max_length=100, verbose_name="Catégorie")
+    location = models.CharField(max_length=200, verbose_name="Ville")
+    description = models.TextField(verbose_name="Description")
+    weather = models.CharField(
+        max_length=50, 
+        choices=[
+            ('sunny', 'Ensoleillé'),
+            ('rainy', 'Pluvieux'),
+            ('cloudy', 'Nuageux'),
+            ('hot', 'Chaud'),
+            ('cold', 'Froid'),
+            ('snowy', 'Neigeux'),
+            ('windy', 'Venteux'),
+        ],
+        verbose_name="Météo idéale"
     )
-
-    name = models.CharField(max_length=200)
-    description = models.TextField(blank=True)
-    type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='autre')
-    location = models.CharField(max_length=120)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    duration_minutes = models.PositiveIntegerField()
-    is_available = models.BooleanField(default=True)
-    image = models.ImageField(upload_to='activities/', blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
+    popularity = models.IntegerField(default=50, verbose_name="Popularité (0-100)")
+    duration = models.CharField(max_length=50, blank=True, null=True, verbose_name="Durée")
+    price = models.CharField(max_length=50, blank=True, null=True, verbose_name="Prix")
+    profile = models.CharField(max_length=100, blank=True, null=True, verbose_name="Profil cible")
+    
+    # 🆕 CHAMP IMPORTANT pour le système hybride
+    created_at = models.DateTimeField(default=timezone.now, verbose_name="Date de création")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Dernière modification")
+    
     class Meta:
-        ordering = ['name']
-
-    def __str__(self) -> str:
-        return self.name
-
-
-class Reservation(models.Model):
-    STATUS_CHOICES = (
-        ('pending', 'Pending'),
-        ('confirmed', 'Confirmed'),
-        ('cancelled', 'Cancelled'),
-    )
-
-    activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='reservations')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activity_reservations')
-    date = models.DateTimeField()
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['-date']
-
-    def __str__(self) -> str:
-        return f"{self.user.username} → {self.activity.name} ({self.status})"
-
-
-class Review(models.Model):
-    activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='reviews')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activity_reviews')
-    comment = models.TextField(blank=True)
-    rating = models.PositiveSmallIntegerField()  # 1..5
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ('activity', 'user')
+        db_table = 'activities'
+        verbose_name = 'Activité'
+        verbose_name_plural = 'Activités'
         ordering = ['-created_at']
-
-    def __str__(self) -> str:
-        return f"{self.activity.name} - {self.rating}/5"
-
-
-# Ensure a profile entry exists for each user
-@receiver(post_save, sender=User)
-def ensure_user_profile_exists(sender, instance: User, created: bool, **kwargs):
-    if created:
-        # Create a minimal profile when a new user is created
-        try:
-            register_table.objects.create(user=instance, contact_number=0, city="")
-        except Exception:
-            # Avoid breaking user creation if profile creation fails
-            pass
+    
+    def __str__(self):
+        return f"{self.activity_name} - {self.location}"

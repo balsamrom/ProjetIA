@@ -1,28 +1,31 @@
-import email
-from django.shortcuts import redirect, render , HttpResponse
+from django.shortcuts import redirect, render, HttpResponse
 from datetime import datetime
-from .models import Contact , register_table , updatemail, Activity, Reservation
+from .models import Contact, register_table, updatemail, Activity
 from django.contrib import messages
-from django.contrib.auth import logout, authenticate, login
+from django.contrib.auth import logout as django_logout, authenticate, login
 from django.urls import reverse
 from django.contrib.auth.models import User
-from django.contrib.auth import logout as django_logout
+from django.http import JsonResponse
+from .recommendation import HybridRecommendationEngine, get_weather_for_city
 import json
-import urllib.request
-import urllib.parse
-import urllib.error
-from django.contrib.auth.decorators import login_required
-from django.utils import timezone
 
-from django.shortcuts import get_object_or_404
+# 🆕 Initialiser le moteur de recommandation une seule fois au démarrage
+try:
+    recommendation_engine = HybridRecommendationEngine()
+    ENGINE_LOADED = True
+except Exception as e:
+    print(f"❌ Erreur lors du chargement du moteur : {e}")
+    recommendation_engine = None
+    ENGINE_LOADED = False
 
 
-# Create your views here.
 def index(request):
     return render(request, 'main/index.html')
 
+
 def about(request):
-    return render(request, 'main/about.html') 
+    return render(request, 'main/about.html')
+
 
 def contact(request):
     if request.method == "POST":
@@ -32,268 +35,156 @@ def contact(request):
         contact = Contact(name=name, email=email, message=message, date=datetime.today())
         contact.save()
         messages.success(request, 'Your message has been sent')
-        
-    return render(request , 'main/contact.html')
-    
+
+    return render(request, 'main/contact.html')
+
+
 def travels(request):
-    return render(request, 'main/travels.html') 
+    """
+    🆕 Vue améliorée avec système de recommandation hybride
+    """
+    context = {
+        'activities': [],
+        'weather_info': None,
+        'city_searched': None,
+        'error': None,
+        'engine_loaded': ENGINE_LOADED
+    }
 
+    if request.method == "POST":
+        city_name = request.POST.get('city', '').strip()
 
- 
+        if not city_name:
+            context['error'] = "Veuillez entrer un nom de ville"
+            return render(request, 'main/travels.html', context)
+
+        if not ENGINE_LOADED:
+            context['error'] = "Le moteur de recommandation n'est pas disponible"
+            return render(request, 'main/travels.html', context)
+
+        try:
+            # 1️⃣ Récupérer la météo
+            weather = get_weather_for_city(city_name)
+            context['weather_info'] = weather
+            context['city_searched'] = city_name.title()
+
+            # 2️⃣ Obtenir les recommandations hybrides
+            recommendations = recommendation_engine.get_recommendations(
+                city_name=city_name,
+                weather=weather,
+                top_n=20
+            )
+
+            if recommendations:
+                context['activities'] = recommendations
+                messages.success(request, f"✅ {len(recommendations)} activités trouvées pour {city_name.title()}")
+            else:
+                context['error'] = f"Aucune activité trouvée pour {city_name.title()}. Essayez une autre ville."
+
+        except Exception as e:
+            context['error'] = f"Erreur lors de la recherche : {str(e)}"
+            print(f"❌ Erreur dans travels() : {e}")
+
+    return render(request, 'main/travels.html', context)
+
 
 def signin(request):
+    if request.method == "POST":
+        username = request.POST.get('uname')
+        password = request.POST.get('password')
 
-        if request.method == "POST":
-            username = request.POST.get('uname')
-            password = request.POST.get('password')
+        user = authenticate(username=username, password=password)
 
-        # check if the user entered the correct credentials
-            user = authenticate(username=username , password=password) 
+        if user is not None:
+            login(request, user)
+            return render(request, 'main/index.html', {"success": "Logged in Successfully"})
+        else:
+            return render(request, 'authentication/signin.html', {"msg": "Enter the Correct Credentials"})
 
-            if user is not None:
-            # A backend authenticated the credentials
-                login(request, user)
-                # Redirect based on user role
-                if user.is_superuser or user.is_staff:
-                    return redirect('/volt/')  # Admin dashboard
-                else:
-                    # Ensure profile exists and fetch weather for user's city if available
-                    weather_info = None
-                    profile = register_table.objects.filter(user=user).first()
-                    if profile is None:
-                        profile = register_table.objects.create(user=user, contact_number=0, city="")
-                    user_city = (profile.city if profile and profile.city else '').strip()
-                    if user_city:
-                        weather_info = _fetch_weather_for_city(user_city)
+    return render(request, 'authentication/signin.html')
 
-                    return render(request , 'main/index.html' , {"success" : " Logged in Successfully ", "weather": weather_info})
-                
-
-            else:
-            # No backend authenticated the credentials
-                return render(request, 'authentication/signin.html' , {"msg" : " Enter the Correct Credentials "})
-
-
-        return render(request , 'authentication/signin.html')
 
 def signup(request):
     if request.method == 'POST':
-        fname = request.POST.get("firstname") 
+        fname = request.POST.get("firstname")
         last = request.POST.get("lastname")
         un = request.POST.get("uname")
         pwd = request.POST.get("password")
         em = request.POST.get("email")
         con = request.POST.get("contact_number")
-        city = request.POST.get("city") or ""
 
-        # Vérifier si le username existe déjà
         if User.objects.filter(username=un).exists():
             return render(request, 'authentication/signup.html', {
                 "error": "Ce nom d'utilisateur existe déjà. Veuillez en choisir un autre."
             })
-        
-        # Vérifier si l'email existe déjà
+
         if User.objects.filter(email=em).exists():
             return render(request, 'authentication/signup.html', {
                 "error": "Cet email est déjà utilisé."
             })
 
-        # Créer l'utilisateur
         usr = User.objects.create_user(un, em, pwd)
         usr.first_name = fname
         usr.last_name = last
         usr.save()
 
-        try:
-            contact_value = int(con) if (con and str(con).isdigit()) else 0
-        except Exception:
-            contact_value = 0
-
-        # Upsert profile
-        reg = register_table.objects.filter(user=usr).first()
-        if reg is None:
-            reg = register_table(user=usr, contact_number=contact_value, city=city)
-        else:
-            reg.contact_number = contact_value
-            reg.city = city
+        reg = register_table(user=usr, contact_number=con)
         reg.save()
 
         messages.success(request, f"{fname}, votre compte a été créé avec succès!")
         return redirect('/signin')
 
     return render(request, 'authentication/signup.html')
+
+
 def logout(request):
     django_logout(request)
-    return redirect("/signin" , {"logsign" : " Logged Out Successfully"})
+    messages.info(request, "Logged Out Successfully")
+    return redirect("/signin")
+
 
 def profile(request):
-    # check if  user is authenticated
-
     if request.user.is_authenticated:
-        return render(request , 'main/profile.html')
+        return render(request, 'main/profile.html')
     else:
         return redirect('/signin')
 
-def error_404(request , exception):
-    return render(request , 'main/404.html')
+
+def error_404(request, exception):
+    return render(request, 'main/404.html')
+
 
 def blog(request):
-    return render(request,'main/blog.html')
+    return render(request, 'main/blog.html')
 
 
-# --------------------- Activities & Reservations (User side) ---------------------
+# 🆕 Vue API pour récupérer les recommandations en JSON (optionnel)
+def get_recommendations_api(request):
+    """
+    API endpoint pour obtenir des recommandations
+    Usage: /api/recommendations?city=Paris
+    """
+    if not ENGINE_LOADED:
+        return JsonResponse({'error': 'Engine not loaded'}, status=500)
 
-def activities_list(request):
-    activities = Activity.objects.filter(is_available=True).order_by('name')
-    return render(request, 'main/activities_list.html', {"activities": activities})
+    city_name = request.GET.get('city', '')
+    if not city_name:
+        return JsonResponse({'error': 'City parameter required'}, status=400)
 
-
-@login_required
-def reserve_activity(request, activity_id):
-    activity = get_object_or_404(Activity, pk=activity_id, is_available=True)
-
-    if request.method == 'POST':
-        date_str = request.POST.get('date')  # expects ISO datetime-local or date
-        if not date_str:
-            messages.error(request, "Veuillez sélectionner une date.")
-            return render(request, 'main/reserve_activity.html', {"activity": activity})
-
-        try:
-            # Support both date and datetime-local inputs
-            if 'T' in date_str:
-                scheduled_at = timezone.make_aware(timezone.datetime.fromisoformat(date_str))
-            else:
-                scheduled_at = timezone.make_aware(timezone.datetime.fromisoformat(date_str + 'T09:00:00'))
-        except Exception:
-            messages.error(request, "Format de date invalide.")
-            return render(request, 'main/reserve_activity.html', {"activity": activity})
-
-        if scheduled_at < timezone.now():
-            messages.error(request, "La date doit être dans le futur.")
-            return render(request, 'main/reserve_activity.html', {"activity": activity})
-
-        Reservation.objects.create(
-            activity=activity,
-            user=request.user,
-            date=scheduled_at,
-            status='pending'
+    try:
+        weather = get_weather_for_city(city_name)
+        recommendations = recommendation_engine.get_recommendations(
+            city_name=city_name,
+            weather=weather,
+            top_n=20
         )
-        messages.success(request, "Réservation créée avec succès. En attente de validation.")
-        return redirect('my_reservations')
 
-    return render(request, 'main/reserve_activity.html', {"activity": activity})
+        return JsonResponse({
+            'city': city_name.title(),
+            'weather': weather,
+            'activities': recommendations,
+            'count': len(recommendations)
+        })
 
-
-@login_required
-def my_reservations(request):
-    reservations = Reservation.objects.filter(user=request.user).select_related('activity')
-    return render(request, 'main/my_reservations.html', {"reservations": reservations})
-
-
-# --------------------- Weather Page ---------------------
-from django.contrib.auth.decorators import login_required
-
-@login_required
-def weather(request):
-    weather_info = None
-    profile = register_table.objects.filter(user=request.user).first()
-    if profile is None:
-        profile = register_table.objects.create(user=request.user, contact_number=0, city="")
-
-    # Update city if posted
-    if request.method == 'POST':
-        new_city = (request.POST.get('city') or '').strip()
-        profile.city = new_city
-        profile.save(update_fields=['city'])
-
-    user_city = (profile.city or '').strip()
-    if user_city:
-        weather_info = _fetch_weather_for_city(user_city)
-
-    return render(request, 'main/weather.html', {"weather": weather_info, "city": user_city})
-
-
-# --------------------- AI Recommendations ---------------------
-@login_required
-def ai_recommendations(request):
-    # Get user profile and weather
-    profile = register_table.objects.filter(user=request.user).first()
-    if profile is None:
-        profile = register_table.objects.create(user=request.user, contact_number=0, city="")
-    
-    user_city = (profile.city or '').strip()
-    weather_info = None
-    if user_city:
-        weather_info = _fetch_weather_for_city(user_city)
-    
-    # Get all available activities
-    activities = Activity.objects.filter(is_available=True).order_by('name')
-    
-    # Simple AI logic based on weather
-    recommended_activities = []
-    if weather_info:
-        temp = weather_info.get('temp', 20)
-        if temp > 25:  # Hot weather
-            recommended_activities = activities.filter(type__in=['culturelle', 'gastronomique'])[:3]
-        elif temp < 15:  # Cold weather
-            recommended_activities = activities.filter(type__in=['culturelle', 'artistique'])[:3]
-        else:  # Moderate weather
-            recommended_activities = activities.filter(type__in=['aventure', 'sportive'])[:3]
-    else:
-        recommended_activities = activities[:6]  # Default recommendations
-    
-    context = {
-        'weather': weather_info,
-        'city': user_city,
-        'recommended_activities': recommended_activities,
-        'all_activities': activities
-    }
-    return render(request, 'main/ai_recommendations.html', context)
-
-
-# --------------------- Helpers ---------------------
-def _fetch_weather_for_city(city: str):
-    # Try API Ninjas weather by city name
-    try:
-        api_key = "fBgrAqgdm7qdNqzztAtcEw==ot2fLHnh3p2n0xPF"
-        url = f"https://api.api-ninjas.com/v1/weather?city={urllib.parse.quote(city)}"
-        req = urllib.request.Request(url)
-        req.add_header('X-Api-Key', api_key)
-        with urllib.request.urlopen(req, timeout=6) as resp:
-            data = json.loads(resp.read().decode('utf-8'))
-            if isinstance(data, dict) and 'temp' in data:
-                return {
-                    'city': city,
-                    'temp': data.get('temp'),
-                    'humidity': data.get('humidity'),
-                    'wind_speed': data.get('wind_speed')
-                }
-    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError):
-        pass
-
-    # Fallback: geocode with API Ninjas, then query Open-Meteo by coordinates (no API key needed)
-    try:
-        geo_url = f"https://api.api-ninjas.com/v1/geocoding?city={urllib.parse.quote(city)}"
-        geo_req = urllib.request.Request(geo_url)
-        geo_req.add_header('X-Api-Key', api_key)
-        with urllib.request.urlopen(geo_req, timeout=6) as gresp:
-            gdata = json.loads(gresp.read().decode('utf-8'))
-            if isinstance(gdata, list) and len(gdata) > 0:
-                lat = gdata[0].get('latitude')
-                lon = gdata[0].get('longitude')
-                if lat is not None and lon is not None:
-                    om_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true"
-                    with urllib.request.urlopen(om_url, timeout=6) as wresp:
-                        wdata = json.loads(wresp.read().decode('utf-8'))
-                        current = wdata.get('current_weather') or {}
-                        if current:
-                            return {
-                                'city': city,
-                                'temp': current.get('temperature'),
-                                'humidity': None,  # Not provided by open-meteo current_weather
-                                'wind_speed': current.get('windspeed')
-                            }
-    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError):
-        pass
-
-    return None
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

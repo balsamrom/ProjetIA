@@ -61,13 +61,9 @@
             <ul class="menu">
                 <li><a href="/">Home</a></li>
                 <li><a href="/travels">travels</a></li>
-                <li><a href="/weather">Météo</a></li>
-                <li><a href="/recommendations">IA</a></li>
-                <li><a href="/activities">Activités</a></li>
                 <li><a href="/contact">Contact</a></li>
                 {% if user.is_authenticated %}
                 <li><a href="/profile">Profile</a></li>
-                <li><a href="/my/reservations">Mes réservations</a></li>
                 <li><a href="/logout">logout</a></li>
                 {% else %}
                 <li><a href="/signin">Sign In</a></li>
@@ -80,28 +76,27 @@
             </div>
 
         </section>
-        {% if weather %}
-        <section style="margin: 16px auto; max-width: 960px; padding: 12px 16px; border: 1px solid #eee; border-radius: 12px; background: #fff;">
-            <div style="display:flex; align-items:center; gap: 12px;">
-                <div style="font-size: 28px;">🌦️</div>
-                <div>
-                    <div style="font-weight:600;">Météo à {{ weather.city }}</div>
-                    <div style="color:#555; font-size: 14px;">Temp: {{ weather.temp }}°C • Humidité: {{ weather.humidity }}% • Vent: {{ weather.wind_speed }} km/h</div>
-                </div>
-            </div>
-        </section>
-        {% endif %}
         <!--===============Banner================-->
         <section class="banner">
             <div class="banner-text-item">
                 <div class="banner-heading" style="margin-bottom: 1rem;">
-                    <h1>Bienvenue sur VoyageVue!</h1>
+                    <h1>Explore curated travel experiences!</h1>
                     <span id="element" style="color: #ece49f; font-size: 48px; margin-bottom: 1.5rem;font-family: 'Roboto', sans-serif; margin-bottom: 1rem;"></span>
                 </div>
-                <div class="form">
-                    <a href="/activities" class="book">Découvrir les activités</a>
-                    <a href="/my/reservations" class="book" style="margin-left: 10px;">Mes réservations</a>
-                </div>
+                <form class="form">
+                    {% comment %} <input type="text" list="mylist" placeholder="Where would you like to go?">
+                    <datalist id="mylist">
+                        <option>Karnatak</option>
+                        <option>Delhi</option>
+                        <option>Punjab</option>
+                        <option>Jammu Kashmir</option>
+                        <option>Srinagar</option>
+                        <option>Assam</option>
+                        <option>Rajasthan</option>
+                    </datalist>
+                    <input type="date" class="date"> {% endcomment %}
+                    <a href="/travels" class="book">book your adventure in India</a>
+                </form>
             </div>
         </section>
 
@@ -124,12 +119,11 @@
                 <h2>98% Our Travelers are Happy</h2>
             </div>
         </section>
-        <!--==============Recommandations IA===================-->
+        <!--==============Places===================-->
         <section class="places">
             <div class="places-text">
-                <small>🤖 RECOMMANDATIONS IA</small>
-                <h2>Activités recommandées pour vous</h2>
-                <p>Basées sur vos préférences et les conditions météo actuelles</p>
+                <small>FEATURED TOURS PACKAGES</small>
+                <h2>Favourite Places</h2>
             </div>
 
             <div class="cards">
