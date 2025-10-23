@@ -1,0 +1,40 @@
+{% extends 'main/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>📋 Toutes les activités</h1>
+    
+    <div class="mb-3">
+        <a href="{% url 'add_activity' %}" class="btn btn-success">➕ Ajouter une activité</a>
+        <a href="{% url 'travels' %}" class="btn btn-outline-primary">🔍 Rechercher</a>
+    </div>
+    
+    <div class="row">
+        {% for activity in activities %}
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ activity.activity_name }}</h5>
+                    <p class="card-text">
+                        <strong>📍</strong> {{ activity.location }}<br>
+                        <strong>🏷️</strong> {{ activity.category }}<br>
+                        <strong>🌦️</strong> {{ activity.get_weather_display }}<br>
+                        <strong>⭐</strong> Popularité : {{ activity.popularity }}/100
+                    </p>
+                    <p class="card-text">{{ activity.description|truncatewords:20 }}</p>
+                    <small class="text-muted">
+                        Ajouté le {{ activity.created_at|date:"d/m/Y" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                Aucune activité n'a été ajoutée pour le moment.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

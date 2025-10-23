@@ -43,9 +43,6 @@ class HybridRecommendationEngine:
         print(f"✅ Modèle chargé : {len(self.df_trained)} activités historiques")
         print(f"📅 Date du modèle : {self.model_date.strftime('%Y-%m-%d')}\n")
 
-    # ==============================
-    # 🔹 Étape 1 : Récupérer TOUTES les activités de la DB pour une ville
-    # ==============================
     def get_activities_from_db(self, city_normalized):
         """
         Récupère TOUTES les activités pour une ville depuis la DB
@@ -61,17 +58,27 @@ class HybridRecommendationEngine:
         df_db = pd.DataFrame(list(activities_qs))
         
         if len(df_db) > 0:
-            # Marquer les activités ajoutées après la génération du modèle
-            df_db['is_new'] = df_db['created_at'] > self.model_date
+            # 🔧 FIX: Convert model_date to timezone-aware datetime
+            from django.utils import timezone as django_timezone
+            
+            # Make model_date timezone-aware if it isn't already
+            if self.model_date.tzinfo is None:
+                model_date_aware = django_timezone.make_aware(self.model_date)
+            else:
+                model_date_aware = self.model_date
+            
+            # Ensure created_at is timezone-aware (it should be by default from Django)
+            df_db['created_at'] = pd.to_datetime(df_db['created_at'])
+            
+            # Now compare
+            df_db['is_new'] = df_db['created_at'] > model_date_aware
+            
             print(f"💾 {len(df_db)} activités trouvées en DB (dont {df_db['is_new'].sum()} nouvelles)")
         else:
             print("ℹ️ Aucune activité trouvée en DB pour cette ville")
 
         return df_db
 
-    # ==============================
-    # 🔹 Étape 2 : Vectorisation des activités DB
-    # ==============================
     def vectorize_db_activities(self, df_db):
         """Vectorise et calcule la similarité sémantique pour les activités DB"""
         if df_db.empty:
@@ -88,9 +95,6 @@ class HybridRecommendationEngine:
         print("📐 Similarité sémantique calculée pour activités DB")
         return df_db
 
-    # ==============================
-    # 🔹 Étape 3 : Calcul du score (amélioré)
-    # ==============================
     def calculate_activity_score(self, row, weather, is_new=False, is_from_db=False):
         """
         Calcule le score d'une activité
@@ -127,10 +131,10 @@ class HybridRecommendationEngine:
 
         return base_score
 
-    # ==============================
-    # 🔹 Étape 4 : Recommandation finale (LOGIQUE HYBRIDE)
-    # ==============================
     def get_recommendations(self, city_name, weather, top_n=20):
+        """
+        Recommandation finale (LOGIQUE HYBRIDE)
+        """
         city_normalized = city_name.lower().strip()
         print(f"\n🔍 Recherche hybride pour : {city_name.title()}")
         print(f"🌤️ Météo : {weather.get('category', 'unknown')} ({weather.get('temp', 'N/A')}°C)")
@@ -216,9 +220,6 @@ class HybridRecommendationEngine:
         return unique_activities[:top_n]
 
 
-# ==============================
-# 🌦️ Fonction Météo (inchangée)
-# ==============================
 def get_weather_for_city(city_name, api_key="73f4a7564f5417d8d9928fbc4c39159d"):
     """Récupère la météo actuelle via OpenWeather"""
     try:

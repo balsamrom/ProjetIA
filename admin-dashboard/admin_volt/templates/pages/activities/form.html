@@ -1,0 +1,213 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block content %}
+
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
+    <div class="d-block mb-4 mb-md-0">
+      <nav aria-label="breadcrumb" class="d-none d-md-inline-block">
+        <ol class="breadcrumb breadcrumb-dark breadcrumb-transparent">
+          <li class="breadcrumb-item">
+            <a href="{% url 'dashboard' %}">
+              <svg class="icon icon-xxs" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
+                </path>
+              </svg>
+            </a>
+          </li>
+          <li class="breadcrumb-item"><a href="{% url 'transaction' %}">Gestion des activités</a></li>
+          <li class="breadcrumb-item active" aria-current="page">
+            {% if mode == 'create' %}Créer une activité{% else %}Modifier une activité{% endif %}
+          </li>
+        </ol>
+      </nav>
+      <h2 class="h4">
+        {% if mode == 'create' %}
+          Créer une nouvelle activité
+        {% else %}
+          Modifier l'activité
+        {% endif %}
+      </h2>
+      <p class="mb-0">
+        {% if mode == 'create' %}
+          Remplissez le formulaire pour ajouter une nouvelle activité touristique.
+        {% else %}
+          Modifiez les informations de l'activité « {{ activity.activity_name }} ».
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <div class="card border-0 shadow">
+        <div class="card-body">
+          <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger" role="alert">
+                {{ form.non_field_errors }}
+              </div>
+            {% endif %}
+
+            <div class="row">
+              <!-- Nom de l'activité -->
+              <div class="col-md-6 mb-3">
+                <label for="{{ form.activity_name.id_for_label }}" class="form-label">
+                  Nom de l'activité <span class="text-danger">*</span>
+                </label>
+                {{ form.activity_name }}
+                {% if form.activity_name.errors %}
+                  <div class="text-danger small mt-1">
+                    {% for error in form.activity_name.errors %}
+                      {{ error }}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- Catégorie -->
+              <div class="col-md-6 mb-3">
+                <label for="{{ form.category.id_for_label }}" class="form-label">
+                  Catégorie <span class="text-danger">*</span>
+                </label>
+                {{ form.category }}
+                {% if form.category.errors %}
+                  <div class="text-danger small mt-1">
+                    {% for error in form.category.errors %}
+                      {{ error }}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- Localisation -->
+              <div class="col-md-6 mb-3">
+                <label for="{{ form.location.id_for_label }}" class="form-label">
+                  Localisation <span class="text-danger">*</span>
+                </label>
+                {{ form.location }}
+                {% if form.location.errors %}
+                  <div class="text-danger small mt-1">
+                    {% for error in form.location.errors %}
+                      {{ error }}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- Météo -->
+              <div class="col-md-6 mb-3">
+                <label for="{{ form.weather.id_for_label }}" class="form-label">
+                  Météo recommandée <span class="text-danger">*</span>
+                </label>
+                {{ form.weather }}
+                {% if form.weather.errors %}
+                  <div class="text-danger small mt-1">
+                    {% for error in form.weather.errors %}
+                      {{ error }}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- Description -->
+              <div class="col-12 mb-3">
+                <label for="{{ form.description.id_for_label }}" class="form-label">
+                  Description <span class="text-danger">*</span>
+                </label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                  <div class="text-danger small mt-1">
+                    {% for error in form.description.errors %}
+                      {{ error }}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- Popularité -->
+              <div class="col-md-4 mb-3">
+                <label for="{{ form.popularity.id_for_label }}" class="form-label">
+                  Popularité (0-100) <span class="text-danger">*</span>
+                </label>
+                {{ form.popularity }}
+                {% if form.popularity.errors %}
+                  <div class="text-danger small mt-1">
+                    {% for error in form.popularity.errors %}
+                      {{ error }}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- Durée -->
+              <div class="col-md-4 mb-3">
+                <label for="{{ form.duration.id_for_label }}" class="form-label">
+                  Durée
+                </label>
+                {{ form.duration }}
+                {% if form.duration.errors %}
+                  <div class="text-danger small mt-1">
+                    {% for error in form.duration.errors %}
+                      {{ error }}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- Prix -->
+              <div class="col-md-4 mb-3">
+                <label for="{{ form.price.id_for_label }}" class="form-label">
+                  Prix
+                </label>
+                {{ form.price }}
+                {% if form.price.errors %}
+                  <div class="text-danger small mt-1">
+                    {% for error in form.price.errors %}
+                      {{ error }}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- Profil -->
+              <div class="col-12 mb-3">
+                <label for="{{ form.profile.id_for_label }}" class="form-label">
+                  Profil recommandé
+                </label>
+                {{ form.profile }}
+                {% if form.profile.errors %}
+                  <div class="text-danger small mt-1">
+                    {% for error in form.profile.errors %}
+                      {{ error }}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <button type="submit" class="btn btn-primary">
+                <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                {% if mode == 'create' %}Créer l'activité{% else %}Enregistrer les modifications{% endif %}
+              </button>
+              <a href="{% url 'transaction' %}" class="btn btn-outline-gray-600 ms-2">
+                <svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Annuler
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock content %}

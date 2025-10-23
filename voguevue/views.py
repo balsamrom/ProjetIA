@@ -7,6 +7,8 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from .recommendation import HybridRecommendationEngine, get_weather_for_city
+from django.utils import timezone
+
 import json
 
 # 🆕 Initialiser le moteur de recommandation une seule fois au démarrage
