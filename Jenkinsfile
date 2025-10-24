@@ -15,31 +15,43 @@ pipeline {
 
         stage('Setup Python Environment') {
             steps {
-                sh '''
-                python3 -m venv $VENV
-                source $VENV/bin/activate
-                pip install --upgrade pip
+                bat '''
+                python -m venv %VENV%
+                call %VENV%\\Scripts\\activate
+                python -m pip install --upgrade pip
                 pip install -r requirements.txt
                 '''
             }
         }
 
-       
+        stage('Run Tests') {
+            steps {
+                bat '''
+                call %VENV%\\Scripts\\activate
+                pytest --junitxml=test-results.xml || exit 0
+                '''
+            }
+            post {
+                always {
+                    junit '**/test-results.xml'
+                }
+            }
+        }
 
         stage('SonarQube Analysis') {
             environment {
-                PATH = "${env.PATH}:${env.WORKSPACE}/$VENV/bin"
+                PATH = "${env.PATH};${env.WORKSPACE}\\${env.VENV}\\Scripts"
             }
             steps {
                 withSonarQubeEnv('sonar') {
-                    sh '''
-                    source $VENV/bin/activate
-                    sonar-scanner \
-                        -Dsonar.projectKey=ProjetIA \
-                        -Dsonar.sources=. \
-                        -Dsonar.language=python \
-                        -Dsonar.host.url=$SONAR_HOST_URL \
-                        -Dsonar.login=$SONAR_AUTH_TOKEN
+                    bat '''
+                    call %VENV%\\Scripts\\activate
+                    sonar-scanner ^
+                        -Dsonar.projectKey=ProjetIA ^
+                        -Dsonar.sources=. ^
+                        -Dsonar.language=python ^
+                        -Dsonar.host.url=%SONAR_HOST_URL% ^
+                        -Dsonar.login=%SONAR_AUTH_TOKEN%
                     '''
                 }
             }
