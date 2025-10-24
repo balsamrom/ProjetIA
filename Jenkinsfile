@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        SONARQUBE = 'SonarQubeServer' // Nom du serveur Sonar configuré dans Jenkins
+        SONARQUBE = 'sonar' // Nom du serveur Sonar configuré dans Jenkins
         VENV = 'venv'
     }
 
