@@ -26,3 +26,25 @@ class register_table(models.Model):
 
     def __str__(self):
         return self.user.username
+        
+class Destination(models.Model):
+    destination = models.CharField(max_length=120)
+    region = models.CharField(max_length=120, blank=True, null=True)
+    country = models.CharField(max_length=80)
+    category = models.CharField(max_length=80, blank=True, null=True)
+    latitude = models.FloatField(blank=True, null=True)
+    longitude = models.FloatField(blank=True, null=True)
+    annual_tourists = models.CharField(max_length=80, blank=True, null=True)
+    currency = models.CharField(max_length=50, blank=True, null=True)
+    majority_religion = models.CharField(max_length=100, blank=True, null=True)
+    famous_foods = models.CharField(max_length=250, blank=True, null=True)
+    language = models.CharField(max_length=80, blank=True, null=True)
+    best_time = models.CharField(max_length=120, blank=True, null=True)
+    cost_of_living = models.CharField(max_length=80, blank=True, null=True)
+    safety = models.CharField(max_length=250, blank=True, null=True)
+    cultural_significance = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.destination} ({self.country})"

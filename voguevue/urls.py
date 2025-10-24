@@ -13,4 +13,9 @@ urlpatterns = [
     path("profile" , views.profile , name="profile"),
     path("travels" , views.travels , name="travels"),
     path("blog" , views.blog , name="blog"),
+    # CRUD Destinations
+    path("destinations/", views.destination_list, name='destination_list'),
+    path("destinations/add/", views.add_destination, name='add_destination'),
+    path("destinations/<int:id>/edit/", views.edit_destination, name='edit_destination'),
+    path("destinations/<int:id>/delete/", views.delete_destination, name='delete_destination'),
 ]

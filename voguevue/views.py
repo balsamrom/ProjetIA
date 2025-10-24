@@ -7,6 +7,9 @@ from django.contrib.auth import logout, authenticate, login
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.auth import logout as django_logout
+from .models import Destination
+from .forms import DestinationForm
+from django.shortcuts import get_object_or_404, redirect, render
 
 # Create your views here.
 def index(request):
@@ -102,3 +105,40 @@ def error_404(request , exception):
 
 def blog(request):
     return render(request,'main/blog.html')
+    
+# --- CRUD Destinations ---
+def destination_list(request):
+    q = request.GET.get('q', '')
+    if q:
+        destinations = Destination.objects.filter(destination__icontains=q) | Destination.objects.filter(country__icontains=q)
+    else:
+        destinations = Destination.objects.all().order_by('-created_at')
+    return render(request, 'voguevue/destination_list.html', {'destinations': destinations, 'q': q})
+
+def add_destination(request):
+    if request.method == 'POST':
+        form = DestinationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('destination_list')
+    else:
+        form = DestinationForm()
+    return render(request, 'voguevue/destination_form.html', {'form': form, 'action': 'Ajouter'})
+
+def edit_destination(request, id):
+    dest = get_object_or_404(Destination, id=id)
+    if request.method == 'POST':
+        form = DestinationForm(request.POST, instance=dest)
+        if form.is_valid():
+            form.save()
+            return redirect('destination_list')
+    else:
+        form = DestinationForm(instance=dest)
+    return render(request, 'voguevue/destination_form.html', {'form': form, 'action': 'Modifier'})
+
+def delete_destination(request, id):
+    dest = get_object_or_404(Destination, id=id)
+    if request.method == 'POST':
+        dest.delete()
+        return redirect('destination_list')
+    return render(request, 'voguevue/destination_confirm_delete.html', {'destination': dest})
