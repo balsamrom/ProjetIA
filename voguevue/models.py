@@ -26,7 +26,6 @@ class register_table(models.Model):
 
     def __str__(self):
         return self.user.username
-        
 class Destination(models.Model):
     destination = models.CharField(max_length=120)
     region = models.CharField(max_length=120, blank=True, null=True)
@@ -44,6 +43,8 @@ class Destination(models.Model):
     safety = models.CharField(max_length=250, blank=True, null=True)
     cultural_significance = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
+    # AJOUTEZ CE CHAMP POUR L'IMAGE
+    image = models.ImageField(upload_to='destinations/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

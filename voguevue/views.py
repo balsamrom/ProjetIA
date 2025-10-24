@@ -1,7 +1,7 @@
 import email
-from django.shortcuts import redirect, render , HttpResponse
+from django.shortcuts import redirect, render, HttpResponse
 from datetime import datetime
-from .models import Contact , register_table , updatemail
+from .models import Contact, register_table, updatemail
 from django.contrib import messages
 from django.contrib.auth import logout, authenticate, login
 from django.urls import reverse
@@ -10,13 +10,14 @@ from django.contrib.auth import logout as django_logout
 from .models import Destination
 from .forms import DestinationForm
 from django.shortcuts import get_object_or_404, redirect, render
+from .recommendation import recommender
 
 # Create your views here.
 def index(request):
     return render(request, 'main/index.html')
 
 def about(request):
-    return render(request, 'main/about.html') 
+    return render(request, 'main/about.html')
 
 def contact(request):
     if request.method == "POST":
@@ -27,36 +28,32 @@ def contact(request):
         contact.save()
         messages.success(request, 'Your message has been sent')
         
-    return render(request , 'main/contact.html')
-    
+    return render(request, 'main/contact.html')
+
 def travels(request):
-    return render(request, 'main/travels.html') 
+    return render(request, 'main/travels.html')
 
 def signin(request):
-
-        if request.method == "POST":
-            username = request.POST.get('uname')
-            password = request.POST.get('password')
+    if request.method == "POST":
+        username = request.POST.get('uname')
+        password = request.POST.get('password')
 
         # check if the user entered the correct credentials
-            user = authenticate(username=username , password=password) 
+        user = authenticate(username=username, password=password)
 
-            if user is not None:
+        if user is not None:
             # A backend authenticated the credentials
-                login(request, user)
-                return render(request , 'main/index.html' , {"success" : " Logged in Successfully "})
-                
-
-            else:
+            login(request, user)
+            return render(request, 'main/index.html', {"success": " Logged in Successfully "})
+        else:
             # No backend authenticated the credentials
-                return render(request, 'authentication/signin.html' , {"msg" : " Enter the Correct Credentials "})
+            return render(request, 'authentication/signin.html', {"msg": " Enter the Correct Credentials "})
 
-
-        return render(request , 'authentication/signin.html')
+    return render(request, 'authentication/signin.html')
 
 def signup(request):
     if request.method == 'POST':
-        fname = request.POST.get("firstname") 
+        fname = request.POST.get("firstname")
         last = request.POST.get("lastname")
         un = request.POST.get("uname")
         pwd = request.POST.get("password")
@@ -88,24 +85,24 @@ def signup(request):
         return redirect('/signin')
 
     return render(request, 'authentication/signup.html')
+
 def logout(request):
     django_logout(request)
-    return redirect("/signin" , {"logsign" : " Logged Out Successfully"})
+    return redirect("/signin", {"logsign": " Logged Out Successfully"})
 
 def profile(request):
-    # check if  user is authenticated
-
+    # check if user is authenticated
     if request.user.is_authenticated:
-        return render(request , 'main/profile.html')
+        return render(request, 'main/profile.html')
     else:
         return redirect('/signin')
 
-def error_404(request , exception):
-    return render(request , 'main/404.html')
+def error_404(request, exception):
+    return render(request, 'main/404.html')
 
 def blog(request):
-    return render(request,'main/blog.html')
-    
+    return render(request, 'main/blog.html')
+
 # --- CRUD Destinations ---
 def destination_list(request):
     q = request.GET.get('q', '')
@@ -117,7 +114,7 @@ def destination_list(request):
 
 def add_destination(request):
     if request.method == 'POST':
-        form = DestinationForm(request.POST)
+        form = DestinationForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             return redirect('destination_list')
@@ -128,7 +125,7 @@ def add_destination(request):
 def edit_destination(request, id):
     dest = get_object_or_404(Destination, id=id)
     if request.method == 'POST':
-        form = DestinationForm(request.POST, instance=dest)
+        form = DestinationForm(request.POST, request.FILES, instance=dest)
         if form.is_valid():
             form.save()
             return redirect('destination_list')
@@ -142,3 +139,38 @@ def delete_destination(request, id):
         dest.delete()
         return redirect('destination_list')
     return render(request, 'voguevue/destination_confirm_delete.html', {'destination': dest})
+
+# --- Recommandation IA ---
+def recommendation_view(request):
+    """Page de recommandation IA"""
+    recommendations = None
+    error = None
+    search_query = ""
+    
+    # Vérifier si une destination est passée dans l'URL
+    destination_from_url = request.GET.get('destination', '').strip()
+    if destination_from_url:
+        search_query = destination_from_url
+    
+    if request.method == 'POST':
+        search_query = request.POST.get('destination', '').strip()
+    
+    # Si on a une recherche (depuis URL ou POST)
+    if search_query:
+        print(f"🎯 Recherche de recommandations pour: {search_query}")
+        result = recommender.recommend(search_query)
+        if 'error' in result:
+            error = result['error']
+            print(f"❌ Erreur: {error}")
+        else:
+            recommendations = result
+            print(f"✅ Recommandations trouvées: {len(recommendations['recommendations'])}")
+    
+    context = {
+        'recommendations': recommendations,
+        'error': error,
+        'search_query': search_query,
+        'model_loaded': recommender.model_loaded
+    }
+    
+    return render(request, 'voguevue/recommendation.html', context)

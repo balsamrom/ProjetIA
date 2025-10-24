@@ -27,8 +27,7 @@ SECRET_KEY = 'django-insecure-mki!p6gl2mg%@2_rlu3&)k&#mrd3mdk9h%9tpk1n&k$2a==_fe
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1"]
-
+ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 # Application definition
 
@@ -136,3 +135,20 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/4.2/howto/static-files/
+
+STATIC_URL = '/static/'
+
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+
+# AJOUTEZ CES LIGNES POUR LES IMAGES UPLOADÉES
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Messages personnalisés (optionnel mais utile)
+MESSAGE_TAGS = {
+    messages.ERROR: 'danger',
+}

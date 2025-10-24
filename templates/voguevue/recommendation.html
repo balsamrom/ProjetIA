@@ -1,0 +1,116 @@
+{% extends 'voguevue/base.html' %}
+
+{% block title %}Recommandation IA - VoyageVue{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <!-- Statut du modèle -->
+            {% if not model_loaded %}
+            <div class="alert alert-warning">
+                ⚠️ Le modèle IA n'est pas chargé. Les recommandations ne fonctionneront pas.
+            </div>
+            {% endif %}
+
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">🎯 Recommandation Intelligente de Destinations</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Entrez une destination que vous aimez et notre IA vous recommandera des lieux similaires !
+                        <br><small>Exemples: Paris, Tokyo, Rome, Tunis, New York...</small>
+                    </p>
+                    
+                    <form method="post" class="mb-4">
+                        {% csrf_token %}
+                        <div class="input-group input-group-lg">
+                            <input type="text" name="destination" class="form-control" 
+                                   placeholder="Ex: Paris, Tokyo, Rome..." 
+                                   value="{{ search_query }}" required>
+                            <button type="submit" class="btn btn-success">🔍 Trouver des recommandations</button>
+                        </div>
+                    </form>
+
+                    {% if error %}
+                    <div class="alert alert-danger">
+                        ❌ {{ error }}
+                    </div>
+                    {% endif %}
+
+                    {% if recommendations %}
+                    <div class="recommendation-results">
+                        <!-- Destination originale -->
+                        <div class="original-destination card mb-4 border-primary">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">📍 Destination de référence</h5>
+                            </div>
+                            <div class="card-body">
+                                <h4 class="text-primary">{{ recommendations.original_destination.name }}</h4>
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <strong>🌍 Pays:</strong> {{ recommendations.original_destination.country }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>📍 Catégorie:</strong> {{ recommendations.original_destination.category }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>💰 Coût de vie:</strong> {{ recommendations.original_destination.cost_of_living }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>🛡️ Sécurité:</strong> {{ recommendations.original_destination.safety }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recommandations -->
+                        <h5 class="mb-3">🎯 Destinations similaires recommandées :</h5>
+                        
+                        {% for rec in recommendations.recommendations %}
+                        <div class="card mb-3 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h5 class="card-title text-success">
+                                            {{ rec.rank }}. {{ rec.destination }}
+                                            <small class="text-muted">({{ rec.country }})</small>
+                                        </h5>
+                                        <p class="card-text mb-2">
+                                            <span class="badge bg-secondary">{{ rec.category }}</span>
+                                            <span class="badge bg-warning text-dark">💰 {{ rec.cost_of_living }}</span>
+                                            <span class="badge bg-info">🛡️ {{ rec.safety }}</span>
+                                        </p>
+                                    </div>
+                                    <div class="text-end ms-3">
+                                        <span class="badge bg-primary fs-6">
+                                            Score: {{ rec.similarity_score }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Informations sur le modèle -->
+            <div class="card mt-4">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0">🤖 À propos de notre IA</h6>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-0">
+                        Notre modèle analyse 218 destinations basé sur le texte descriptif, 
+                        la catégorie, le pays, le coût de vie et la sécurité pour trouver 
+                        les destinations les plus similaires. Score moyen: 0.474 (Excellent)
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

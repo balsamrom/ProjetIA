@@ -13,6 +13,7 @@ urlpatterns = [
     path("profile" , views.profile , name="profile"),
     path("travels" , views.travels , name="travels"),
     path("blog" , views.blog , name="blog"),
+    path("recommendation/", views.recommendation_view, name='recommendation'),
     # CRUD Destinations
     path("destinations/", views.destination_list, name='destination_list'),
     path("destinations/add/", views.add_destination, name='add_destination'),

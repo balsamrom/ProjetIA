@@ -29,11 +29,9 @@
     </style>
 </head>
 <body>
-    <!-- Navigation simplifiée -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container">
             <a class="navbar-brand" href="{% url 'home' %}">🏠 VoyageVue</a>
-            
             <div class="navbar-nav ms-auto">
                 <a class="nav-link" href="{% url 'home' %}">Accueil</a>
                 <a class="nav-link active" href="{% url 'destination_list' %}">📋 Destinations</a>
@@ -47,7 +45,6 @@
         </div>
     </nav>
 
-    <!-- Messages -->
     {% if messages %}
     <div class="container">
         {% for message in messages %}
@@ -59,13 +56,11 @@
     </div>
     {% endif %}
 
-    <!-- Contenu principal -->
     <main class="container">
         {% block content %}
         {% endblock %}
     </main>
 
-    <!-- Footer simple -->
     <footer class="bg-dark text-white text-center py-3 mt-5">
         <div class="container">
             <p class="mb-0">&copy; 2024 VoyageVue - Gestion des Destinations</p>
