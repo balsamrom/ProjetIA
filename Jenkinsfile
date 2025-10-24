@@ -13,7 +13,7 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/balsamrom/ProjetIA.git'
             }
         }
-    }
+    
 
 
 
