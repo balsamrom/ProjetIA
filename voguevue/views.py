@@ -1,12 +1,13 @@
 import email
 from django.shortcuts import redirect, render , HttpResponse
 from datetime import datetime
-from .models import Contact , register_table , updatemail
+from .models import Contact , register_table , updatemail, Avis
 from django.contrib import messages
 from django.contrib.auth import logout, authenticate, login
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.auth import logout as django_logout
+from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 def index(request):
@@ -102,3 +103,113 @@ def error_404(request , exception):
 
 def blog(request):
     return render(request,'main/blog.html')
+
+
+def avis_list(request):
+    avis_queryset = Avis.objects.select_related('user').order_by('-created_at')
+    return render(request, 'main/avis_list.html', { 'avis_list': avis_queryset })
+
+
+@login_required
+def avis_create(request):
+    if request.method == 'POST':
+        comment = request.POST.get('comment')
+        image = request.FILES.get('image')
+        if not comment:
+            messages.error(request, 'Le commentaire est obligatoire.')
+            return render(request, 'main/avis_form.html')
+        Avis.objects.create(user=request.user, comment=comment, image=image)
+        messages.success(request, 'Votre avis a été ajouté.')
+        return redirect('/multimedia')
+    return render(request, 'main/avis_form.html')
+
+
+@login_required
+def avis_delete(request, avis_id):
+    try:
+        avis = Avis.objects.get(id=avis_id, user=request.user)
+    except Avis.DoesNotExist:
+        messages.error(request, "Avis introuvable ou non autorisé.")
+        return redirect('/multimedia')
+    if request.method == 'POST':
+        avis.delete()
+        messages.success(request, 'Avis supprimé.')
+        return redirect('/multimedia')
+    return render(request, 'main/avis_confirm_delete.html', { 'avis': avis })
+
+
+@login_required
+def avis_update(request, avis_id):
+    try:
+        avis = Avis.objects.get(id=avis_id, user=request.user)
+    except Avis.DoesNotExist:
+        messages.error(request, "Contenu introuvable ou non autorisé.")
+        return redirect('/multimedia')
+
+    if request.method == 'POST':
+        comment = request.POST.get('comment')
+        image = request.FILES.get('image')
+        if not comment:
+            messages.error(request, 'Le commentaire est obligatoire.')
+        else:
+            avis.comment = comment
+            if image is not None:
+                avis.image = image
+            avis.save()
+            messages.success(request, 'Contenu mis à jour.')
+            return redirect('/multimedia')
+
+    return render(request, 'main/avis_update.html', { 'avis': avis })
+
+
+def _classify_image_keywords(text: str) -> dict:
+    content = (text or '').lower()
+    place_type = None
+    if any(k in content for k in ['plage', 'beach', 'mer', 'sea', 'coast']):
+        place_type = 'plage'
+    elif any(k in content for k in ['montagne', 'mountain', 'alps', 'himalaya', 'everest']):
+        place_type = 'montagne'
+    elif any(k in content for k in ['desert', 'sahara', 'dune']):
+        place_type = 'désert'
+    elif any(k in content for k in ['ville', 'city', 'downtown', 'urban']):
+        place_type = 'ville'
+
+    city_guess = None
+    city_keywords = {
+        'paris': ['paris', 'eiffel'],
+        'mumbai': ['mumbai', 'bombay', 'gateway of india'],
+        'agra': ['agra', 'taj'],
+        'delhi': ['delhi', 'red fort'],
+        'new york': ['new york', 'nyc', 'manhattan'],
+        'tunisie': ['tunisia', 'tunisie', 'hammamet', 'sidi bou'],
+        'amritsar': ['amritsar', 'golden temple'],
+        'mysore': ['mysore', 'mysuru', 'palace'],
+    }
+    for city, keys in city_keywords.items():
+        if any(k in content for k in keys):
+            city_guess = city
+            break
+
+    return {
+        'place_type': place_type or 'inconnu',
+        'city_guess': city_guess or 'inconnue',
+    }
+
+
+def multimedia_scan(request, avis_id):
+    try:
+        avis = Avis.objects.get(id=avis_id)
+    except Avis.DoesNotExist:
+        messages.error(request, "Contenu introuvable.")
+        return redirect('/multimedia')
+
+    scan_result = None
+    if request.method == 'POST':
+        basis = ''
+        if avis.image and hasattr(avis.image, 'name'):
+            basis += f" {avis.image.name}"
+        if avis.comment:
+            basis += f" {avis.comment}"
+        scan_result = _classify_image_keywords(basis)
+
+    return render(request, 'main/multimedia_scan.html', { 'avis': avis, 'scan_result': scan_result })

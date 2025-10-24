@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmer la suppression</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/Home CSS/mobile.css">
+</head>
+<body>
+    <section class="nav-bar" style="z-index: 1000;">
+        <div class="logo"><a href="/">VoyageVue</a></div>
+        <ul class="menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/travels">travels</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/multimedia">Multimédia</a></li>
+            {% if user.is_authenticated %}
+            <li><a href="/profile">Profile</a></li>
+            <li><a href="/logout">logout</a></li>
+            {% else %}
+            <li><a href="/signin">Sign In</a></li>
+            <li><a href="/signup">Sign Up</a></li>
+            {% endif %}
+        </ul>
+        <div class="mobile">
+            <i class="fa-solid fa-bars"></i>
+        </div>
+    </section>
+
+    <div class="container" style="max-width: 640px; margin: 2rem auto; padding: 1rem;">
+        <h1>Supprimer cet avis ?</h1>
+        <p>Êtes-vous sûr de vouloir supprimer cet avis ? Cette action est irréversible.</p>
+        <div style="margin: 1rem 0;">
+            {% if avis.image %}
+                <img src="{{ avis.image.url }}" alt="image" style="width:100%;max-width:320px;border-radius:8px;" />
+            {% endif %}
+            <p style="white-space: pre-line;">{{ avis.comment }}</p>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" style="background:#e74c3c;color:white;border:0;border-radius:6px;padding:0.6rem 1rem;cursor:pointer;">Supprimer</button>
+            <a href="/multimedia" style="margin-left:0.5rem;">Annuler</a>
+        </form>
+    </div>
+</body>
+</html>
+
+

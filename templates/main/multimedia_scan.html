@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner l'image</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/Home CSS/mobile.css">
+</head>
+<body>
+    <section class="nav-bar" style="z-index: 1000;">
+        <div class="logo"><a href="/">VoyageVue</a></div>
+        <ul class="menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/travels">travels</a></li>
+            <li><a href="/multimedia">Multimédia</a></li>
+            {% if user.is_authenticated %}
+            <li><a href="/profile">Profile</a></li>
+            <li><a href="/logout">logout</a></li>
+            {% else %}
+            <li><a href="/signin">Sign In</a></li>
+            <li><a href="/signup">Sign Up</a></li>
+            {% endif %}
+        </ul>
+        <div class="mobile">
+            <i class="fa-solid fa-bars"></i>
+        </div>
+    </section>
+
+    <div class="container" style="max-width: 900px; margin: 2rem auto; padding: 1rem;">
+        <h1 style="margin-bottom: 1rem;">Scanner l'image</h1>
+        {% if avis.image %}
+        <img src="{{ avis.image.url }}" alt="image" style="width:100%;max-height:420px;object-fit:cover;border-radius:8px;" />
+        {% endif %}
+        <p style="margin-top:0.75rem; white-space: pre-line;">{{ avis.comment }}</p>
+
+        <form method="post" style="margin-top:1rem;">
+            {% csrf_token %}
+            <button type="submit" style="background:#3498db;color:white;border:0;border-radius:6px;padding:0.6rem 1rem;cursor:pointer;">Scanner l'image</button>
+            <a href="/multimedia" style="margin-left:0.5rem;">Retour</a>
+        </form>
+
+        {% if scan_result %}
+        <div style="margin-top:1rem;border:1px solid #eee;border-radius:8px;padding:1rem;">
+            <h3>Résultat du scan</h3>
+            <p><strong>Type de lieu</strong>: {{ scan_result.place_type }}</p>
+            <p><strong>Ville (estimée)</strong>: {{ scan_result.city_guess }}</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
+
+
