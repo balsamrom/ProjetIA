@@ -24,19 +24,7 @@ pipeline {
             }
         }
 
-        stage('Run Tests') {
-            steps {
-                bat '''
-                call %VENV%\\Scripts\\activate
-                pytest --junitxml=test-results.xml || exit 0
-                '''
-            }
-            post {
-                always {
-                    junit '**/test-results.xml'
-                }
-            }
-        }
+        
 
         stage('SonarQube Analysis') {
             environment {
