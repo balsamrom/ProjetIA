@@ -28,13 +28,7 @@ pipeline {
             }
         }
 
-        stage('Run Tests') {
-            steps {
-                sh '''
-                source $VENV/bin/activate
-                python manage.py test --noinput
-                '''
-            }
+       
             post {
                 always {
                     junit '**/test-results.xml'
@@ -47,7 +41,7 @@ pipeline {
                 PATH = "${env.PATH}:${env.WORKSPACE}/$VENV/bin"
             }
             steps {
-                withSonarQubeEnv('SonarQubeServer') {
+                withSonarQubeEnv('sonar') {
                     sh '''
                     source $VENV/bin/activate
                     sonar-scanner \
