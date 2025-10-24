@@ -6,16 +6,12 @@ pipeline {
         VENV = 'venv'
     }
 
-
     stages {
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/balsamrom/ProjetIA.git'
             }
         }
-    
-
-
 
         stage('Setup Python Environment') {
             steps {
@@ -28,7 +24,13 @@ pipeline {
             }
         }
 
-       
+        stage('Run Tests') {
+            steps {
+                sh '''
+                source $VENV/bin/activate
+                pytest --junitxml=test-results.xml || true
+                '''
+            }
             post {
                 always {
                     junit '**/test-results.xml'
