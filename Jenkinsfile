@@ -25,22 +25,19 @@ pipeline {
         }
 
         
-
-        stage('SonarQube Analysis') {
+stage('SonarQube Analysis') {
     steps {
         withSonarQubeEnv('sonar') {
             bat '''
-            call %VENV%\\Scripts\\activate
-            sonar-scanner ^
+            "C:\\sonar-scanner-7.3.0.5189-windows-x64\\bin\\sonar-scanner.bat" ^
                 -Dsonar.projectKey=ProjetIA ^
                 -Dsonar.sources=. ^
                 -Dsonar.host.url=%SONAR_HOST_URL% ^
                 -Dsonar.login=%SONAR_AUTH_TOKEN%
             '''
         }
-      }
     }
-
+}
 
         stage('Quality Gate') {
             steps {
