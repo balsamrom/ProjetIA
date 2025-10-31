@@ -4,16 +4,17 @@
 <head>
     <meta charset="utf-8">
     <title>Reviews - {{ hotel.name }}</title>
-    <link rel="stylesheet" href="/static/css/Home CSS/style.css" />
-    <link rel="stylesheet" href="/static/css/Home CSS/mobile.css" />
+    <link rel="stylesheet" href="{% static 'css/Home CSS/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/Home CSS/mobile.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/voguevue-theme.css' %}">
     <style>
         .container { max-width: 1000px; margin: 20px auto; padding: 0 15px; }
-        .review-card { background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; }
-        .rating { color: #ffc107; }
-        .sentiment-good { background: #d4edda; color: #155724; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
-        .sentiment-bad { background: #f8d7da; color: #721c24; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
-        .btn { padding: 8px 15px; color: #fff; text-decoration: none; border-radius: 6px; display: inline-block; }
-        .btn-primary { background: #2a9d8f; }
+        .review-card { background: var(--vv-white); padding: 16px; border-radius: 12px; border: 1px solid rgba(107,79,59,.15); margin-bottom: 14px; box-shadow: 0 6px 16px rgba(107,79,59,.08); }
+        .rating { color: var(--vv-yellow); }
+        .meta { color: #6b7280; font-size: 12px; }
+        .btn { text-decoration: none; }
+        .toolbar { display:flex; gap:10px; align-items:center; justify-content:space-between; margin-bottom:20px; }
+        .title { margin: 0 0 10px 0; }
     </style>
 </head>
 <body>
@@ -28,21 +29,22 @@
     </section>
 
     <div class="container">
-        <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 20px;">
-            <a href="/hotels/{{ hotel.id }}" class="btn btn-primary">← Back to Hotel</a>
-            <a href="/hotels/{{ hotel.id }}/reviews/create/" class="btn btn-primary">✍️ Add Review</a>
+        <div class="toolbar">
+            <a href="/hotels/{{ hotel.id }}" class="btn btn-secondary">← Retour à l'hôtel</a>
+            <a href="/hotels/{{ hotel.id }}/reviews/create/" class="btn btn-primary">✍️ Rédiger un avis</a>
         </div>
 
-        <h1>📝 Reviews for {{ hotel.name }}</h1>
+        <h1 class="title">📝 Avis pour {{ hotel.name|default:"(Hôtel inconnu)" }}</h1>
         
         {% if reviews %}
-            <p>{{ reviews.count }} review(s)</p>
+            <p class="meta">{{ reviews.count }} avis</p>
             
             {% for review in reviews %}
             <div class="review-card">
-                <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
                     <div>
-                        <strong>{{ review.user.username }}</strong>
+                        <strong>{{ review.user.username|default:"(anonyme)" }}</strong>
+
                         <div class="rating">
                             {% for i in "12345" %}
                                 {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
@@ -50,25 +52,31 @@
                             ({{ review.rating }}/5)
                         </div>
                     </div>
-                    <small style="color: #666;">{{ review.created_at|date:"M d, Y" }}</small>
+                    <small class="meta">{{ review.created_at|date:"M d, Y" }}</small>
                 </div>
                 
-                <p style="margin: 10px 0;">{{ review.review_text }}</p>
+                <p style="margin: 6px 0 10px 0;">{{ review.review_text|default:"(sans avis)" }}</p>
+
                 
-                {% if review.sentiment_label %}
+                {% if review.sentiment_label and review.sentiment_score is not None %}
                 <div>
-                    <span class="sentiment-{{ review.sentiment_label|lower }}">
-                        Sentiment: {{ review.sentiment_label }} ({{ review.sentiment_score }}%)
-                    </span>
+                    {% with lbl=review.sentiment_label|lower %}
+                        {% if 'pos' in lbl or 'good' in lbl or 'positif' in lbl %}
+                        <span class="sentiment-good">Sentiment: {{ review.sentiment_label }} ({{ review.sentiment_score|floatformat:"2" }}%)</span>
+                        {% else %}
+                        <span class="sentiment-bad">Sentiment: {{ review.sentiment_label }} ({{ review.sentiment_score|floatformat:"2" }}%)</span>
+                        {% endif %}
+                    {% endwith %}
                 </div>
                 {% endif %}
+
             </div>
             {% endfor %}
         {% else %}
             <div style="text-align: center; padding: 40px;">
-                <h3>No reviews yet</h3>
-                <p>Be the first to share your experience!</p>
-                <a href="/hotels/{{ hotel.id }}/reviews/create/" class="btn btn-primary">Write First Review</a>
+                <h3>Aucun avis pour le moment</h3>
+                <p>Soyez le premier à partager votre expérience.</p>
+                <a href="/hotels/{{ hotel.id }}/reviews/create/" class="btn btn-primary">Écrire un premier avis</a>
             </div>
         {% endif %}
     </div>

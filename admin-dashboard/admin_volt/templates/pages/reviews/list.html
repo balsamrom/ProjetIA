@@ -1,0 +1,40 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+<div class="py-4 d-flex justify-content-between align-items-center">
+  <h2 class="h4 mb-0">Reviews</h2>
+</div>
+<div class="card border-0 shadow">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-centered table-nowrap mb-0 rounded">
+        <thead class="thead-light">
+          <tr>
+            <th>User</th>
+            <th>Hotel</th>
+            <th>Rating</th>
+            <th>Created</th>
+            <th>Excerpt</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in reviews %}
+          <tr>
+            <td>{{ r.user.username }}</td>
+            <td>{{ r.hotel.name }}</td>
+            <td>{{ r.rating }}/5</td>
+            <td>{% if r.created_at %}{{ r.created_at }}{% else %}-{% endif %}</td>
+            <td>{{ r.review_text|truncatechars:80 }}</td>
+            <td class="text-end">
+              <a href="{% url 'volt_review_delete' r.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-center">No reviews.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

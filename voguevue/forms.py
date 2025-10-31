@@ -15,6 +15,7 @@ class HotelForm(forms.ModelForm):
             'price_per_night',
             'rating',
             'is_available',
+            'image',
         ]
 
 
@@ -28,6 +29,10 @@ class ReservationForm(forms.ModelForm):
     class Meta:
         model = Reservation
         fields = ['hotel', 'room', 'customer_name', 'check_in', 'check_out']
+        widgets = {
+            'check_in': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'check_out': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        }
 
     def clean(self):
         cleaned = super().clean()
@@ -52,6 +57,12 @@ class ReservationForm(forms.ModelForm):
         return cleaned
 
 class ReviewForm(forms.ModelForm):
+    rating = forms.ChoiceField(
+        choices=[(1, '1★'), (2, '2★'), (3, '3★'), (4, '4★'), (5, '5★')],
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
     class Meta:
         model = Review
         fields = ['review_text', 'rating']
@@ -61,9 +72,18 @@ class ReviewForm(forms.ModelForm):
                 'placeholder': 'Partagez votre expérience avec cet hôtel...',
                 'rows': 4
             }),
-            'rating': forms.Select(attrs={'class': 'form-control'})
         }
         labels = {
             'review_text': 'Votre avis',
             'rating': 'Note (1 à 5 étoiles)'
         }
+
+    def clean_rating(self):
+        value = self.cleaned_data.get('rating')
+        try:
+            ivalue = int(value)
+        except Exception:
+            raise ValidationError('Veuillez choisir une note entre 1 et 5.')
+        if ivalue < 1 or ivalue > 5:
+            raise ValidationError('Veuillez choisir une note entre 1 et 5.')
+        return ivalue

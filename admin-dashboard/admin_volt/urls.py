@@ -19,6 +19,22 @@ urlpatterns = [
     path('pages/hotels/<int:pk>/edit/', views.hotel_update_volt, name='volt_hotel_update'),
     path('pages/hotels/<int:pk>/delete/', views.hotel_delete_volt, name='volt_hotel_delete'),
 
+    # Rooms CRUD (Volt Dashboard)
+    path('pages/rooms/', views.room_list_volt, name='volt_room_list'),
+    path('pages/rooms/new/', views.room_create_volt, name='volt_room_create'),
+    path('pages/rooms/<int:pk>/edit/', views.room_update_volt, name='volt_room_update'),
+    path('pages/rooms/<int:pk>/delete/', views.room_delete_volt, name='volt_room_delete'),
+
+    # Reservations CRUD (Volt Dashboard)
+    path('pages/reservations/', views.reservation_list_volt, name='volt_reservation_list'),
+    path('pages/reservations/new/', views.reservation_create_volt, name='volt_reservation_create'),
+    path('pages/reservations/<int:pk>/edit/', views.reservation_update_volt, name='volt_reservation_update'),
+    path('pages/reservations/<int:pk>/delete/', views.reservation_delete_volt, name='volt_reservation_delete'),
+
+    # Reviews (Volt) list/delete
+    path('pages/reviews/', views.review_list_volt, name='volt_review_list'),
+    path('pages/reviews/<int:pk>/delete/', views.review_delete_volt, name='volt_review_delete'),
+
     # Tables
     path('tables/bs-tables/', views.bs_tables, name="bs_tables"),
 

@@ -40,6 +40,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
+# Explicit path for Hotel Reputation model (.pkl) placed next to manage.py
+HOTEL_REPUTATION_MODEL_PATH = BASE_DIR / 'hotel_review_tfidf_logreg.pkl'
+
 
 # Application definition
 
@@ -172,6 +175,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
+
+# Media (user uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Auth redirects: ensure admin_volt routes are used
 LOGIN_URL = '/volt/accounts/login/'

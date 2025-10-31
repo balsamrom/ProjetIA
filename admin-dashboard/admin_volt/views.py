@@ -6,8 +6,8 @@ from django.urls import reverse, reverse_lazy
 
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from voguevue.models import Hotel
-from voguevue.forms import HotelForm
+from voguevue.models import Hotel, Room, Reservation, Review
+from voguevue.forms import HotelForm, RoomForm, ReservationForm
 
 # Index
 def index(request):
@@ -211,3 +211,124 @@ def hotel_delete_volt(request, pk:int):
   }
   return render(request, 'pages/hotels/confirm_delete.html', context)
 
+
+# Rooms CRUD (Volt)
+@login_required(login_url=reverse_lazy('login'))
+def room_list_volt(request):
+  qs = Room.objects.select_related('hotel').order_by('hotel__name', 'name')
+  context = {
+    'segment': 'rooms',
+    'rooms': qs,
+  }
+  return render(request, 'pages/rooms/list.html', context)
+
+@login_required(login_url=reverse_lazy('login'))
+def room_create_volt(request):
+  if request.method == 'POST':
+    form = RoomForm(request.POST)
+    if form.is_valid():
+      room = form.save()
+      messages.success(request, 'Chambre créée avec succès')
+      return redirect('volt_room_list')
+  else:
+    form = RoomForm()
+  return render(request, 'pages/rooms/form.html', {'segment': 'rooms', 'form': form, 'mode': 'create'})
+
+@login_required(login_url=reverse_lazy('login'))
+def room_update_volt(request, pk:int):
+  try:
+    room = Room.objects.get(pk=pk)
+  except Room.DoesNotExist:
+    messages.error(request, 'Chambre introuvable')
+    return redirect('volt_room_list')
+  if request.method == 'POST':
+    form = RoomForm(request.POST, instance=room)
+    if form.is_valid():
+      form.save()
+      messages.success(request, 'Chambre modifiée avec succès')
+      return redirect('volt_room_list')
+  else:
+    form = RoomForm(instance=room)
+  return render(request, 'pages/rooms/form.html', {'segment': 'rooms', 'form': form, 'mode': 'update', 'room': room})
+
+@login_required(login_url=reverse_lazy('login'))
+def room_delete_volt(request, pk:int):
+  try:
+    room = Room.objects.get(pk=pk)
+  except Room.DoesNotExist:
+    messages.error(request, 'Chambre introuvable')
+    return redirect('volt_room_list')
+  if request.method == 'POST':
+    room.delete()
+    messages.success(request, 'Chambre supprimée')
+    return redirect('volt_room_list')
+  return render(request, 'pages/rooms/confirm_delete.html', {'segment': 'rooms', 'room': room})
+
+
+# Reservations CRUD (Volt)
+@login_required(login_url=reverse_lazy('login'))
+def reservation_list_volt(request):
+  qs = Reservation.objects.select_related('room__hotel').order_by('-check_in')
+  return render(request, 'pages/reservations/list.html', {'segment': 'reservations', 'reservations': qs})
+
+@login_required(login_url=reverse_lazy('login'))
+def reservation_create_volt(request):
+  if request.method == 'POST':
+    form = ReservationForm(request.POST)
+    if form.is_valid():
+      form.save()
+      messages.success(request, 'Réservation créée avec succès')
+      return redirect('volt_reservation_list')
+  else:
+    form = ReservationForm()
+  return render(request, 'pages/reservations/form.html', {'segment': 'reservations', 'form': form, 'mode': 'create'})
+
+@login_required(login_url=reverse_lazy('login'))
+def reservation_update_volt(request, pk:int):
+  try:
+    reservation = Reservation.objects.get(pk=pk)
+  except Reservation.DoesNotExist:
+    messages.error(request, 'Réservation introuvable')
+    return redirect('volt_reservation_list')
+  if request.method == 'POST':
+    form = ReservationForm(request.POST, instance=reservation)
+    if form.is_valid():
+      form.save()
+      messages.success(request, 'Réservation modifiée avec succès')
+      return redirect('volt_reservation_list')
+  else:
+    form = ReservationForm(instance=reservation)
+  return render(request, 'pages/reservations/form.html', {'segment': 'reservations', 'form': form, 'mode': 'update', 'reservation': reservation})
+
+@login_required(login_url=reverse_lazy('login'))
+def reservation_delete_volt(request, pk:int):
+  try:
+    reservation = Reservation.objects.get(pk=pk)
+  except Reservation.DoesNotExist:
+    messages.error(request, 'Réservation introuvable')
+    return redirect('volt_reservation_list')
+  if request.method == 'POST':
+    reservation.delete()
+    messages.success(request, 'Réservation supprimée')
+    return redirect('volt_reservation_list')
+  return render(request, 'pages/reservations/confirm_delete.html', {'segment': 'reservations', 'reservation': reservation})
+
+
+# Reviews (Volt) – list + delete
+@login_required(login_url=reverse_lazy('login'))
+def review_list_volt(request):
+  qs = Review.objects.select_related('hotel', 'user').order_by('-created_at') if hasattr(Review, 'created_at') else Review.objects.select_related('hotel', 'user').all()
+  return render(request, 'pages/reviews/list.html', {'segment': 'reviews', 'reviews': qs})
+
+@login_required(login_url=reverse_lazy('login'))
+def review_delete_volt(request, pk:int):
+  try:
+    review = Review.objects.get(pk=pk)
+  except Review.DoesNotExist:
+    messages.error(request, 'Avis introuvable')
+    return redirect('volt_review_list')
+  if request.method == 'POST':
+    review.delete()
+    messages.success(request, 'Avis supprimé')
+    return redirect('volt_review_list')
+  return render(request, 'pages/reviews/confirm_delete.html', {'segment': 'reviews', 'review': review})

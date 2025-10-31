@@ -9,19 +9,21 @@
 
     {% if not model_available %}
     <!-- Alert Model Not Available -->
-    <div class="alert alert-danger custom-alert">
+    <div class="alert alert-warning custom-alert" style="background:#FFF8E7;border:1px solid rgba(107,79,59,.2);color:#6B4F3B;">
         <div class="d-flex align-items-center">
             <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
             <div>
                 <h5 class="mb-1">❌ Modèle non disponible</h5>
-                <p class="mb-0">L'analyse de réputation IA n'est pas disponible pour le moment.</p>
+                <p class="mb-0">L'analyse IA n'est pas encore chargée. Cliquez sur « Lancer l'Analyse Complète » pour réessayer.</p>
+                {% if predictor_error %}<small class="text-muted">{{ predictor_error }}</small>{% endif %}
             </div>
         </div>
     </div>
-    {% else %}
+    {% endif %}
+
     <!-- Analysis Card -->
     <div class="card custom-card">
-        <div class="card-header bg-gradient-primary text-white">
+        <div class="card-header text-white" style="background:linear-gradient(135deg,#F2C94C 0%, #E0B73A 35%, #6B4F3B 100%);">
             <h5 class="mb-0"><i class="fas fa-rocket me-2"></i>🚀 Analyse IA des Réputations</h5>
         </div>
         <div class="card-body">
@@ -30,7 +32,7 @@
             </p>
             <form method="post">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-primary btn-lg btn-gradient">
+                <button type="submit" class="btn btn-primary btn-lg vv-cta">
                     <i class="fas fa-play me-2"></i>🚀 Lancer l'Analyse Complète
                 </button>
                 <small class="text-muted d-block mt-2">
@@ -43,7 +45,7 @@
     {% if analysis_results %}
     <!-- Results Card -->
     <div class="card custom-card mt-4">
-        <div class="card-header bg-gradient-info text-white">
+        <div class="card-header text-white" style="background:linear-gradient(135deg,#6B4F3B 0%, #E0B73A 100%);">
             <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>📋 Résultats de l'Analyse</h5>
         </div>
         <div class="card-body">
@@ -69,7 +71,7 @@
                             </td>
                             <td>
                                 {% if item.result %}
-                                    {% with reputation=item.result.reputation %}
+                                    {% with reputation=item.result.overall_reputation %}
                                     <span class="badge reputation-badge
                                         {% if reputation == 'Excellent' %} reputation-excellent
                                         {% elif reputation == 'Très bon' %} reputation-very-good
@@ -94,7 +96,7 @@
                                                  data-confidence="{{ item.result.confidence }}">
                                             </div>
                                         </div>
-                                        <span class="confidence-value">{{ item.result.confidence }}</span>
+                                        <span class="confidence-value">{{ item.result.confidence|floatformat:3 }}</span>
                                     </div>
                                 {% else %}
                                     <span class="text-muted">-</span>
@@ -111,17 +113,17 @@
         </div>
     </div>
     {% endif %}
-    {% endif %}
 </div>
 
 <style>
+@import url("/static/css/voguevue-theme.css");
 :root {
-    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    --info-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-    --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    
+    --primary-gradient: linear-gradient(135deg, #F2C94C 0%, #E0B73A 60%, #6B4F3B 100%);
+    --success-gradient: linear-gradient(135deg, #eaf7d9 0%, #b7e4a8 100%);
+    --info-gradient: linear-gradient(135deg, #6B4F3B 0%, #E0B73A 100%);
+    --warning-gradient: linear-gradient(135deg, #FFF3CD 0%, #FFE69C 100%);
+    --danger-gradient: linear-gradient(135deg, #fde2e1 0%, #f8b4b4 100%);
+
     --excellent-color: #10b981;
     --very-good-color: #3b82f6;
     --good-color: #8b5cf6;
@@ -168,7 +170,7 @@
     transition: all 0.3s ease;
 }
 
-.btn-gradient {
+.vv-cta {
     background: var(--primary-gradient);
     border: none;
     border-radius: 25px;
@@ -176,12 +178,12 @@
     font-weight: 600;
     color: white;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 15px rgba(107, 79, 59, 0.25);
 }
 
-.btn-gradient:hover {
+.vv-cta:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+    box-shadow: 0 8px 25px rgba(107, 79, 59, 0.35);
     color: white;
 }
 
@@ -256,7 +258,7 @@
 
 /* Table Styling */
 .table-hover tbody tr.hover-row:hover {
-    background: rgba(102, 126, 234, 0.05);
+    background: rgba(107, 79, 59, 0.05);
     transform: scale(1.01);
     transition: all 0.2s ease;
 }

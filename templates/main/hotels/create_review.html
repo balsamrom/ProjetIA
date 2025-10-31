@@ -3,49 +3,54 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Add Review - {{ hotel.name }}</title>
+    <title>Ajouter un avis - {{ hotel.name }}</title>
     <link rel="stylesheet" href="/static/css/Home CSS/style.css" />
     <link rel="stylesheet" href="/static/css/Home CSS/mobile.css" />
+    <link rel="stylesheet" href="{% static 'css/voguevue-theme.css' %}">
+
     <style>
+        :root{ --vv-brown:#6B4F3B; --vv-brown-600:#5c4433; --vv-yellow:#F2C94C; --vv-yellow-600:#E0B73A; --vv-cream:#FFF8E7; --vv-white:#FFFFFF; }
+        body{ background: var(--vv-cream); }
         .container { max-width: 800px; margin: 20px auto; padding: 0 15px; }
-        .form-container { background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #ddd; }
+        .form-container { background: var(--vv-white); padding: 20px; border-radius: 12px; border: 1px solid rgba(107,79,59,.15); box-shadow:0 6px 16px rgba(107,79,59,.08); }
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-control { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-        .btn { padding: 10px 20px; color: #fff; text-decoration: none; border-radius: 6px; border: none; cursor: pointer; }
-        .btn-primary { background: #2a9d8f; }
-        .btn-secondary { background: #6c757d; }
-        .rating-stars { display: flex; gap: 5px; margin: 10px 0; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color:#5c4433; }
+        .form-control { width: 100%; padding: 8px; border: 1px solid rgba(107,79,59,.25); border-radius: 10px; }
+        .btn { padding: 10px 20px; text-decoration: none; border-radius: 10px; border: none; cursor: pointer; }
+        .btn-primary { background: var(--vv-yellow); color: var(--vv-brown); }
+        .btn-primary:hover{ background: var(--vv-yellow-600); }
+        .btn-secondary { background: var(--vv-brown); color:#fff; }
+        .rating-stars { display: flex; gap: 6px; margin: 10px 0; }
         .star { font-size: 24px; cursor: pointer; color: #ddd; }
-        .star.active { color: #ffc107; }
+        .star.active { color: var(--vv-yellow); }
     </style>
 </head>
 <body>
     <section class="nav-bar">
         <div class="logo"><a href="/">VogueVue</a></div>
         <ul class="menu">
-            <li><a href="/">Home</a></li>
-            <li><a href="/hotels">Hotels</a></li>
-            <li><a href="/travels">Travels</a></li>
+            <li><a href="/">Accueil</a></li>
+            <li><a href="/hotels">Hôtels</a></li>
+            <li><a href="/travels">Voyages</a></li>
             <li><a href="/contact">Contact</a></li>
             {% if user.is_authenticated %}
-                <li><a href="/profile">Profile</a></li>
-                <li><a href="/logout">Logout</a></li>
+                <li><a href="/profile">Profil</a></li>
+                <li><a href="/logout">Déconnexion</a></li>
             {% else %}
-                <li><a href="/signin">Login</a></li>
-                <li><a href="/signup">Sign Up</a></li>
+                <li><a href="/signin">Connexion</a></li>
+                <li><a href="/signup">Inscription</a></li>
             {% endif %}
         </ul>
     </section>
 
     <div class="container">
         <div style="margin-bottom: 20px;">
-            <a href="/hotels/{{ hotel.id }}" class="btn btn-secondary">← Back to Hotel</a>
+            <a href="/hotels/{{ hotel.id }}" class="btn btn-secondary">← Retour à l'hôtel</a>
         </div>
 
         <div class="form-container">
-            <h1>✍️ Add Review for {{ hotel.name }}</h1>
-            <p style="color: #666; margin-bottom: 20px;">Share your experience with this hotel</p>
+            <h1>✍️ Ajouter un avis pour {{ hotel.name }}</h1>
+            <p style="color: #666; margin-bottom: 20px;">Partagez votre expérience dans cet hôtel</p>
 
             {% if messages %}
             <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin: 10px 0;">
@@ -59,7 +64,7 @@
                 {% csrf_token %}
                 
                 <div class="form-group">
-                    <label for="id_rating">Rating:</label>
+                    <label for="id_rating">Note:</label>
                     <div class="rating-stars" id="rating-stars">
                         <span class="star" data-rating="1">★</span>
                         <span class="star" data-rating="2">★</span>
@@ -71,26 +76,26 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="id_review_text">Your Review:</label>
+                    <label for="id_review_text">Votre avis:</label>
                     <textarea name="review_text" id="id_review_text" class="form-control" rows="6" 
                               placeholder="Share your experience... What did you like? What could be improved?" required></textarea>
                 </div>
 
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="submit" class="btn btn-primary">Submit Review</button>
-                    <a href="/hotels/{{ hotel.id }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Envoyer l'avis</button>
+                    <a href="/hotels/{{ hotel.id }}" class="btn btn-secondary">Annuler</a>
                 </div>
             </form>
         </div>
 
         <!-- Conseils pour une bonne review -->
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px;">
-            <h3 style="margin-top: 0;">💡 Tips for a helpful review:</h3>
-            <ul style="color: #666;">
-                <li>Describe your overall experience</li>
-                <li>Mention the staff, cleanliness, and amenities</li>
-                <li>Share what you liked and what could be improved</li>
-                <li>Be honest and specific</li>
+        <div style="background: #FFF8E7; padding: 15px; border-radius: 12px; margin-top: 20px; border:1px solid rgba(107,79,59,.12)">
+            <h3 style="margin-top: 0; color:#6B4F3B;">💡 Conseils pour un avis utile</h3>
+            <ul style="color: #6b7280;">
+                <li>Décrivez votre expérience globale</li>
+                <li>Mentionnez le personnel, la propreté et les équipements</li>
+                <li>Dites ce que vous avez aimé et ce qui peut être amélioré</li>
+                <li>Soyez honnête et précis</li>
             </ul>
         </div>
     </div>

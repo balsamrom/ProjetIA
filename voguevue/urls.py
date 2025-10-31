@@ -35,5 +35,11 @@ urlpatterns = [
     path("hotels/<int:hotel_id>/reserve-cheapest/", views.reserve_cheapest, name="reserve_cheapest"),
     path("reputation-analysis/", views.reputation_analysis, name="reputation_analysis"),
     path('api/generate-hotel-description/', views.api_generate_hotel_description, name='api_generate_hotel_description'),
+    # Public search/filter APIs
+    path('api/hotels', views.api_hotels, name='api_hotels'),
+    path('api/rooms', views.api_rooms, name='api_rooms'),
+    path('api/reservations', views.api_reservations, name='api_reservations'),
+    # Admin-only actions
+    path('api/admin/reviews/<int:pk>/delete', views.admin_delete_review, name='admin_delete_review'),
     
 ]# Ajoutez cette URL temporaire pour debug

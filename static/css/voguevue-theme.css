@@ -1,0 +1,38 @@
+:root{
+  --vv-brown:#6B4F3B;
+  --vv-brown-600:#5c4433;
+  --vv-yellow:#F2C94C;
+  --vv-yellow-600:#E0B73A;
+  --vv-cream:#FFF8E7;
+  --vv-white:#FFFFFF;
+  --vv-text:#2A2A2A;
+}
+/* Base */
+body{background:var(--vv-cream);color:var(--vv-text);} 
+/* Navbar */
+.nav-bar{background:var(--vv-white);border-bottom:3px solid var(--vv-yellow);} 
+.nav-bar .logo a{color:var(--vv-brown);font-weight:800;}
+.nav-bar .menu li a{color:var(--vv-brown);}
+.nav-bar .menu li a.active,.nav-bar .menu li a:hover{color:var(--vv-white);background:var(--vv-brown);padding:6px 10px;border-radius:8px;}
+/* Buttons */
+.btn{background:var(--vv-brown);border:none;color:var(--vv-white);border-radius:10px;padding:10px 16px;}
+.btn:hover{background:var(--vv-brown-600);}
+.btn-primary{background:var(--vv-yellow);color:var(--vv-brown);} 
+.btn-primary:hover{background:var(--vv-yellow-600);color:var(--vv-brown);} 
+/* Cards */
+.hotel-card,.review-card,.vv-card{background:var(--vv-white);border:1px solid rgba(107,79,59,.15);box-shadow:0 6px 16px rgba(107,79,59,.08);}
+/* Badges */
+.best-seller-badge,.sentiment-good,.sentiment-bad{border-radius:12px;}
+.sentiment-good{background:#eaf7d9;color:#1b5e20;}
+.sentiment-bad{background:#fde2e1;color:#7f1d1d;}
+/* Ratings */
+.rating,.vv-review-rating{color:var(--vv-yellow);} 
+/* Links */
+a{color:var(--vv-brown);} a:hover{color:var(--vv-brown-600);} 
+/* Tables */
+.table thead,.table-dark{background:var(--vv-brown);color:var(--vv-white);} 
+/* Inputs */
+input,select,textarea{border:1px solid rgba(107,79,59,.25);border-radius:10px;padding:8px 10px;} 
+/* Price / CTAs */
+.check-availability{background:var(--vv-yellow);color:var(--vv-brown);} 
+.check-availability:hover{background:var(--vv-yellow-600);} 

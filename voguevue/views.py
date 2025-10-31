@@ -16,6 +16,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import json
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
+from django.contrib.admin.views.decorators import staff_member_required
 
 try:
     import openai
@@ -25,262 +26,66 @@ except Exception:
 # Importez vos modèles et forms
 from .models import Contact, register_table, Hotel, Room, Reservation, Review
 from .forms import HotelForm, RoomForm, ReservationForm, ReviewForm
-
-# === CLASSE HOTEL REPUTATION PREDICTOR ===
-class HotelReputationPredictor:
-    def __init__(self):
-        print("=== INITIALISATION PRÉDICTEUR RÉPUTATION ===")
-        
-        # Lister tous les chemins possibles
-        possible_paths = [
-            'hotel_review_tfidf_logreg.pkl',  # À côté de manage.py
-            'hotel_reputation_model.pkl',     # Autre nom possible
-            os.path.join(settings.BASE_DIR, 'hotel_review_tfidf_logreg.pkl'),
-            os.path.join(settings.BASE_DIR, 'hotel_reputation_model.pkl'),
-            os.path.join(settings.BASE_DIR, 'voguevue', 'hotel_review_tfidf_logreg.pkl'),
-            os.path.join(settings.BASE_DIR, 'voguevue', 'hotel_reputation_model.pkl'),
-        ]
-        
-        print("🔍 Recherche du modèle...")
-        for path in possible_paths:
-            exists = "✅ EXISTE" if os.path.exists(path) else "❌ N'EXISTE PAS"
-            print(f"  {exists}: {path}")
-        
-        self.model = None
-        self.vectorizer = None
-        
-        for path in possible_paths:
-            if os.path.exists(path):
-                try:
-                    print(f"📂 Tentative de chargement: {path}")
-                    with open(path, 'rb') as f:
-                        model_data = pickle.load(f)
-                    
-                    print(f"📊 Type des données chargées: {type(model_data)}")
-                    
-                    # Gestion différente selon le type de données
-                    if isinstance(model_data, dict):
-                        print(f"📋 Clés disponibles: {list(model_data.keys())}")
-                        self.model = model_data.get('model')
-                        self.vectorizer = model_data.get('vectorizer')
-                        self.accuracy = model_data.get('accuracy', 'Inconnue')
-                    else:
-                        # Si c'est directement le modèle
-                        print("ℹ️  Modèle chargé directement")
-                        self.model = model_data
-                        self.vectorizer = None
-                        self.accuracy = 'Inconnue'
-                    
-                    # Vérification que le modèle est valide
-                    if self.model is not None and hasattr(self.model, 'predict'):
-                        print("✅ Modèle valide avec méthode predict")
-                        if self.accuracy != 'Inconnue':
-                            print(f"🎯 Précision du modèle: {self.accuracy:.2%}")
-                        break
-                    else:
-                        print("❌ Modèle invalide ou sans méthode predict")
-                        self.model = None
-                        
-                except Exception as e:
-                    print(f"❌ Erreur de chargement: {e}")
-                    continue
-        
-        if self.model is None:
-            print("🔄 Activation du mode démo intelligent...")
-            self.model = 'demo'
-        else:
-            print("🎉 Modèle de réputation PRÊT à l'utilisation!")
-
-    def predict_hotel_reputation(self, hotel_reviews):
-        """Prédit la réputation d'un hôtel"""
-        if not hotel_reviews:
-            return self._empty_result()
-        
-        clean_reviews = [str(review).strip() for review in hotel_reviews if review and str(review).strip()]
-        
-        if not clean_reviews:
-            return self._empty_result()
-        
-        # Mode réel avec modèle ML
-        if self.model != 'demo':
-            try:
-                return self._real_ml_predict(clean_reviews)
-            except Exception as e:
-                print(f"❌ Erreur prédiction ML: {e}")
-                return self._smart_demo_predict(clean_reviews)
-        
-        # Mode démo intelligent
-        return self._smart_demo_predict(clean_reviews)
-    
-    def _real_ml_predict(self, reviews):
-        """Prédiction avec le vrai modèle ML"""
-        # Vectorisation
-        if self.vectorizer:
-            reviews_vec = self.vectorizer.transform(reviews)
-        else:
-            # Si pas de vectorizer, en créer un nouveau
-            vectorizer = TfidfVectorizer(max_features=5000, stop_words='english')
-            reviews_vec = vectorizer.fit_transform(reviews)
-        
-        # Prédictions
-        individual_predictions = self.model.predict(reviews_vec)
-        
-        # Probabilités pour la confiance
+from .hotels.ml_models.reputation_predictor import reputation_predictor, HotelReputationPredictor
+# Disponibilité dynamique du modèle
+def _get_reputation_predictor():
+    """Return a loaded predictor instance, attempting reload with explicit path if needed."""
+    pred = reputation_predictor
+    if not getattr(pred, 'model_loaded', False):
+        # Essayer de recharger avec un chemin explicite
         try:
-            probabilities = self.model.predict_proba(reviews_vec)
-            confidence_scores = [np.max(prob) for prob in probabilities]
-            overall_confidence = np.mean(confidence_scores)
-        except:
-            confidence_scores = [0.8] * len(individual_predictions)
-            overall_confidence = 0.8
-        
-        # Réputation globale
-        pred_series = pd.Series(individual_predictions)
-        reputation_counts = pred_series.value_counts()
-        overall_reputation = reputation_counts.index[0]
-        
-        # Détail par catégorie
-        breakdown = {}
-        total_reviews = len(individual_predictions)
-        reputation_labels = ['Mauvais', 'Moyen', 'Bon', 'Très bon', 'Excellent']
-        
-        for category in reputation_labels:
-            count = (pred_series == category).sum()
-            breakdown[category] = {
-                'count': count,
-                'percentage': round((count / total_reviews) * 100, 1) if total_reviews > 0 else 0
-            }
-        
-        return {
-            'reputation': overall_reputation,
-            'confidence': round(overall_confidence, 3),
-            'total_reviews': total_reviews,
-            'prediction_breakdown': breakdown,
-            'individual_predictions': individual_predictions.tolist(),
-            'mode': 'ML'
-        }
-    
-    def _smart_demo_predict(self, reviews):
-        """Prédiction démo intelligente basée sur l'analyse de texte"""
-        # Mots-clés pour l'analyse de sentiment
-        positive_words = ['excellent', 'parfait', 'superbe', 'magnifique', 'exceptionnel', 
-                         'agréable', 'confortable', 'propre', 'spacieux', 'accueillant',
-                         'génial', 'merveilleux', 'fantastique', 'incroyable', 'parfaitement',
-                         'idéal', 'exquis', 'luxueux', 'raffiné', 'élégant']
-        
-        negative_words = ['mauvais', 'terrible', 'horrible', 'déçu', 'décevant', 'sale',
-                         'bruyant', 'petit', 'vieux', 'cher', 'nul', 'minable',
-                         'dégoutant', 'infect', 'horreur', 'catastrophe', 'désastre',
-                         'insupportable', 'inacceptable', 'médiocre']
-        
-        positive_count = 0
-        negative_count = 0
-        total_length = 0
-        
-        for review in reviews:
-            review_lower = review.lower()
-            total_length += len(review)
-            
-            # Compter les mots positifs/négatifs
-            positive_count += sum(1 for word in positive_words if word in review_lower)
-            negative_count += sum(1 for word in negative_words if word in review_lower)
-        
-        # Calcul du score
-        total_sentiment = positive_count - negative_count
-        avg_length = total_length / len(reviews)
-        
-        # Déterminer la réputation
-        if total_sentiment > 8:
-            reputation = "Excellent"
-            confidence = min(0.95, 0.75 + (total_sentiment * 0.02))
-        elif total_sentiment > 4:
-            reputation = "Très bon"
-            confidence = 0.75 + (total_sentiment * 0.03)
-        elif total_sentiment >= 0:
-            reputation = "Bon"
-            confidence = 0.65 + (total_sentiment * 0.02)
-        elif total_sentiment > -5:
-            reputation = "Moyen"
-            confidence = 0.55 - (total_sentiment * 0.02)
-        else:
-            reputation = "Mauvais"
-            confidence = max(0.3, 0.5 - (total_sentiment * 0.03))
-        
-        # Générer une répartition réaliste
-        breakdown = self._generate_realistic_breakdown(reputation, len(reviews))
-        
-        return {
-            'reputation': reputation,
-            'confidence': round(confidence, 3),
-            'total_reviews': len(reviews),
-            'prediction_breakdown': breakdown,
-            'individual_predictions': [reputation] * len(reviews),
-            'mode': 'Démo',
-            'analysis_notes': f"Analysé {len(reviews)} avis - {positive_count}👍 / {negative_count}👎"
-        }
-    
-    def _generate_realistic_breakdown(self, main_reputation, total_reviews):
-        """Génère une répartition réaliste"""
-        if main_reputation == "Excellent":
-            return {
-                'Excellent': {'count': max(1, int(total_reviews * 0.7)), 'percentage': 70},
-                'Très bon': {'count': max(0, int(total_reviews * 0.2)), 'percentage': 20},
-                'Bon': {'count': max(0, int(total_reviews * 0.1)), 'percentage': 10},
-                'Moyen': {'count': 0, 'percentage': 0},
-                'Mauvais': {'count': 0, 'percentage': 0}
-            }
-        elif main_reputation == "Très bon":
-            return {
-                'Excellent': {'count': max(0, int(total_reviews * 0.3)), 'percentage': 30},
-                'Très bon': {'count': max(1, int(total_reviews * 0.5)), 'percentage': 50},
-                'Bon': {'count': max(0, int(total_reviews * 0.2)), 'percentage': 20},
-                'Moyen': {'count': 0, 'percentage': 0},
-                'Mauvais': {'count': 0, 'percentage': 0}
-            }
-        elif main_reputation == "Bon":
-            return {
-                'Excellent': {'count': max(0, int(total_reviews * 0.1)), 'percentage': 10},
-                'Très bon': {'count': max(0, int(total_reviews * 0.3)), 'percentage': 30},
-                'Bon': {'count': max(1, int(total_reviews * 0.4)), 'percentage': 40},
-                'Moyen': {'count': max(0, int(total_reviews * 0.2)), 'percentage': 20},
-                'Mauvais': {'count': 0, 'percentage': 0}
-            }
-        elif main_reputation == "Moyen":
-            return {
-                'Excellent': {'count': 0, 'percentage': 0},
-                'Très bon': {'count': max(0, int(total_reviews * 0.1)), 'percentage': 10},
-                'Bon': {'count': max(0, int(total_reviews * 0.3)), 'percentage': 30},
-                'Moyen': {'count': max(1, int(total_reviews * 0.5)), 'percentage': 50},
-                'Mauvais': {'count': max(0, int(total_reviews * 0.1)), 'percentage': 10}
-            }
-        else:  # Mauvais
-            return {
-                'Excellent': {'count': 0, 'percentage': 0},
-                'Très bon': {'count': 0, 'percentage': 0},
-                'Bon': {'count': max(0, int(total_reviews * 0.1)), 'percentage': 10},
-                'Moyen': {'count': max(0, int(total_reviews * 0.3)), 'percentage': 30},
-                'Mauvais': {'count': max(1, int(total_reviews * 0.6)), 'percentage': 60}
-            }
-    
-    def _empty_result(self):
-        return {
-            'reputation': 'Non évalué',
-            'confidence': 0,
-            'total_reviews': 0,
-            'prediction_breakdown': {},
-            'individual_predictions': []
-        }
+            candidates = []
+            override_path = getattr(settings, 'HOTEL_REPUTATION_MODEL_PATH', None)
+            if override_path:
+                candidates.append(override_path)
+            # À côté de manage.py (racine projet)
+            candidates.append(os.path.join(settings.BASE_DIR, 'hotel_review_tfidf_logreg.pkl'))
 
-# === INITIALISATION DU PRÉDICTEUR ===
-print("🔄 Initialisation du système de réputation...")
-reputation_predictor = HotelReputationPredictor()
-PREDICTOR_AVAILABLE = True  # Toujours disponible (ML ou démo)
+            for p in candidates:
+                try:
+                    pred = HotelReputationPredictor(model_path=p)
+                    if getattr(pred, 'model_loaded', False):
+                        break
+                except Exception:
+                    continue
+        except Exception:
+            pass
+    return pred
+
+PREDICTOR_AVAILABLE = getattr(_get_reputation_predictor(), 'model_loaded', False)
+
+# Normalisation des libellés de réputation pour l'UI
+def _normalize_reputation_label(val):
+    try:
+        s = str(val).strip().lower()
+    except Exception:
+        s = ""
+    # Binaire commun
+    if s in {"1", "pos", "positive", "positif", "good", "bon", "true"}:
+        return "Bon"
+    if s in {"0", "neg", "negative", "négatif", "bad", "mauvais", "false"}:
+        return "Mauvais"
+    # Multi-classes déjà lisibles
+    mapping = {
+        "excellent": "Excellent",
+        "tres bon": "Très bon",
+        "très bon": "Très bon",
+        "bon": "Bon",
+        "moyen": "Moyen",
+        "faible": "Mauvais",
+        "mauvais": "Mauvais",
+        "poor": "Mauvais",
+        "average": "Moyen",
+        "very good": "Très bon",
+    }
+    return mapping.get(s, val)
 
 # === CONFIGURATION ML SENTIMENT ===
 try:
     sentiment_model_paths = [
+        os.path.join(settings.BASE_DIR, 'voguevue', 'hotels', 'ml_models', 'sentiment_fr.pkl'),
+        os.path.join(settings.BASE_DIR, 'voguevue', 'hotels', 'ml_models', 'hotel_review_tfidf_logreg.pkl'),
         os.path.join(settings.BASE_DIR, 'hotel_review_tfidf_logreg.pkl'),
-        os.path.join(settings.BASE_DIR, 'voguevue', 'ml_models', 'hotel_review_tfidf_logreg.pkl'),
     ]
     
     sentiment_model = None
@@ -291,7 +96,7 @@ try:
             break
     
     if sentiment_model is None:
-        print("ℹ️  Mode démo pour l'analyse de sentiment")
+        pass
         
 except Exception as e:
     print(f"❌ Erreur chargement modèle sentiment: {e}")
@@ -300,20 +105,7 @@ except Exception as e:
 def predict_sentiment(text):
     """Analyse de sentiment avec fallback"""
     if sentiment_model is None:
-        # Mode démo
-        positive_words = ['good', 'great', 'excellent', 'amazing', 'wonderful', 'perfect']
-        negative_words = ['bad', 'terrible', 'awful', 'horrible', 'dirty', 'broken']
-        
-        text_lower = text.lower()
-        positive_count = sum(1 for word in positive_words if word in text_lower)
-        negative_count = sum(1 for word in negative_words if word in text_lower)
-        
-        if positive_count > negative_count:
-            return {"label": "Good", "probability": 80}
-        elif negative_count > positive_count:
-            return {"label": "Bad", "probability": 20}
-        else:
-            return {"label": "Neutral", "probability": 50}
+        return {"label": "Error", "probability": 0, "error": "sentiment_model_not_loaded"}
     
     try:
         # Nettoyage du texte
@@ -324,10 +116,37 @@ def predict_sentiment(text):
         
         # Prédiction
         pred = sentiment_model.predict([text])[0]
-        proba = sentiment_model.predict_proba([text])[0][1]
+        probs = sentiment_model.predict_proba([text])[0]
+        # Déterminer l'index de la classe positive depuis classes_
+        classes = list(getattr(sentiment_model, 'classes_', []))
+        pos_aliases = [1, 'Good', 'Positive', 'pos', 'good', 'positive']
+        pos_idx = None
+        for alias in pos_aliases:
+            if alias in classes:
+                pos_idx = classes.index(alias)
+                break
+        if pos_idx is None:
+            # Fallback: si impossible à déduire, prendre la proba max comme confiance
+            pos_idx = int(np.argmax(probs))
+        proba_pos = float(probs[pos_idx])
+        # Normaliser le label en 'Good'/'Bad' si possible
+        if str(pred).lower() in ('1', 'good', 'positive', 'pos'):
+            label = 'Good'
+        elif str(pred).lower() in ('0', 'bad', 'negative', 'neg'):
+            label = 'Bad'
+        else:
+            # si labels custom, garder tel quel mais retourner la proba de la classe positive déduite
+            label = str(pred)
+        # Aligner la probabilité avec le label final
+        if label == 'Good':
+            proba_label = proba_pos
+        elif label == 'Bad':
+            proba_label = 1.0 - proba_pos
+        else:
+            proba_label = proba_pos
         return {
-            "label": "Good" if pred == 1 else "Bad",
-            "probability": round(proba * 100, 2)
+            "label": label,
+            "probability": round(proba_label * 100, 2)
         }
     except Exception as e:
         return {"label": "Error", "probability": 0, "error": str(e)}
@@ -470,10 +289,13 @@ def hotel_detail(request, pk):
     
     # Analyse de réputation
     reputation_data = None
-    if PREDICTOR_AVAILABLE and reviews:
+    predictor = _get_reputation_predictor()
+    if getattr(predictor, 'model_loaded', False) and reviews:
         review_texts = [review.review_text for review in reviews if review.review_text]
         if review_texts:
-            reputation_data = reputation_predictor.predict_hotel_reputation(review_texts)
+            reputation_data = predictor.predict_from_reviews(review_texts)
+            if isinstance(reputation_data, dict) and 'overall_reputation' in reputation_data:
+                reputation_data['overall_reputation'] = _normalize_reputation_label(reputation_data['overall_reputation'])
     
     eco_score = compute_eco_score(hotel)
     
@@ -482,7 +304,8 @@ def hotel_detail(request, pk):
         'reviews': reviews,
         'reputation_data': reputation_data,
         'eco_score': eco_score,
-        'model_available': PREDICTOR_AVAILABLE,
+        'model_available': getattr(predictor, 'model_loaded', False),
+        'predictor_error': getattr(predictor, 'last_error', None),
     }
     return render(request, 'main/hotels/hotel_detail.html', context)
 
@@ -509,29 +332,31 @@ def hotel_delete(request, pk):
 def reputation_analysis(request):
     """Analyse de réputation de tous les hôtels"""
     hotels = Hotel.objects.all().prefetch_related('reviews')
+    predictor = _get_reputation_predictor()
     analysis_results = []
     
-    if request.method == 'POST':
+    # Exécuter aussi en GET si le modèle est chargé (remplit la page immédiatement)
+    if getattr(predictor, 'model_loaded', False):
         print("🔄 Lancement de l'analyse de réputation...")
-        # Lancer l'analyse
         for hotel in hotels:
             reviews = hotel.reviews.all()
             review_texts = [review.review_text for review in reviews if review.review_text]
-            
             if review_texts:
                 try:
-                    result = reputation_predictor.predict_hotel_reputation(review_texts)
+                    result = predictor.predict_from_reviews(review_texts)
+                    if isinstance(result, dict) and 'overall_reputation' in result:
+                        result['overall_reputation'] = _normalize_reputation_label(result['overall_reputation'])
                     analysis_results.append({
                         'hotel': hotel,
                         'result': result,
                         'review_count': len(review_texts)
                     })
-                    print(f"✅ Analysé {hotel.name}: {result['reputation']}")
+                    print(f"✅ Analysé {hotel.name}: {result.get('overall_reputation')}")
                 except Exception as e:
                     print(f"❌ Erreur pour {hotel.name}: {e}")
                     analysis_results.append({
                         'hotel': hotel,
-                        'result': {'reputation': 'Erreur', 'mode': 'Erreur'},
+                        'result': None,
                         'review_count': len(review_texts)
                     })
             else:
@@ -540,13 +365,15 @@ def reputation_analysis(request):
                     'result': None,
                     'review_count': 0
                 })
-        
-        messages.success(request, f'Analyse terminée pour {len(analysis_results)} hôtels')
+        if request.method == 'POST':
+            messages.success(request, f'Analyse terminée pour {len(analysis_results)} hôtels')
     
     context = {
         'hotels': hotels,
         'analysis_results': analysis_results,
-        'model_available': PREDICTOR_AVAILABLE,
+        'model_available': getattr(predictor, 'model_loaded', False),
+        'hotels_count': hotels.count(),
+        'predictor_error': getattr(predictor, 'last_error', None),
     }
     return render(request, 'main/hotels/reputation_analysis.html', context)
 def predict_hotel_reputation_api(request, pk):
@@ -556,16 +383,16 @@ def predict_hotel_reputation_api(request, pk):
     review_texts = [review.review_text for review in reviews if review.review_text]
     
     try:
-        result = reputation_predictor.predict_hotel_reputation(review_texts)
+        result = reputation_predictor.predict_from_reviews(review_texts)
         return JsonResponse({
             'success': True,
             'hotel_id': hotel.id,
             'hotel_name': hotel.name,
-            'reputation': result['reputation'],
-            'confidence': result['confidence'],
-            'total_reviews': result['total_reviews'],
-            'breakdown': result['prediction_breakdown'],
-            'mode': result.get('mode', 'ML')
+            'overall_reputation': result.get('overall_reputation'),
+            'confidence': result.get('confidence'),
+            'total_reviews_analyzed': result.get('total_reviews_analyzed'),
+            'breakdown': result.get('breakdown'),
+            'model_accuracy': result.get('model_accuracy')
         })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
@@ -660,6 +487,141 @@ def api_generate_hotel_description(request):
             'status': 'error',
             'message': f'Erreur: {str(e)}'
         }, status=500)
+
+# === API: Filters & Search ===
+def api_hotels(request):
+    """GET /api/hotels?city=&min_price=&max_price=&available=true|false"""
+    try:
+        qs = Hotel.objects.all().order_by('name')
+        city = request.GET.get('city')
+        min_price = request.GET.get('min_price')
+        max_price = request.GET.get('max_price')
+        available = request.GET.get('available')
+
+        if city:
+            qs = qs.filter(city__icontains=city)
+        try:
+            if min_price:
+                qs = qs.filter(price_per_night__gte=float(min_price))
+            if max_price:
+                qs = qs.filter(price_per_night__lte=float(max_price))
+        except ValueError:
+            pass
+        if available in ('true', 'false'):
+            qs = qs.filter(is_available=(available == 'true'))
+
+        data = [
+            {
+                'id': h.id,
+                'name': h.name,
+                'city': h.city,
+                'price_per_night': h.price_per_night,
+                'is_available': h.is_available,
+                'reviews_count': h.reviews.count(),
+            }
+            for h in qs
+        ]
+        return JsonResponse({'results': data})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+def api_rooms(request):
+    """GET /api/rooms?hotel_id=&min_price=&max_price=&available=true|false"""
+    try:
+        qs = Room.objects.select_related('hotel').all().order_by('hotel__name', 'name')
+        hotel_id = request.GET.get('hotel_id')
+        min_price = request.GET.get('min_price')
+        max_price = request.GET.get('max_price')
+        available = request.GET.get('available')
+
+        if hotel_id:
+            try:
+                qs = qs.filter(hotel_id=int(hotel_id))
+            except ValueError:
+                pass
+        try:
+            if min_price:
+                qs = qs.filter(price_per_night__gte=float(min_price))
+            if max_price:
+                qs = qs.filter(price_per_night__lte=float(max_price))
+        except ValueError:
+            pass
+        if available in ('true', 'false'):
+            qs = qs.filter(is_available=(available == 'true'))
+
+        data = [
+            {
+                'id': r.id,
+                'hotel_id': r.hotel_id,
+                'hotel_name': r.hotel.name,
+                'name': r.name,
+                'capacity': r.capacity,
+                'price_per_night': r.price_per_night,
+                'is_available': r.is_available,
+            }
+            for r in qs
+        ]
+        return JsonResponse({'results': data})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+def api_reservations(request):
+    """GET /api/reservations?hotel_id=&room_id=&from=&to="""
+    try:
+        qs = Reservation.objects.select_related('room__hotel').all().order_by('-check_in')
+        hotel_id = request.GET.get('hotel_id')
+        room_id = request.GET.get('room_id')
+        date_from = request.GET.get('from')
+        date_to = request.GET.get('to')
+
+        if hotel_id:
+            try:
+                qs = qs.filter(room__hotel_id=int(hotel_id))
+            except ValueError:
+                pass
+        if room_id:
+            try:
+                qs = qs.filter(room_id=int(room_id))
+            except ValueError:
+                pass
+        # Dates ISO (YYYY-MM-DD)
+        try:
+            if date_from:
+                qs = qs.filter(check_in__gte=date_from)
+            if date_to:
+                qs = qs.filter(check_out__lte=date_to)
+        except Exception:
+            pass
+
+        data = [
+            {
+                'id': r.id,
+                'hotel_id': r.room.hotel_id,
+                'hotel_name': r.room.hotel.name,
+                'room_id': r.room_id,
+                'room_name': r.room.name,
+                'customer_name': r.customer_name,
+                'check_in': r.check_in.isoformat() if hasattr(r.check_in, 'isoformat') else str(r.check_in),
+                'check_out': r.check_out.isoformat() if hasattr(r.check_out, 'isoformat') else str(r.check_out),
+            }
+            for r in qs
+        ]
+        return JsonResponse({'results': data})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+# === Admin (staff) action: delete review ===
+@require_POST
+@staff_member_required
+def admin_delete_review(request, pk):
+    try:
+        review = Review.objects.get(pk=pk)
+        review.delete()
+        return JsonResponse({'success': True})
+    except Review.DoesNotExist:
+        return JsonResponse({'error': 'Review not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 # ... (ajoutez ici vos autres vues pour rooms, reservations, reviews si nécessaire)
 
 def predict_review_view(request):
@@ -677,6 +639,12 @@ def predict_review_view(request):
 def room_list(request, hotel_id=None):
     """Liste des chambres"""
     qs = Room.objects.select_related('hotel').order_by('hotel__name', 'name')
+    # Support GET filter: /rooms/?hotel_id=<id>
+    if hotel_id is None:
+        try:
+            hotel_id = int(request.GET.get('hotel_id')) if request.GET.get('hotel_id') else None
+        except ValueError:
+            hotel_id = None
     if hotel_id:
         qs = qs.filter(hotel_id=hotel_id)
     return render(request, 'main/hotels/room_list.html', {'rooms': qs, 'hotel_id': hotel_id})
@@ -842,6 +810,10 @@ def create_review(request, hotel_id):
     """Créer un avis"""
     try:
         hotel = Hotel.objects.get(id=hotel_id)
+        # Empêcher les utilisateurs non authentifiés de créer un avis
+        if not request.user.is_authenticated:
+            messages.warning(request, "Veuillez vous connecter pour publier un avis.")
+            return redirect('signin')
         
         if request.method == 'POST':
             form = ReviewForm(request.POST)
@@ -1045,6 +1017,10 @@ def create_review(request, hotel_id):
     """Créer un avis"""
     try:
         hotel = Hotel.objects.get(id=hotel_id)
+        # Empêcher les utilisateurs non authentifiés de créer un avis
+        if not request.user.is_authenticated:
+            messages.warning(request, "Veuillez vous connecter pour publier un avis.")
+            return redirect('signin')
         
         if request.method == 'POST':
             form = ReviewForm(request.POST)
@@ -1082,6 +1058,10 @@ def create_review(request, hotel_id):
     """Créer un avis"""
     try:
         hotel = Hotel.objects.get(id=hotel_id)
+        # Empêcher les utilisateurs non authentifiés de créer un avis
+        if not request.user.is_authenticated:
+            messages.warning(request, "Veuillez vous connecter pour publier un avis.")
+            return redirect('signin')
         
         if request.method == 'POST':
             # Créer un formulaire basique si ReviewForm n'existe pas

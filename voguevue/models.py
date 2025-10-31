@@ -36,6 +36,7 @@ class Hotel(models.Model):
     price_per_night = models.DecimalField(max_digits=8, decimal_places=2)
     rating = models.DecimalField(max_digits=3, decimal_places=2, blank=True, null=True)
     is_available = models.BooleanField(default=True)
+    image = models.ImageField(upload_to='hotels/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
