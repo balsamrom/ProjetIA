@@ -23,7 +23,7 @@
 
     <!-- Analysis Card -->
     <div class="card custom-card">
-        <div class="card-header text-white" style="background:linear-gradient(135deg,#F2C94C 0%, #E0B73A 35%, #6B4F3B 100%);">
+        <div class="card-header text-white" style="background:#6B4F3B;">
             <h5 class="mb-0"><i class="fas fa-rocket me-2"></i>🚀 Analyse IA des Réputations</h5>
         </div>
         <div class="card-body">
@@ -45,7 +45,7 @@
     {% if analysis_results %}
     <!-- Results Card -->
     <div class="card custom-card mt-4">
-        <div class="card-header text-white" style="background:linear-gradient(135deg,#6B4F3B 0%, #E0B73A 100%);">
+        <div class="card-header text-white" style="background:#6B4F3B;">
             <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>📋 Résultats de l'Analyse</h5>
         </div>
         <div class="card-body">
@@ -118,11 +118,11 @@
 <style>
 @import url("/static/css/voguevue-theme.css");
 :root {
-    --primary-gradient: linear-gradient(135deg, #F2C94C 0%, #E0B73A 60%, #6B4F3B 100%);
-    --success-gradient: linear-gradient(135deg, #eaf7d9 0%, #b7e4a8 100%);
-    --info-gradient: linear-gradient(135deg, #6B4F3B 0%, #E0B73A 100%);
-    --warning-gradient: linear-gradient(135deg, #FFF3CD 0%, #FFE69C 100%);
-    --danger-gradient: linear-gradient(135deg, #fde2e1 0%, #f8b4b4 100%);
+    --primary-gradient: none;
+    --success-gradient: none;
+    --info-gradient: none;
+    --warning-gradient: none;
+    --danger-gradient: none;
 
     --excellent-color: #10b981;
     --very-good-color: #3b82f6;
@@ -133,16 +133,10 @@
 
 /* Custom Cards */
 .custom-card {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    border: none;
-    border-radius: 15px;
+    box-shadow: none;
+    border: 1px solid rgba(107,79,59,.15);
+    border-radius: 12px;
     overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.custom-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
 }
 
 /* Gradient Headers */
@@ -154,13 +148,8 @@
     background: var(--info-gradient) !important;
 }
 
-/* Text Gradient */
-.text-gradient {
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
+/* Title */
+.text-gradient { color: #6B4F3B; }
 
 /* Buttons */
 .btn-custom {
@@ -170,22 +159,8 @@
     transition: all 0.3s ease;
 }
 
-.vv-cta {
-    background: var(--primary-gradient);
-    border: none;
-    border-radius: 25px;
-    padding: 12px 30px;
-    font-weight: 600;
-    color: white;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(107, 79, 59, 0.25);
-}
-
-.vv-cta:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(107, 79, 59, 0.35);
-    color: white;
-}
+.vv-cta { background: #F2C94C; color:#6B4F3B; border:none; border-radius: 10px; padding: 10px 16px; font-weight:700; }
+.vv-cta:hover { background:#E0B73A; color:#6B4F3B; }
 
 /* Alerts */
 .custom-alert {
@@ -242,12 +217,7 @@
     position: relative;
 }
 
-.confidence-fill {
-    height: 100%;
-    border-radius: 10px;
-    background: var(--primary-gradient);
-    transition: width 0.8s ease-in-out;
-}
+.confidence-fill { height: 100%; border-radius: 10px; background: #6B4F3B; transition: width 0.8s ease-in-out; }
 
 .confidence-value {
     font-weight: 600;
