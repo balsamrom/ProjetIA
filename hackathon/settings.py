@@ -14,7 +14,8 @@ import os
 import sys
 from pathlib import Path
 from django.contrib.messages import constants as messages
-
+import os
+from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -178,3 +179,5 @@ LOGIN_REDIRECT_URL = '/volt/'
 LOGOUT_REDIRECT_URL = '/volt/accounts/login/'
 
 
+# Clé OpenAI
+OPENAI_API_KEY = "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"

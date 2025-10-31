@@ -1,83 +1,108 @@
-
 <div class="container mt-4">
+    <!-- Header Section -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="mb-0">📊 Analyse de Réputation des Hôtels</h1>
-        <a href="{% url 'hotel_list' %}" class="btn btn-outline-secondary">← Retour aux hôtels</a>
+        <h1 class="mb-0 text-gradient">📊 Analyse de Réputation des Hôtels</h1>
+        <a href="{% url 'hotel_list' %}" class="btn btn-outline-primary btn-custom">
+            <i class="fas fa-arrow-left me-2"></i>Retour aux hôtels
+        </a>
     </div>
 
     {% if not model_available %}
-    <div class="alert alert-danger">
-        <h5>❌ Modèle non disponible</h5>
-        <p>L'analyse de réputation IA n'est pas disponible pour le moment.</p>
+    <!-- Alert Model Not Available -->
+    <div class="alert alert-danger custom-alert">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+            <div>
+                <h5 class="mb-1">❌ Modèle non disponible</h5>
+                <p class="mb-0">L'analyse de réputation IA n'est pas disponible pour le moment.</p>
+            </div>
+        </div>
     </div>
     {% else %}
-    <div class="card">
-        <div class="card-header bg-success text-white">
-            <h5 class="mb-0">🚀 Analyse IA des Réputations</h5>
+    <!-- Analysis Card -->
+    <div class="card custom-card">
+        <div class="card-header bg-gradient-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-rocket me-2"></i>🚀 Analyse IA des Réputations</h5>
         </div>
         <div class="card-body">
-            <p class="mb-3">
+            <p class="mb-3 text-muted">
                 Cette analyse utilise l'IA pour prédire la réputation globale des hôtels basée sur leurs avis clients.
             </p>
             <form method="post">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-success btn-lg">🚀 Lancer l'Analyse Complète</button>
-                <small class="text-muted d-block mt-2">{{ hotels.count }} hôtels seront analysés</small>
+                <button type="submit" class="btn btn-primary btn-lg btn-gradient">
+                    <i class="fas fa-play me-2"></i>🚀 Lancer l'Analyse Complète
+                </button>
+                <small class="text-muted d-block mt-2">
+                    <i class="fas fa-hotel me-1"></i>{{ hotels_count }} hôtels seront analysés
+                </small>
             </form>
         </div>
     </div>
 
     {% if analysis_results %}
-    <div class="card mt-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">📋 Résultats de l'Analyse</h5>
+    <!-- Results Card -->
+    <div class="card custom-card mt-4">
+        <div class="card-header bg-gradient-info text-white">
+            <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>📋 Résultats de l'Analyse</h5>
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-striped align-middle">
+                <table class="table table-hover align-middle">
                     <thead class="table-dark">
                         <tr>
-                            <th>Hôtel</th>
-                            <th>Ville</th>
-                            <th>Réputation IA</th>
-                            <th>Confiance</th>
-                            <th>Nb Avis</th>
+                            <th><i class="fas fa-hotel me-2"></i>Hôtel</th>
+                            <th><i class="fas fa-map-marker-alt me-2"></i>Ville</th>
+                            <th><i class="fas fa-star me-2"></i>Réputation IA</th>
+                            <th><i class="fas fa-bullseye me-2"></i>Confiance</th>
+                            <th><i class="fas fa-comments me-2"></i>Nb Avis</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in analysis_results %}
-                        <tr>
-                            <td><strong>{{ item.hotel.name }}</strong></td>
-                            <td>{{ item.hotel.city }}</td>
+                        <tr class="hover-row">
+                            <td>
+                                <strong class="hotel-name">{{ item.hotel.name }}</strong>
+                            </td>
+                            <td>
+                                <span class="city-badge">{{ item.hotel.city }}</span>
+                            </td>
                             <td>
                                 {% if item.result %}
                                     {% with reputation=item.result.reputation %}
-                                    <span class="badge ra-badge
-                                        {% if reputation == 'Excellent' %} ra-badge-excellent
-                                        {% elif reputation == 'Très bon' %} ra-badge-very-good
-                                        {% elif reputation == 'Bon' %} ra-badge-good
-                                        {% elif reputation == 'Moyen' %} ra-badge-average
-                                        {% else %} ra-badge-poor{% endif %}">
+                                    <span class="badge reputation-badge
+                                        {% if reputation == 'Excellent' %} reputation-excellent
+                                        {% elif reputation == 'Très bon' %} reputation-very-good
+                                        {% elif reputation == 'Bon' %} reputation-good
+                                        {% elif reputation == 'Moyen' %} reputation-average
+                                        {% else %} reputation-poor{% endif %}">
+                                        <i class="fas fa-{% if reputation == 'Excellent' %}crown{% elif reputation == 'Très bon' %}trophy{% elif reputation == 'Bon' %}award{% elif reputation == 'Moyen' %}star{% else %}exclamation-triangle{% endif %} me-1"></i>
                                         {{ reputation }}
                                     </span>
                                     {% endwith %}
                                 {% else %}
-                                    <span class="badge bg-secondary">Non évalué</span>
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-question me-1"></i>Non évalué
+                                    </span>
                                 {% endif %}
                             </td>
                             <td style="min-width:160px;">
                                 {% if item.result %}
-                                    <div class="d-flex align-items-center gap-2 ra-confidence">
-                                        <div class="ra-progress">
-                                            <div class="ra-progress-fill" data-width="{{ item.result.confidence|default_if_none:0|floatformat:0 }}"></div>
+                                    <div class="d-flex align-items-center gap-2 confidence-meter">
+                                        <div class="confidence-bar">
+                                            <div class="confidence-fill" 
+                                                 data-confidence="{{ item.result.confidence }}">
+                                            </div>
                                         </div>
-                                        <span class="ra-confidence-value">{{ item.result.confidence|floatformat:3 }}</span>
+                                        <span class="confidence-value">{{ item.result.confidence }}</span>
                                     </div>
                                 {% else %}
-                                    -
+                                    <span class="text-muted">-</span>
                                 {% endif %}
                             </td>
-                            <td>{{ item.review_count }}</td>
+                            <td>
+                                <span class="review-count">{{ item.review_count }}</span>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -90,8 +115,232 @@
 </div>
 
 <style>
-.card {
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    border: 1px solid rgba(0, 0, 0, 0.125);
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    --info-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    
+    --excellent-color: #10b981;
+    --very-good-color: #3b82f6;
+    --good-color: #8b5cf6;
+    --average-color: #f59e0b;
+    --poor-color: #ef4444;
+}
+
+/* Custom Cards */
+.custom-card {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.custom-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Gradient Headers */
+.bg-gradient-primary {
+    background: var(--primary-gradient) !important;
+}
+
+.bg-gradient-info {
+    background: var(--info-gradient) !important;
+}
+
+/* Text Gradient */
+.text-gradient {
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Buttons */
+.btn-custom {
+    border-radius: 25px;
+    padding: 8px 20px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-gradient {
+    background: var(--primary-gradient);
+    border: none;
+    border-radius: 25px;
+    padding: 12px 30px;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+    color: white;
+}
+
+/* Alerts */
+.custom-alert {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Reputation Badges */
+.reputation-badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85em;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.reputation-excellent {
+    background: var(--excellent-color);
+    color: white;
+}
+
+.reputation-very-good {
+    background: var(--very-good-color);
+    color: white;
+}
+
+.reputation-good {
+    background: var(--good-color);
+    color: white;
+}
+
+.reputation-average {
+    background: var(--average-color);
+    color: white;
+}
+
+.reputation-poor {
+    background: var(--poor-color);
+    color: white;
+}
+
+/* Confidence Meter */
+.confidence-meter {
+    padding: 5px 0;
+}
+
+.confidence-bar {
+    background: #e5e7eb;
+    border-radius: 10px;
+    height: 8px;
+    width: 80px;
+    overflow: hidden;
+    position: relative;
+}
+
+.confidence-fill {
+    height: 100%;
+    border-radius: 10px;
+    background: var(--primary-gradient);
+    transition: width 0.8s ease-in-out;
+}
+
+.confidence-value {
+    font-weight: 600;
+    color: #374151;
+    min-width: 45px;
+    text-align: right;
+}
+
+/* Table Styling */
+.table-hover tbody tr.hover-row:hover {
+    background: rgba(102, 126, 234, 0.05);
+    transform: scale(1.01);
+    transition: all 0.2s ease;
+}
+
+.table th {
+    border: none;
+    font-weight: 600;
+    color: #374151;
+    padding: 15px 12px;
+}
+
+.table td {
+    border: none;
+    padding: 15px 12px;
+    vertical-align: middle;
+}
+
+/* City Badge */
+.city-badge {
+    background: #f3f4f6;
+    color: #6b7280;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+/* Hotel Name */
+.hotel-name {
+    color: #1f2937;
+    font-weight: 600;
+}
+
+/* Review Count */
+.review-count {
+    background: #f8fafc;
+    color: #374151;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .d-flex {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .table-responsive {
+        font-size: 0.9em;
+    }
+    
+    .confidence-bar {
+        width: 60px;
+    }
 }
 </style>
+
+<script>
+// JavaScript pour initialiser les barres de confiance
+document.addEventListener('DOMContentLoaded', function() {
+    const confidenceFills = document.querySelectorAll('.confidence-fill');
+    
+    confidenceFills.forEach(fill => {
+        const confidence = parseFloat(fill.getAttribute('data-confidence')) || 0;
+        const width = Math.round(confidence * 100);
+        fill.style.width = width + '%';
+        
+        // Changer la couleur en fonction du niveau de confiance
+        if (confidence >= 0.9) {
+            fill.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+        } else if (confidence >= 0.7) {
+            fill.style.background = 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)';
+        } else if (confidence >= 0.5) {
+            fill.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+        } else {
+            fill.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+        }
+    });
+});
+</script>

@@ -17,13 +17,13 @@ urlpatterns = [
     # Hotels CRUD - TOUTES les URLs doivent avoir des slashs
     path("hotels/", views.hotel_list, name="hotel_list"),
     path('hotels/new/', views.hotel_create, name='hotel_create'),
-     path('hotels/<int:hotel_id>/reviews/create/', views.create_review, name='create_review'),
+    path('hotels/<int:hotel_id>/reviews/create/', views.create_review, name='create_review'),
     path("hotels/<int:pk>/", views.hotel_detail, name="hotel_detail"),
     path("hotels/<int:pk>/edit/", views.hotel_update, name="hotel_update"),
     path("hotels/<int:pk>/delete/", views.hotel_delete, name="hotel_delete"),
-     path("hotels/<int:hotel_id>/reviews/", views.hotel_reviews, name="hotel_reviews"),
+    path("hotels/<int:hotel_id>/reviews/", views.hotel_reviews, name="hotel_reviews"),
     path("hotels/<int:hotel_id>/reviews/create/", views.create_review, name="create_review"),
-     path('api/hotels/<int:pk>/predict-reputation/', views.predict_hotel_reputation_api, name='predict_hotel_reputation_api'),
+    path('api/hotels/<int:pk>/predict-reputation/', views.predict_hotel_reputation_api, name='predict_hotel_reputation_api'),
     
     # OU si vous voulez l'URL plus courte :
     path('hotels/<int:pk>/predict-reputation/', views.predict_hotel_reputation_api, name='predict_hotel_reputation_api'),
@@ -33,6 +33,7 @@ urlpatterns = [
     path("reservations/new/", views.reservation_create, name="reservation_create"),
     path("reservations/new/<int:room_id>/", views.reservation_create_for_room, name="reservation_create_for_room"),
     path("hotels/<int:hotel_id>/reserve-cheapest/", views.reserve_cheapest, name="reserve_cheapest"),
-     path("reputation-analysis/", views.reputation_analysis, name="reputation_analysis"),
+    path("reputation-analysis/", views.reputation_analysis, name="reputation_analysis"),
+    path('api/generate-hotel-description/', views.api_generate_hotel_description, name='api_generate_hotel_description'),
     
 ]# Ajoutez cette URL temporaire pour debug

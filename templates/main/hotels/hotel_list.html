@@ -4,16 +4,11 @@
 <head>
     <meta charset="utf-8">
     <title>Hotels</title>
-    <link rel="stylesheet" href="/static/css/Home CSS/style.css" />
-    <link rel="stylesheet" href="/static/css/Home CSS/mobile.css" />
-    <style>
-        .table { width: 100%; border-collapse: collapse; }
-        .table th, .table td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
-        .actions a { margin-right: 8px; }
-        .topbar { display:flex; justify-content: space-between; align-items: center; margin: 20px 0; }
-        .btn { padding: 8px 14px; background: #2a9d8f; color: #fff; text-decoration: none; border-radius: 6px; }
-    </style>
-    </head>
+    <link rel="stylesheet" href="{% static 'css/Home CSS/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/Home CSS/mobile.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/hotels/hotels.css' %}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
 <body>
     <section class="nav-bar">
         <div class="logo"><a href="/">VoyageVue</a></div>
@@ -46,26 +41,43 @@
         {% endif %}
 
         {% if recommended %}
-        <h2 style="margin: 10px 0;">Recommended for you</h2>
-        <div class="cards" style="margin-bottom: 24px;">
+        <h2>Meilleures ventes</h2>
+        <div class="hotel-grid">
             {% for hotel in recommended %}
-            <div class="card">
-                <div class="zoom-img">
-                    <div class="img-card">
-                        <img src="/static/assets/travels.jpg" alt="Hotel image">
+            <div class="hotel-card">
+                <img src="{% static 'assets/travels.jpg' %}" alt="{{ hotel.name }}" class="hotel-image">
+                <div class="hotel-content">
+                    <div class="best-seller-badge">Meilleures ventes</div>
+                    <h3 class="hotel-title">{{ hotel.name }}</h3>
+                    <div class="hotel-rating">
+                        <div class="rating-stars">
+                            {% with ''|center:hotel.get_rating as range %}
+                            {% for _ in range %}
+                            <i class="fas fa-star"></i>
+                            {% endfor %}
+                            {% endwith %}
+                        </div>
+                        <span class="review-count">({{ hotel.reviews.count }} avis)</span>
                     </div>
-                </div>
-                <div class="text">
-                    <h2>{{ hotel.name }}</h2>
-                    <p class="cost">{{ hotel.price_per_night }} / night</p>
-                    <div class="card-box" style="cursor:pointer;">
-                        <p class="time">Availability: {{ hotel.is_available|yesno:"Available,Full" }}</p>
-                        <p class="location">📍 {{ hotel.city }}</p>
+                    <div class="hotel-rank">
+                        Rapport qualité prix n°{{ forloop.counter }} sur {{ recommended|length }} hébergements pour : {{ hotel.city }}
                     </div>
-                    <div style="margin-top:10px; display:flex; gap:10px;">
-                        <a class="btn" href="/hotels/{{ hotel.id }}">View</a>
-                        <a class="btn" style="background:#457b9d" href="/hotels/{{ hotel.id }}/edit">Edit</a>
-                        <a class="btn" style="background:#e76f51" href="/hotels/{{ hotel.id }}/delete">Delete</a>
+                    {% with hotel.reviews.first as latest_review %}
+                    {% if latest_review %}
+                    <div class="hotel-comment">
+                        "{{ latest_review.review_text|truncatechars:100 }}"
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    <div class="hotel-price">
+                        à partir de {{ hotel.price_per_night }}€
+                    </div>
+                    <a href="/hotels/{{ hotel.id }}" class="check-availability">Vérifier la disponibilité</a>
+                    
+                    <div class="admin-actions">
+                        <a class="admin-button view-button" href="/hotels/{{ hotel.id }}">View</a>
+                        <a class="admin-button edit-button" href="/hotels/{{ hotel.id }}/edit">Edit</a>
+                        <a class="admin-button delete-button" href="/hotels/{{ hotel.id }}/delete">Delete</a>
                     </div>
                 </div>
             </div>
@@ -73,30 +85,46 @@
         </div>
         {% endif %}
 
-        <div class="cards">
+        <div class="hotel-grid">
             {% for hotel in hotels %}
-            <div class="card">
-                <div class="zoom-img">
-                    <div class="img-card">
-                        <img src="/static/assets/travels.jpg" alt="Hotel image">
+            <div class="hotel-card">
+                <img src="{% static 'assets/travels.jpg' %}" alt="{{ hotel.name }}" class="hotel-image">
+                <div class="hotel-content">
+                    <h3 class="hotel-title">{{ hotel.name }}</h3>
+                    <div class="hotel-rating">
+                        <div class="rating-stars">
+                            {% with ''|center:hotel.get_rating as range %}
+                            {% for _ in range %}
+                            <i class="fas fa-star"></i>
+                            {% endfor %}
+                            {% endwith %}
+                        </div>
+                        <span class="review-count">({{ hotel.reviews.count }} avis)</span>
                     </div>
-                </div>
-                <div class="text">
-                    <h2>{{ hotel.name }}</h2>
-                    <p class="cost">{{ hotel.price_per_night }} / night</p>
-                    <div class="card-box" style="cursor:pointer;">
-                        <p class="time">Availability: {{ hotel.is_available|yesno:"Available,Full" }}</p>
-                        <p class="location">📍 {{ hotel.city }}</p>
+                    <div class="hotel-rank">
+                        Rapport qualité prix n°{{ forloop.counter }} sur {{ hotels|length }} hébergements pour : {{ hotel.city }}
                     </div>
-                    <div style="margin-top:10px; display:flex; gap:10px;">
-                        <a class="btn" href="/hotels/{{ hotel.id }}">View</a>
-                        <a class="btn" style="background:#457b9d" href="/hotels/{{ hotel.id }}/edit">Edit</a>
-                        <a class="btn" style="background:#e76f51" href="/hotels/{{ hotel.id }}/delete">Delete</a>
+                    {% with hotel.reviews.first as latest_review %}
+                    {% if latest_review %}
+                    <div class="hotel-comment">
+                        "{{ latest_review.review_text|truncatechars:100 }}"
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    <div class="hotel-price">
+                        à partir de {{ hotel.price_per_night }}€
+                    </div>
+                    <a href="/hotels/{{ hotel.id }}" class="check-availability">Vérifier la disponibilité</a>
+                    
+                    <div class="admin-actions">
+                        <a class="admin-button view-button" href="/hotels/{{ hotel.id }}">View</a>
+                        <a class="admin-button edit-button" href="/hotels/{{ hotel.id }}/edit">Edit</a>
+                        <a class="admin-button delete-button" href="/hotels/{{ hotel.id }}/delete">Delete</a>
                     </div>
                 </div>
             </div>
             {% empty %}
-            <p>No hotels yet. <a href="/hotels/new">Create one</a>.</p>
+            <p>Aucun hôtel disponible. <a href="/hotels/new">Ajouter un hôtel</a>.</p>
             {% endfor %}
         </div>
     </div>

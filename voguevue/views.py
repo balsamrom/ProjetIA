@@ -13,6 +13,14 @@ from django.contrib.auth import logout as django_logout
 from django.http import JsonResponse
 from django.conf import settings
 from sklearn.feature_extraction.text import TfidfVectorizer
+import json
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_protect, csrf_exempt
+
+try:
+    import openai
+except Exception:
+    openai = None
 
 # Importez vos modèles et forms
 from .models import Contact, register_table, Hotel, Room, Reservation, Review
@@ -358,25 +366,23 @@ def contact(request):
 
 def travels(request):
     return render(request, 'main/travels.html')
+
 def signin(request):
     if request.method == "POST":
         username = request.POST.get('uname')
         password = request.POST.get('password')
-
-        user = authenticate(username=username, password=password)
-
+        user = authenticate(username=username, password=password) 
         if user is not None:
             login(request, user)
-            return render(request, 'main/index.html', {"success": "Logged in Successfully"})
+            messages.success(request, 'Connexion réussie!')
+            return redirect('index')
         else:
-            return render(request, 'authentication/signin.html', {"msg": "Enter the Correct Credentials"})
-
+            messages.error(request, 'Identifiants incorrects')
     return render(request, 'authentication/signin.html')
-
 
 def signup(request):
     if request.method == 'POST':
-        fname = request.POST.get("firstname")
+        fname = request.POST.get("firstname") 
         last = request.POST.get("lastname")
         un = request.POST.get("uname")
         pwd = request.POST.get("password")
@@ -384,14 +390,12 @@ def signup(request):
         con = request.POST.get("contact_number")
 
         if User.objects.filter(username=un).exists():
-            return render(request, 'authentication/signup.html', {
-                "error": "Ce nom d'utilisateur existe déjà. Veuillez en choisir un autre."
-            })
-
+            messages.error(request, "Ce nom d'utilisateur existe déjà")
+            return render(request, 'authentication/signup.html')
+        
         if User.objects.filter(email=em).exists():
-            return render(request, 'authentication/signup.html', {
-                "error": "Cet email est déjà utilisé."
-            })
+            messages.error(request, "Cet email est déjà utilisé")
+            return render(request, 'authentication/signup.html')
 
         usr = User.objects.create_user(un, em, pwd)
         usr.first_name = fname
@@ -401,28 +405,23 @@ def signup(request):
         reg = register_table(user=usr, contact_number=con)
         reg.save()
 
-        messages.success(request, f"{fname}, votre compte a été créé avec succès!")
-        return redirect('/signin')
+        messages.success(request, f"Compte créé avec succès, {fname}!")
+        return redirect('signin')
 
     return render(request, 'authentication/signup.html')
 
-
 def logout(request):
     django_logout(request)
-    messages.info(request, "Logged Out Successfully")
-    return redirect("/signin")
-
+    return redirect("/signin" , {"logsign" : " Logged Out Successfully"})
 
 def profile(request):
     if request.user.is_authenticated:
         return render(request, 'main/profile.html')
     else:
-        return redirect('/signin')
-
+        return redirect('signin')
 
 def error_404(request, exception):
     return render(request, 'main/404.html')
-
 
 def blog(request):
     return render(request, 'main/blog.html')
@@ -571,6 +570,96 @@ def predict_hotel_reputation_api(request, pk):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+
+@csrf_exempt
+def api_generate_hotel_description(request):
+    """Génère une description d'hôtel avec OpenAI"""
+    try:
+        if request.method != 'POST':
+            return JsonResponse({
+                'status': 'error', 
+                'message': 'Méthode POST requise'
+            }, status=405)
+
+        # Charger les données JSON
+        data = json.loads(request.body)
+        hotel_name = data.get('hotel_name', '').strip()
+        city = data.get('city', '').strip()
+        features = data.get('features', [])
+        
+        # Validation
+        if not hotel_name:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Le nom de l\'hôtel est requis'
+            }, status=400)
+        
+        if not city:
+            return JsonResponse({
+                'status': 'error', 
+                'message': 'La ville est requise'
+            }, status=400)
+
+        # Préparer les caractéristiques
+        features_text = ", ".join(features) if features else "confortable et accueillant"
+        
+        # Prompt optimisé
+        prompt = f"""
+        Tu es un expert en marketing hôtelier. Crée une description attractive et unique en français pour l'hôtel suivant :
+
+        NOM: {hotel_name}
+        VILLE: {city}
+        CARACTÉRISTIQUES: {features_text}
+
+        La description doit :
+        - Faire 80-120 mots
+        - Être engageante et professionnelle
+        - Mettre en valeur l'emplacement et les services
+        - Utiliser un langage élégant et accueillant
+        - Donner envie de réserver
+        - Inclure une touche d'originalité
+        """
+
+        # Appel OpenAI
+        response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {
+                    "role": "system", 
+                    "content": "Tu es un copywriter expert en hôtellerie de luxe. Tu crées des descriptions engageantes qui donnent envie de voyager."
+                },
+                {
+                    "role": "user", 
+                    "content": prompt
+                }
+            ],
+            max_tokens=300,
+            temperature=0.8,
+            top_p=0.9
+        )
+        
+        description = response.choices[0].message.content.strip()
+
+        return JsonResponse({
+            'status': 'success',
+            'hotel_name': hotel_name,
+            'city': city,
+            'features': features,
+            'generated_description': description,
+            'word_count': len(description.split()),
+            'model_used': 'gpt-3.5-turbo'
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Données JSON invalides'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Erreur: {str(e)}'
+        }, status=500)
 # ... (ajoutez ici vos autres vues pour rooms, reservations, reviews si nécessaire)
 
 def predict_review_view(request):
