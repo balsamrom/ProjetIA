@@ -12,6 +12,13 @@ urlpatterns = [
     path('pages/transaction/', views.transaction, name="transaction"),
     path('pages/settings/', views.settings, name="settings"),
 
+    # Hotels CRUD (Volt Dashboard)
+    path('pages/hotels/', views.hotel_list_volt, name='volt_hotel_list'),
+    path('pages/hotels/new/', views.hotel_create_volt, name='volt_hotel_create'),
+    path('pages/hotels/<int:pk>/', views.hotel_detail_volt, name='volt_hotel_detail'),
+    path('pages/hotels/<int:pk>/edit/', views.hotel_update_volt, name='volt_hotel_update'),
+    path('pages/hotels/<int:pk>/delete/', views.hotel_delete_volt, name='volt_hotel_delete'),
+
     # Tables
     path('tables/bs-tables/', views.bs_tables, name="bs_tables"),
 
@@ -49,4 +56,7 @@ urlpatterns = [
 
     # Extra
     path('pages/upgrade-to-pro/', views.upgrade_to_pro, name="upgrade_to_pro"),
+
+
+    
 ]

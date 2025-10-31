@@ -11,12 +11,22 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 import os
+import sys
 from pathlib import Path
 from django.contrib.messages import constants as messages
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Ensure the admin dashboard app can be imported
+sys.path.insert(0, str(BASE_DIR / 'admin-dashboard'))
+
+# Enable PyMySQL (pure-Python) as the MySQL driver on Windows
+try:
+    import pymysql  # type: ignore
+    pymysql.install_as_MySQLdb()
+except Exception:
+    pass
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -27,7 +37,7 @@ SECRET_KEY = 'django-insecure-mki!p6gl2mg%@2_rlu3&)k&#mrd3mdk9h%9tpk1n&k$2a==_fe
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 
 # Application definition
@@ -40,6 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'voguevue',
+    'admin_volt',
 ]
 
 MIDDLEWARE = [
@@ -74,22 +85,46 @@ WSGI_APPLICATION = 'hackathon.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+# Database
+# By default prefer SQLite for local development to avoid startup errors
+# when MySQL isn't installed/running. To force MySQL, set USE_MYSQL=1 (or
+# 'true') in your environment and provide the usual MYSQL_* variables.
+MYSQL_NAME = os.getenv('MYSQL_DATABASE', 'voguevue_db')
+MYSQL_USER = os.getenv('MYSQL_USER', 'root')
+MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD', '')
+MYSQL_HOST = os.getenv('MYSQL_HOST', '127.0.0.1')
+MYSQL_PORT = os.getenv('MYSQL_PORT', '3306')
+# Toggle to explicitly enable MySQL. Defaults to false so Django will use
+# SQLite on machines without a MySQL server running.
+USE_MYSQL = os.getenv('USE_MYSQL', '0')
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'voguevue_db',
-        'USER': 'root',
-        'PASSWORD': '',  # Vide par défaut avec XAMPP
-        'HOST': 'localhost',
-        'PORT': '3306',
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
+def _use_mysql():
+    try:
+        return str(USE_MYSQL).lower() in ('1', 'true', 'yes')
+    except Exception:
+        return False
+
+if _use_mysql() and MYSQL_NAME and MYSQL_USER:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': MYSQL_NAME,
+            'USER': MYSQL_USER,
+            'PASSWORD': MYSQL_PASSWORD or '',
+            'HOST': MYSQL_HOST,
+            'PORT': MYSQL_PORT,
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -136,3 +171,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
+
+# Auth redirects: ensure admin_volt routes are used
+LOGIN_URL = '/volt/accounts/login/'
+LOGIN_REDIRECT_URL = '/volt/'
+LOGOUT_REDIRECT_URL = '/volt/accounts/login/'

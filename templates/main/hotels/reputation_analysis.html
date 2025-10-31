@@ -1,0 +1,97 @@
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">📊 Analyse de Réputation des Hôtels</h1>
+        <a href="{% url 'hotel_list' %}" class="btn btn-outline-secondary">← Retour aux hôtels</a>
+    </div>
+
+    {% if not model_available %}
+    <div class="alert alert-danger">
+        <h5>❌ Modèle non disponible</h5>
+        <p>L'analyse de réputation IA n'est pas disponible pour le moment.</p>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">🚀 Analyse IA des Réputations</h5>
+        </div>
+        <div class="card-body">
+            <p class="mb-3">
+                Cette analyse utilise l'IA pour prédire la réputation globale des hôtels basée sur leurs avis clients.
+            </p>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success btn-lg">🚀 Lancer l'Analyse Complète</button>
+                <small class="text-muted d-block mt-2">{{ hotels.count }} hôtels seront analysés</small>
+            </form>
+        </div>
+    </div>
+
+    {% if analysis_results %}
+    <div class="card mt-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">📋 Résultats de l'Analyse</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Hôtel</th>
+                            <th>Ville</th>
+                            <th>Réputation IA</th>
+                            <th>Confiance</th>
+                            <th>Nb Avis</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in analysis_results %}
+                        <tr>
+                            <td><strong>{{ item.hotel.name }}</strong></td>
+                            <td>{{ item.hotel.city }}</td>
+                            <td>
+                                {% if item.result %}
+                                    {% with reputation=item.result.reputation %}
+                                    <span class="badge ra-badge
+                                        {% if reputation == 'Excellent' %} ra-badge-excellent
+                                        {% elif reputation == 'Très bon' %} ra-badge-very-good
+                                        {% elif reputation == 'Bon' %} ra-badge-good
+                                        {% elif reputation == 'Moyen' %} ra-badge-average
+                                        {% else %} ra-badge-poor{% endif %}">
+                                        {{ reputation }}
+                                    </span>
+                                    {% endwith %}
+                                {% else %}
+                                    <span class="badge bg-secondary">Non évalué</span>
+                                {% endif %}
+                            </td>
+                            <td style="min-width:160px;">
+                                {% if item.result %}
+                                    <div class="d-flex align-items-center gap-2 ra-confidence">
+                                        <div class="ra-progress">
+                                            <div class="ra-progress-fill" data-width="{{ item.result.confidence|default_if_none:0|floatformat:0 }}"></div>
+                                        </div>
+                                        <span class="ra-confidence-value">{{ item.result.confidence|floatformat:3 }}</span>
+                                    </div>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{{ item.review_count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+</style>
