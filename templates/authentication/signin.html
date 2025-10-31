@@ -122,7 +122,7 @@
                                 <p class="mb-4" style="font-weight: 600;">Sign in to the website and experience an
                                     different happy world and explore all the features.</p>
                             </div>
-                            <form action="/signin" method="post">
+                            <form action="{% url 'signin' %}" method="post">
                                 {% csrf_token %}
                                 <div class="form-group first">
                                     <label for="username" style="color:#252121">Username</label>

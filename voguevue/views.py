@@ -358,23 +358,25 @@ def contact(request):
 
 def travels(request):
     return render(request, 'main/travels.html')
-
 def signin(request):
     if request.method == "POST":
         username = request.POST.get('uname')
         password = request.POST.get('password')
-        user = authenticate(username=username, password=password) 
+
+        user = authenticate(username=username, password=password)
+
         if user is not None:
             login(request, user)
-            messages.success(request, 'Connexion réussie!')
-            return redirect('index')
+            return render(request, 'main/index.html', {"success": "Logged in Successfully"})
         else:
-            messages.error(request, 'Identifiants incorrects')
+            return render(request, 'authentication/signin.html', {"msg": "Enter the Correct Credentials"})
+
     return render(request, 'authentication/signin.html')
+
 
 def signup(request):
     if request.method == 'POST':
-        fname = request.POST.get("firstname") 
+        fname = request.POST.get("firstname")
         last = request.POST.get("lastname")
         un = request.POST.get("uname")
         pwd = request.POST.get("password")
@@ -382,12 +384,14 @@ def signup(request):
         con = request.POST.get("contact_number")
 
         if User.objects.filter(username=un).exists():
-            messages.error(request, "Ce nom d'utilisateur existe déjà")
-            return render(request, 'authentication/signup.html')
-        
+            return render(request, 'authentication/signup.html', {
+                "error": "Ce nom d'utilisateur existe déjà. Veuillez en choisir un autre."
+            })
+
         if User.objects.filter(email=em).exists():
-            messages.error(request, "Cet email est déjà utilisé")
-            return render(request, 'authentication/signup.html')
+            return render(request, 'authentication/signup.html', {
+                "error": "Cet email est déjà utilisé."
+            })
 
         usr = User.objects.create_user(un, em, pwd)
         usr.first_name = fname
@@ -397,23 +401,28 @@ def signup(request):
         reg = register_table(user=usr, contact_number=con)
         reg.save()
 
-        messages.success(request, f"Compte créé avec succès, {fname}!")
-        return redirect('signin')
+        messages.success(request, f"{fname}, votre compte a été créé avec succès!")
+        return redirect('/signin')
 
     return render(request, 'authentication/signup.html')
 
+
 def logout(request):
     django_logout(request)
-    return redirect("/signin" , {"logsign" : " Logged Out Successfully"})
+    messages.info(request, "Logged Out Successfully")
+    return redirect("/signin")
+
 
 def profile(request):
     if request.user.is_authenticated:
         return render(request, 'main/profile.html')
     else:
-        return redirect('signin')
+        return redirect('/signin')
+
 
 def error_404(request, exception):
     return render(request, 'main/404.html')
+
 
 def blog(request):
     return render(request, 'main/blog.html')

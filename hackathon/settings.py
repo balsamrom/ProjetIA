@@ -176,3 +176,5 @@ STATICFILES_DIRS = [
 LOGIN_URL = '/volt/accounts/login/'
 LOGIN_REDIRECT_URL = '/volt/'
 LOGOUT_REDIRECT_URL = '/volt/accounts/login/'
+
+
