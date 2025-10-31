@@ -28,6 +28,11 @@
     </style>
     <!-- Header Hero Section -->
     <div class="vv-hero-section">
+        {% if hotel.image %}
+        <div class="vv-hero-media">
+            <img src="{{ hotel.image.url }}" alt="{{ hotel.name }}" />
+        </div>
+        {% endif %}
         <div class="vv-hero-content">
             <nav class="vv-breadcrumb">
                 <a href="{% url 'hotel_list' %}" class="vv-breadcrumb-link">

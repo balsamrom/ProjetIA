@@ -144,7 +144,7 @@ def hotel_list_volt(request):
 @login_required(login_url=reverse_lazy('login'))
 def hotel_create_volt(request):
   if request.method == 'POST':
-    form = HotelForm(request.POST)
+    form = HotelForm(request.POST, request.FILES)
     if form.is_valid():
       hotel = form.save()
       messages.success(request, 'Hôtel créé avec succès')
@@ -179,7 +179,7 @@ def hotel_update_volt(request, pk:int):
     messages.error(request, 'Hôtel introuvable')
     return redirect('volt_hotel_list')
   if request.method == 'POST':
-    form = HotelForm(request.POST, instance=hotel)
+    form = HotelForm(request.POST, request.FILES, instance=hotel)
     if form.is_valid():
       form.save()
       messages.success(request, 'Hôtel modifié avec succès')

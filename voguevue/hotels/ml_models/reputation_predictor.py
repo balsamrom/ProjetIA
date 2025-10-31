@@ -158,20 +158,13 @@ class HotelReputationPredictor:
                 # Générer des labels génériques si mismatch
                 labels = [f'class_{i}' for i in range(probabilities.shape[1])]
 
-            # Calculs de confiance
-            if probabilities is not None:
-                confidence_scores = [float(np.max(probs)) for probs in probabilities]
-                avg_confidence = float(np.mean(confidence_scores)) if len(confidence_scores) else 0.0
-            else:
-                # Confiance neutre si pas de proba
-                confidence_scores = [0.5] * len(individual_predictions)
-                avg_confidence = 0.5
+            # Confiance alignée Colab: proportion de la classe majoritaire (majority ratio)
+            # On calcule d'abord la série des prédictions, puis la classe majoritaire et son ratio
 
             # Réputation globale (mode)
             pred_series = pd.Series(individual_predictions)
-            overall_reputation = pred_series.mode()[0]
-            if len(pred_series.mode()) > 1:
-                overall_reputation = pred_series.value_counts().index[0]
+            value_counts = pred_series.value_counts()
+            overall_reputation = value_counts.index[0]
 
             # Analyse détaillée
             breakdown = {}
@@ -180,6 +173,10 @@ class HotelReputationPredictor:
                 count = int((pred_series == category).sum())
                 percentage = round((count / total_reviews) * 100, 1) if total_reviews > 0 else 0
                 breakdown[str(category)] = {'count': count, 'percentage': percentage}
+
+            # Confiance finale = ratio de la classe majoritaire
+            majority_count = int(value_counts.iloc[0]) if total_reviews > 0 else 0
+            majority_ratio = (majority_count / total_reviews) if total_reviews > 0 else 0.0
 
             # Prédictions individuelles avec scores
             detailed_predictions = []
@@ -201,7 +198,7 @@ class HotelReputationPredictor:
             return {
                 'status': 'success',
                 'overall_reputation': str(overall_reputation),
-                'confidence': round(avg_confidence, 3),
+                'confidence': round(majority_ratio, 3),
                 'total_reviews_analyzed': total_reviews,
                 'breakdown': breakdown,
                 'individual_analyses': detailed_predictions,
