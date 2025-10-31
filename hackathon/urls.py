@@ -1,9 +1,10 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import path,include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.conf.urls import handler404
 from django.urls.conf import include
+from django.views.generic.base import RedirectView
 
 admin.site.site_header = "VogueVue Admin"
 admin.site.site_title = "VogueVue Admin Portal"

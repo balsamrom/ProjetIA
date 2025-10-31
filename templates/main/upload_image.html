@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyse d'image IA</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/Home CSS/mobile.css">
+</head>
+<body>
+    <section class="nav-bar" style="z-index: 1000;">
+        <div class="logo"><a href="/">VoyageVue</a></div>
+        <ul class="menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/travels">travels</a></li>
+            <li><a href="/multimedia">Multimédia</a></li>
+            {% if user.is_authenticated %}
+            <li><a href="/profile">Profile</a></li>
+            <li><a href="/logout">logout</a></li>
+            {% else %}
+            <li><a href="/signin">Sign In</a></li>
+            <li><a href="/signup">Sign Up</a></li>
+            {% endif %}
+        </ul>
+        <div class="mobile">
+            <i class="fa-solid fa-bars"></i>
+        </div>
+    </section>
+
+    <div class="container" style="max-width: 900px; margin: 2rem auto; padding: 1rem;">
+        <h1 style="margin-bottom: 1rem;">🤖 Analyse d'image avec IA</h1>
+        
+        <form method="post" enctype="multipart/form-data" style="margin-bottom: 2rem;">
+            {% csrf_token %}
+            <div style="margin-bottom: 1rem;">
+                <label for="image" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">
+                    Sélectionnez une image à analyser:
+                </label>
+                <input type="file" id="image" name="image" accept="image/*" required 
+                       style="width: 100%; padding: 0.5rem; border: 2px dashed #ddd; border-radius: 8px;">
+            </div>
+            <button type="submit" style="background: #28a745; color: white; border: 0; border-radius: 6px; padding: 0.75rem 1.5rem; cursor: pointer; font-size: 1rem;">
+                🔍 Analyser l'image
+            </button>
+        </form>
+
+        {% if image_url %}
+        <div style="margin-bottom: 2rem;">
+            <h3>📸 Image analysée:</h3>
+            <img src="{{ image_url }}" alt="Image analysée" style="width: 100%; max-height: 400px; object-fit: cover; border-radius: 8px; border: 2px solid #ddd;">
+        </div>
+        {% endif %}
+
+        {% if result %}
+        <div style="border: 1px solid #eee; border-radius: 8px; padding: 1.5rem; background: #f8f9fa;">
+            <h3>🔍 Résultat de l'analyse IA</h3>
+            
+            {% if result.success %}
+                <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; padding: 0.75rem; margin-bottom: 1rem;">
+                    <strong>✅ Analyse terminée avec succès!</strong>
+                </div>
+                
+                {% if result.predicted_labels %}
+                <div style="margin-bottom: 1.5rem;">
+                    <h4>🏷️ Classes détectées:</h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                        {% for label in result.predicted_labels %}
+                        <span style="background: #007bff; color: white; padding: 0.5rem 1rem; border-radius: 20px; font-weight: bold;">
+                            {{ label|title }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if result.probabilities %}
+                <div>
+                    <h4>📊 Probabilités détaillées:</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                        {% for class_name, probability in result.probabilities.items %}
+                        <div style="background: white; padding: 1rem; border-radius: 8px; border-left: 4px solid #007bff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <strong>{{ class_name|title }}</strong>
+                                <span style="color: #007bff; font-weight: bold;">{% widthratio probability 1 100 %}%</span>
+                            </div>
+                            <div style="background: #e9ecef; height: 8px; border-radius: 4px; overflow: hidden;">
+                                <div style="background: linear-gradient(90deg, #007bff, #0056b3); height: 100%; width: {{ probability|floatformat:0|add:0 }}%; border-radius: 4px; transition: width 0.3s ease;"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            {% else %}
+                <div style="background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; padding: 0.75rem;">
+                    <strong>❌ Erreur lors de l'analyse:</strong>
+                    <p style="margin: 0.5rem 0 0 0; color: #721c24;">{{ result.error }}</p>
+                </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div style="margin-top: 2rem; text-align: center;">
+            <a href="/multimedia" style="background: #6c757d; color: white; padding: 0.75rem 1.5rem; text-decoration: none; border-radius: 6px; display: inline-block;">
+                ← Retour au multimédia
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Animation des barres de progression
+        document.addEventListener('DOMContentLoaded', function() {
+            const progressBars = document.querySelectorAll('[style*="width: {{ probability|floatformat:0|add:0 }}%"]');
+            progressBars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 100);
+            });
+        });
+    </script>
+</body>
+</html>

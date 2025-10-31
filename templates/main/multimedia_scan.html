@@ -3,9 +3,283 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scanner l'image</title>
+    <title>Scanner d'Image IA</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/Home CSS/mobile.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .scanner-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+        .scanner-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .scanner-header h1 {
+            margin: 0 0 1rem 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        .scanner-header p {
+            margin: 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        .image-section {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .image-container {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+        .scanned-image {
+            width: 100%;
+            max-height: 500px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        .scanned-image:hover {
+            transform: scale(1.02);
+        }
+        .image-overlay {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        .image-info {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        .user-details h3 {
+            margin: 0;
+            color: #333;
+        }
+        .post-date {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .image-comment {
+            color: #555;
+            line-height: 1.6;
+            white-space: pre-line;
+            font-style: italic;
+        }
+        .scan-section {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .scan-btn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+        .scan-btn:hover {
+            background: linear-gradient(45deg, #2980b9, #1f618d);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+        .scan-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .back-btn {
+            background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+            color: white;
+            text-decoration: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            margin-left: 1rem;
+        }
+        .back-btn:hover {
+            background: linear-gradient(45deg, #7f8c8d, #6c7b7d);
+            color: white;
+            text-decoration: none;
+            transform: translateY(-2px);
+        }
+        .results-section {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .results-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .results-header h2 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .success-banner {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-weight: 600;
+        }
+        .error-banner {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-weight: 600;
+        }
+        .detected-classes {
+            margin-bottom: 2rem;
+        }
+        .detected-classes h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .class-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        .class-tag {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .probabilities-section h3 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .probabilities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        .probability-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border-left: 5px solid #3498db;
+            transition: transform 0.3s ease;
+        }
+        .probability-card:hover {
+            transform: translateY(-2px);
+        }
+        .probability-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .class-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1rem;
+        }
+        .probability-value {
+            font-weight: bold;
+            color: #3498db;
+            font-size: 1.2rem;
+        }
+        .progress-bar {
+            background: #e9ecef;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+        .progress-fill {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            height: 100%;
+            border-radius: 6px;
+            transition: width 1s ease;
+        }
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
     <section class="nav-bar" style="z-index: 1000;">
@@ -27,27 +301,113 @@
         </div>
     </section>
 
-    <div class="container" style="max-width: 900px; margin: 2rem auto; padding: 1rem;">
-        <h1 style="margin-bottom: 1rem;">Scanner l'image</h1>
-        {% if avis.image %}
-        <img src="{{ avis.image.url }}" alt="image" style="width:100%;max-height:420px;object-fit:cover;border-radius:8px;" />
-        {% endif %}
-        <p style="margin-top:0.75rem; white-space: pre-line;">{{ avis.comment }}</p>
+    <div class="scanner-container">
+        <div class="scanner-header">
+            <h1><i class="fas fa-brain"></i> Scanner d'Image IA</h1>
+            <p>Analysez votre image avec notre intelligence artificielle avancée</p>
+        </div>
 
-        <form method="post" style="margin-top:1rem;">
-            {% csrf_token %}
-            <button type="submit" style="background:#3498db;color:white;border:0;border-radius:6px;padding:0.6rem 1rem;cursor:pointer;">Scanner l'image</button>
-            <a href="/multimedia" style="margin-left:0.5rem;">Retour</a>
-        </form>
+        <div class="image-section">
+            {% if avis.image %}
+            <div class="image-container">
+                <img src="{{ avis.image.url }}" alt="Image à analyser" class="scanned-image"/>
+                <div class="image-overlay">
+                    <i class="fas fa-image"></i> Image prête pour l'analyse
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="image-info">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        {{ avis.user.username|first|upper }}
+                    </div>
+                    <div>
+                        <h3>{{ avis.user.username }}</h3>
+                        <div class="post-date">
+                            <i class="fas fa-clock"></i> {{ avis.created_at|date:"d M Y à H:i" }}
+                        </div>
+                    </div>
+                </div>
+                <p class="image-comment">{{ avis.comment }}</p>
+            </div>
+        </div>
+
+        <div class="scan-section">
+            <form method="post" id="scanForm">
+                {% csrf_token %}
+                <button type="submit" class="scan-btn" id="scanButton">
+                    <i class="fas fa-search"></i> Analyser avec l'IA
+                </button>
+                <a href="/multimedia" class="back-btn">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+            </form>
+            
+            <div class="loading-spinner" id="loadingSpinner">
+                <div class="spinner"></div>
+                <p>Analyse en cours... L'IA examine votre image</p>
+            </div>
+        </div>
 
         {% if scan_result %}
-        <div style="margin-top:1rem;border:1px solid #eee;border-radius:8px;padding:1rem;">
-            <h3>Résultat du scan</h3>
-            <p><strong>Type de lieu</strong>: {{ scan_result.place_type }}</p>
-            <p><strong>Ville (estimée)</strong>: {{ scan_result.city_guess }}</p>
+        <div class="results-section">
+            <div class="results-header">
+                <h2><i class="fas fa-chart-line"></i> Résultats de l'Analyse IA</h2>
+            </div>
+            
+            {% if scan_result.success %}
+                <div class="success-banner">
+                    <i class="fas fa-check-circle"></i> Analyse terminée avec succès !
+                </div>
+                
+                {% if scan_result.predicted_labels %}
+                <div class="detected-classes">
+                    <h3><i class="fas fa-tags"></i> Classes détectées</h3>
+                    <div class="class-tags">
+                        {% for label in scan_result.predicted_labels %}
+                        <div class="class-tag">
+                            <i class="fas fa-check"></i> {{ label|title }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if scan_result.probabilities %}
+                <div class="probabilities-section">
+                    <h3><i class="fas fa-percentage"></i> Probabilités détaillées</h3>
+                    <div class="probabilities-grid">
+                        {% for class_name, probability in scan_result.probabilities.items %}
+                        <div class="probability-card">
+                            <div class="probability-header">
+                                <span class="class-name">{{ class_name|title }}</span>
+                                <span class="probability-value">{% widthratio probability 1 100 %}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {% widthratio probability 1 100 %}%"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="error-banner">
+                    <i class="fas fa-exclamation-triangle"></i> Erreur lors de l'analyse
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">{{ scan_result.error }}</p>
+                </div>
+            {% endif %}
         </div>
         {% endif %}
     </div>
+
+    <script>
+        document.getElementById('scanForm').addEventListener('submit', function() {
+            document.getElementById('scanButton').style.display = 'none';
+            document.getElementById('loadingSpinner').style.display = 'block';
+        });
+    </script>
 </body>
 </html>
 

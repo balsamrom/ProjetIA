@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner IA - VoyageVue</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/Home CSS/mobile.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .ai-scanner-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 25px;
+            margin-bottom: 3rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+        .hero-section h1 {
+            margin: 0 0 1rem 0;
+            font-size: 3rem;
+            font-weight: 700;
+        }
+        .hero-section p {
+            margin: 0 0 2rem 0;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #667eea;
+        }
+        .feature-card h3 {
+            margin: 0 0 1rem 0;
+            color: #333;
+        }
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+        .upload-section {
+            background: white;
+            border-radius: 25px;
+            padding: 3rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            margin: 2rem 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: scale(1.02);
+        }
+        .upload-icon {
+            font-size: 4rem;
+            color: #ddd;
+            margin-bottom: 1rem;
+        }
+        .upload-text {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        .upload-hint {
+            color: #999;
+            font-size: 0.9rem;
+        }
+        .file-input {
+            display: none;
+        }
+        .upload-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        .preview-section {
+            background: white;
+            border-radius: 25px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: none;
+        }
+        .preview-image {
+            width: 100%;
+            max-height: 400px;
+            object-fit: cover;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+        }
+        .analyze-btn {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-right: 1rem;
+        }
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(46, 204, 113, 0.3);
+        }
+        .analyze-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .clear-btn {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .clear-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3);
+        }
+        .loading-section {
+            background: white;
+            border-radius: 25px;
+            padding: 3rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            display: none;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 2rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-text {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        .loading-details {
+            color: #999;
+            font-size: 0.9rem;
+        }
+        .results-section {
+            background: white;
+            border-radius: 25px;
+            padding: 3rem;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            display: none;
+        }
+        .results-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .results-header h2 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
+        }
+        .success-banner {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            color: white;
+            padding: 1.5rem 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        .error-banner {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 1.5rem 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        .detected-classes {
+            margin-bottom: 3rem;
+        }
+        .detected-classes h3 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+        }
+        .class-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .class-tag {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 30px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.1rem;
+        }
+        .probabilities-section h3 {
+            color: #333;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+        }
+        .probabilities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+        .probability-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 2rem;
+            border-radius: 20px;
+            border-left: 6px solid #3498db;
+            transition: transform 0.3s ease;
+        }
+        .probability-card:hover {
+            transform: translateY(-3px);
+        }
+        .probability-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .class-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.3rem;
+        }
+        .probability-value {
+            font-weight: bold;
+            color: #3498db;
+            font-size: 1.5rem;
+        }
+        .progress-bar {
+            background: #e9ecef;
+            height: 15px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 0.75rem;
+        }
+        .progress-fill {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            height: 100%;
+            border-radius: 8px;
+            transition: width 1.5s ease;
+        }
+        .new-analysis-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 2rem;
+        }
+        .new-analysis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <section class="nav-bar" style="z-index: 1000;">
+        <div class="logo"><a href="/">VoyageVue</a></div>
+        <ul class="menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/travels">travels</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/multimedia">Multimédia</a></li>
+            {% if user.is_authenticated %}
+            <li><a href="/profile">Profile</a></li>
+            <li><a href="/logout">logout</a></li>
+            {% else %}
+            <li><a href="/signin">Sign In</a></li>
+            <li><a href="/signup">Sign Up</a></li>
+            {% endif %}
+        </ul>
+        <div class="mobile">
+            <i class="fa-solid fa-bars"></i>
+        </div>
+    </section>
+
+    <div class="ai-scanner-container">
+        <div class="hero-section">
+            <div class="hero-content">
+                <h1><i class="fas fa-brain"></i> Scanner IA</h1>
+                <p>Analysez vos images avec notre intelligence artificielle avancée</p>
+            </div>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-robot"></i></div>
+                <h3>IA Avancée</h3>
+                <p>Notre modèle de deep learning analyse vos images avec une précision exceptionnelle</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+                <h3>Analyse Rapide</h3>
+                <p>Obtenez des résultats instantanés grâce à notre technologie optimisée</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-chart-bar"></i></div>
+                <h3>Résultats Détaillés</h3>
+                <p>Visualisez les probabilités et classes détectées avec des graphiques clairs</p>
+            </div>
+        </div>
+
+        <div class="upload-section">
+            <h2><i class="fas fa-upload"></i> Téléchargez votre image</h2>
+            <p>Glissez-déposez votre image ou cliquez pour la sélectionner</p>
+            
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                <div class="upload-text">Glissez votre image ici ou cliquez pour la sélectionner</div>
+                <div class="upload-hint">Formats supportés: JPG, PNG, GIF (max 10MB)</div>
+                <input type="file" id="fileInput" class="file-input" accept="image/*">
+            </div>
+            
+            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-folder-open"></i> Choisir une image
+            </button>
+        </div>
+
+        <div class="preview-section" id="previewSection">
+            <h3><i class="fas fa-eye"></i> Aperçu de l'image</h3>
+            <img id="previewImage" class="preview-image" alt="Aperçu">
+            <div>
+                <button class="analyze-btn" id="analyzeBtn">
+                    <i class="fas fa-search"></i> Analyser avec l'IA
+                </button>
+                <button class="clear-btn" onclick="clearImage()">
+                    <i class="fas fa-times"></i> Effacer
+                </button>
+            </div>
+        </div>
+
+        <div class="loading-section" id="loadingSection">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Analyse en cours...</div>
+            <div class="loading-details">Notre IA examine votre image et identifie les éléments</div>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <div class="results-header">
+                <h2><i class="fas fa-chart-line"></i> Résultats de l'Analyse</h2>
+            </div>
+            <div id="resultsContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const previewSection = document.getElementById('previewSection');
+        const previewImage = document.getElementById('previewImage');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const loadingSection = document.getElementById('loadingSection');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultsContent = document.getElementById('resultsContent');
+
+        let selectedFile = null;
+
+        // Drag and drop functionality
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        // Click to upload
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('Veuillez sélectionner une image valide.');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                alert('L\'image est trop volumineuse. Taille maximale: 10MB');
+                return;
+            }
+
+            selectedFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                previewSection.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearImage() {
+            selectedFile = null;
+            fileInput.value = '';
+            previewSection.style.display = 'none';
+            resultsSection.style.display = 'none';
+            loadingSection.style.display = 'none';
+        }
+
+        // Analyze button
+        analyzeBtn.addEventListener('click', () => {
+            if (!selectedFile) return;
+
+            // Show loading
+            loadingSection.style.display = 'block';
+            resultsSection.style.display = 'none';
+
+            // Create FormData
+            const formData = new FormData();
+            formData.append('image', selectedFile);
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+            // Send request
+            fetch('/multimedia/upload_and_analyse/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                loadingSection.style.display = 'none';
+                displayResults(data);
+            })
+            .catch(error => {
+                loadingSection.style.display = 'none';
+                console.error('Erreur:', error);
+                displayError('Erreur lors de l\'analyse: ' + error.message);
+            });
+        });
+
+        function displayResults(data) {
+            resultsSection.style.display = 'block';
+            
+            if (data.success) {
+                let html = '<div class="success-banner"><i class="fas fa-check-circle"></i> Analyse terminée avec succès !</div>';
+                
+                if (data.predicted_labels && data.predicted_labels.length > 0) {
+                    html += '<div class="detected-classes"><h3><i class="fas fa-tags"></i> Classes détectées</h3><div class="class-tags">';
+                    data.predicted_labels.forEach(label => {
+                        html += `<div class="class-tag"><i class="fas fa-check"></i> ${label.charAt(0).toUpperCase() + label.slice(1)}</div>`;
+                    });
+                    html += '</div></div>';
+                }
+
+                if (data.probabilities) {
+                    html += '<div class="probabilities-section"><h3><i class="fas fa-percentage"></i> Probabilités détaillées</h3><div class="probabilities-grid">';
+                    Object.entries(data.probabilities).forEach(([className, probability]) => {
+                        const percentage = Math.round(probability * 100);
+                        html += `
+                            <div class="probability-card">
+                                <div class="probability-header">
+                                    <span class="class-name">${className.charAt(0).toUpperCase() + className.slice(1)}</span>
+                                    <span class="probability-value">${percentage}%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${percentage}%"></div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div></div>';
+                }
+
+                html += '<button class="new-analysis-btn" onclick="clearImage()"><i class="fas fa-plus"></i> Nouvelle analyse</button>';
+                resultsContent.innerHTML = html;
+            } else {
+                displayError(data.error || 'Erreur inconnue lors de l\'analyse');
+            }
+        }
+
+        function displayError(message) {
+            resultsSection.style.display = 'block';
+            resultsContent.innerHTML = `
+                <div class="error-banner">
+                    <i class="fas fa-exclamation-triangle"></i> Erreur lors de l'analyse
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">${message}</p>
+                </div>
+                <button class="new-analysis-btn" onclick="clearImage()"><i class="fas fa-plus"></i> Nouvelle analyse</button>
+            `;
+        }
+
+        // Add CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (!csrfToken) {
+            const form = document.createElement('form');
+            form.style.display = 'none';
+            form.innerHTML = '{% csrf_token %}';
+            document.body.appendChild(form);
+        }
+    </script>
+</body>
+</html>

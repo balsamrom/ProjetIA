@@ -8,6 +8,27 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.auth import logout as django_logout
 from django.contrib.auth.decorators import login_required
+from django.core.files.storage import FileSystemStorage
+# Import conditionnel du module IA
+def get_analyse_function():
+    """Retourne la fonction d'analyse ou une fonction de remplacement"""
+    try:
+        from voguevue.multimedia.karima_model.image_analyse import analyse_image
+        return analyse_image
+    except ImportError as e:
+        print(f"Module IA non disponible: {e}")
+        # Fonction de remplacement
+        def analyse_image_fallback(img_path):
+            return {
+                "error": "Module IA non disponible. Veuillez installer TensorFlow et numpy.",
+                "success": False,
+                "predicted_labels": ["Module IA non disponible"],
+                "probabilities": {}
+            }
+        return analyse_image_fallback
+
+# Obtenir la fonction d'analyse
+analyse_image = get_analyse_function()
 
 # Create your views here.
 def index(request):
@@ -205,11 +226,47 @@ def multimedia_scan(request, avis_id):
 
     scan_result = None
     if request.method == 'POST':
-        basis = ''
-        if avis.image and hasattr(avis.image, 'name'):
-            basis += f" {avis.image.name}"
-        if avis.comment:
-            basis += f" {avis.comment}"
-        scan_result = _classify_image_keywords(basis)
+        if avis.image:
+            # Utiliser le modèle IA pour analyser l'image
+            try:
+                image_path = avis.image.path
+                scan_result = analyse_image(image_path)
+                
+                if scan_result.get('success'):
+                    messages.success(request, 'Analyse IA terminée avec succès!')
+                else:
+                    messages.error(request, f"Erreur lors de l'analyse: {scan_result.get('error', 'Erreur inconnue')}")
+            except Exception as e:
+                messages.error(request, f"Erreur lors de l'analyse de l'image: {str(e)}")
+                scan_result = {"error": str(e)}
+        else:
+            messages.error(request, "Aucune image à analyser.")
 
     return render(request, 'main/multimedia_scan.html', { 'avis': avis, 'scan_result': scan_result })
+
+
+def upload_and_analyse(request):
+    from django.http import JsonResponse
+    
+    if request.method == "POST" and request.FILES.get("image"):
+        uploaded_file = request.FILES["image"]
+
+        fs = FileSystemStorage()
+        file_path = fs.save(uploaded_file.name, uploaded_file)
+        full_path = fs.path(file_path)
+
+        # Analyse via le modèle IA
+        result = analyse_image(full_path)
+
+        # Retourner directement JSON pour les requêtes AJAX
+        return JsonResponse(result)
+    
+    # Si pas de fichier, retourner une erreur
+    return JsonResponse({
+        "success": False,
+        "error": "Aucune image fournie"
+    })
+
+def ai_scanner(request):
+    """Page dédiée au scanner IA avec interface améliorée"""
+    return render(request, "main/ai_scanner.html")
