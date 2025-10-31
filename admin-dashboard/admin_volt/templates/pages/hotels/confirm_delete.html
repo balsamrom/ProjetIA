@@ -1,0 +1,25 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="py-4 d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="h4">Supprimer l'hôtel</h1>
+    <p class="mb-0 text-muted">Confirmez la suppression de <strong>{{ hotel.name }}</strong></p>
+  </div>
+  <div>
+    <a class="btn btn-outline-secondary btn-sm" href="{% url 'volt_hotel_detail' hotel.id %}">Annuler</a>
+  </div>
+</div>
+
+<div class="card border-0 shadow p-4">
+  <form method="post">
+    {% csrf_token %}
+    <p>Cette action est irréversible. Êtes-vous sûr de vouloir supprimer cet hôtel ?</p>
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-danger">Supprimer</button>
+      <a href="{% url 'volt_hotel_detail' hotel.id %}" class="btn btn-outline-secondary">Annuler</a>
+    </div>
+  </form>
+</div>
+{% endblock content %}
