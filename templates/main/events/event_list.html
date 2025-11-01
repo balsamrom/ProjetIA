@@ -1,0 +1,215 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Événements - VoyageVue</title>
+    <link rel="stylesheet" href="{% static 'css/Home CSS/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/Home CSS/mobile.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/voguevue-theme.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <section class="nav-bar">
+        <div class="logo"><a href="/">VoyageVue</a></div>
+        <ul class="menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/hotels">Hotels</a></li>
+            <li><a href="/events" class="active">Events</a></li>
+            <li><a href="/travels">Travels</a></li>
+            <li><a href="/contact">Contact</a></li>
+            {% if user.is_authenticated %}
+            <li><a href="/profile">Profile</a></li>
+            <li><a href="/logout">Logout</a></li>
+            {% else %}
+            <li><a href="/signin">Sign In</a></li>
+            <li><a href="/signup">Sign Up</a></li>
+            {% endif %}
+        </ul>
+        <div class="mobile">
+            <i class="fa-solid fa-bars"></i>
+        </div>
+    </section>
+
+    <div class="container" style="max-width:1200px;margin: 20px auto; padding: 20px;">
+        <div class="topbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+            <h1 style="color: #6B4F3B; margin: 0;">Festivals & Événements Culturels</h1>
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap: wrap;">
+                <form method="get" style="display:flex; gap:8px; align-items:center;">
+                    <input type="text" name="q" placeholder="Rechercher..." value="{{ q }}" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px;">
+                    <input type="text" name="city" placeholder="Ville" value="{{ q_city }}" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px;">
+                    <button type="submit" class="btn" style="background:#6B4F3B; color: white; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer;">Rechercher</button>
+                    <a class="btn" href="/events" style="background:#6c757d; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none;">Reset</a>
+                </form>
+                {% if user.is_staff %}
+                <a class="btn" href="/events/new/" style="background:#F2C94C; color: #6B4F3B; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 700;">+ Nouvel événement</a>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if messages %}
+        <div style="margin-bottom: 20px;">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" style="padding: 12px; background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 8px; color: #0c5460;">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <style>
+          :root{ 
+            --vv-brown:#6B4F3B; 
+            --vv-brown-600:#5c4433; 
+            --vv-yellow:#F2C94C; 
+            --vv-yellow-600:#E0B73A; 
+            --vv-cream:#FFF8E7; 
+            --vv-white:#FFFFFF; 
+          }
+          body{ background: var(--vv-cream); }
+          .event-grid{ 
+            display:grid; 
+            grid-template-columns: repeat(auto-fill,minmax(300px,1fr)); 
+            gap:24px; 
+            margin-top: 20px;
+          }
+          .event-card{ 
+            background: var(--vv-white); 
+            border:1px solid rgba(107,79,59,.15); 
+            border-radius:16px; 
+            overflow:hidden; 
+            box-shadow:0 6px 16px rgba(107,79,59,.08); 
+            transition: transform .3s ease, box-shadow .3s ease; 
+          }
+          .event-card:hover{ 
+            transform: translateY(-5px); 
+            box-shadow:0 12px 28px rgba(107,79,59,.14); 
+          }
+          .event-image{ 
+            width:100%; 
+            height:200px; 
+            object-fit:cover; 
+            display:block; 
+            background: linear-gradient(135deg, var(--vv-yellow), var(--vv-brown));
+          }
+          .event-content{ 
+            padding:20px; 
+          }
+          .event-title{ 
+            margin:0 0 12px 0; 
+            color: var(--vv-brown); 
+            font-size: 1.3rem;
+            font-weight: 700;
+          }
+          .event-meta{ 
+            display: flex; 
+            gap: 8px; 
+            align-items: center; 
+            flex-wrap: wrap; 
+            margin-bottom: 12px;
+          }
+          .event-badge{ 
+            background:#f3f4f6; 
+            color:#6b7280; 
+            padding:6px 12px; 
+            border-radius:999px; 
+            font-size:12px; 
+            border:1px solid #e5e7eb; 
+            font-weight: 600;
+          }
+          .event-date{ 
+            color: var(--vv-brown); 
+            font-weight: 700;
+            margin: 8px 0;
+          }
+          .event-price{ 
+            color: var(--vv-brown); 
+            font-weight:800; 
+            font-size: 1.2rem;
+            margin:12px 0 16px 0; 
+          }
+          .event-description{ 
+            color:#4b5563; 
+            font-size:14px; 
+            margin:10px 0; 
+            line-height: 1.6;
+          }
+          .btn-view-details{ 
+            display:inline-block; 
+            background: var(--vv-yellow); 
+            color: var(--vv-brown); 
+            text-decoration:none; 
+            padding:12px 20px; 
+            border-radius:10px; 
+            border:1px solid rgba(107,79,59,.15); 
+            font-weight:700; 
+            transition: all .3s ease;
+            width: 100%;
+            text-align: center;
+            box-sizing: border-box;
+          }
+          .btn-view-details:hover{ 
+            background: var(--vv-yellow-600); 
+            transform: translateY(-2px);
+          }
+          .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+          }
+          .empty-state h3 {
+            color: var(--vv-brown);
+            margin-bottom: 10px;
+          }
+        </style>
+
+        {% if events %}
+        <div class="event-grid">
+            {% for event in events %}
+            <div class="event-card">
+                {% if event.image %}
+                <img src="{{ event.image.url }}" alt="{{ event.name }}" class="event-image" loading="lazy">
+                {% else %}
+                <div class="event-image" style="display: flex; align-items: center; justify-content: center; color: white; font-size: 48px;">
+                    🎭
+                </div>
+                {% endif %}
+                <div class="event-content">
+                    <h3 class="event-title">{{ event.name }}</h3>
+                    <div class="event-meta">
+                        <span class="event-badge">📍 {{ event.city }}</span>
+                        {% if event.location %}
+                        <span class="event-badge">🏛️ {{ event.location|truncatechars:20 }}</span>
+                        {% endif %}
+                        <span class="event-badge">💬 {{ event.reviews.count }} avis</span>
+                    </div>
+                    <div class="event-date">
+                        <i class="far fa-calendar"></i> 
+                        {{ event.date_start|date:"d M Y" }} - {{ event.date_end|date:"d M Y" }}
+                    </div>
+                    {% if event.description %}
+                    <div class="event-description">
+                        {{ event.description|truncatechars:120 }}
+                    </div>
+                    {% endif %}
+                    <div class="event-price">
+                        {{ event.price }} DT
+                    </div>
+                    <a href="{% url 'event_detail' event.pk %}" class="btn-view-details">
+                        Voir les détails
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <h3>🎭 Aucun événement trouvé</h3>
+            <p>Il n'y a pas d'événements disponibles pour le moment.</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
+

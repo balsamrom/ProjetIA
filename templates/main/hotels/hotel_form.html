@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{% if mode == 'create' %}Create Hotel{% else %}Update Hotel{% endif %}</title>
+    <link rel="stylesheet" href="/static/css/Home CSS/style.css" />
+    <style>
+        form { 
+            max-width: 800px; 
+            margin: 20px auto; 
+            display: grid; 
+            gap: 16px; 
+        }
+        label { 
+            font-weight: 600; 
+            color: #2d3748;
+            margin-bottom: 8px;
+            display: block;
+        }
+        input, textarea, select { 
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            width: 100%;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+        .btn { 
+            padding: 12px 24px; 
+            background: #2a9d8f; 
+            color: #fff; 
+            text-decoration: none; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            background: #21867a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(42, 157, 143, 0.3);
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .btn-ai {
+            background: #ffb703;
+            color: #111;
+        }
+        .btn-ai:hover {
+            background: #e6a500;
+        }
+        .row { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 16px; 
+        }
+        .description-container {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .description-textarea {
+            flex: 1;
+            min-height: 120px;
+            resize: vertical;
+        }
+        .ai-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 200px;
+        }
+        .status-message {
+            font-size: 14px;
+            color: #718096;
+            line-height: 1.4;
+        }
+        .status-success {
+            color: #38a169;
+        }
+        .status-error {
+            color: #e53e3e;
+        }
+        .status-loading {
+            color: #3182ce;
+        }
+        .features-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .feature-tag {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .feature-tag:hover {
+            background: #bbdefb;
+            transform: scale(1.05);
+        }
+        .feature-tag.active {
+            background: #1976d2;
+            color: white;
+        }
+        .ai-loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4299e1;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <section class="nav-bar">
+        <div class="logo"><a href="/">VoyageVue</a></div>
+        <ul class="menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/hotels" class="active">Hotels</a></li>
+        </ul>
+    </section>
+
+    <h1 style="text-align:center; margin: 30px 0; color: #2d3748;">
+        {% if mode == 'create' %}➕ Create Hotel{% else %}✏️ Update Hotel{% endif %}
+    </h1>
+
+    <form method="post" enctype="multipart/form-data" style="background:#fff;padding:30px;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,.08);">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        
+        <div class="row">
+            <div>
+                <label for="id_name">🏨 Hotel Name</label>
+                {{ form.name }}
+                {{ form.name.errors }}
+            </div>
+            <div>
+                <label for="id_city">📍 City</label>
+                {{ form.city }}
+                {{ form.city.errors }}
+            </div>
+        </div>
+
+        <div>
+            <label for="id_address">📫 Address</label>
+            {{ form.address }}
+            {{ form.address.errors }}
+        </div>
+
+        <div>
+            <label for="id_description">📝 Description</label>
+            <div class="description-container">
+                {{ form.description }}
+                <div class="ai-section">
+                    <button type="button" id="generate-desc-btn" class="btn btn-ai">
+                        <span id="btn-text">🤖 Générer avec IA</span>
+                    </button>
+                    <small id="generate-desc-status" class="status-message">
+                        Cliquez pour générer une description automatique avec l'IA
+                    </small>
+
+                    <!-- Features selection -->
+                    <div style="margin-top: 15px;">
+                        <label style="font-size: 14px; margin-bottom: 8px;">🏷️ Caractéristiques (optionnel):</label>
+                        <div class="features-tags">
+                            <span class="feature-tag" data-feature="Piscine">🏊 Piscine</span>
+                            <span class="feature-tag" data-feature="Spa">💆 Spa</span>
+                            <span class="feature-tag" data-feature="Restaurant">🍽️ Restaurant</span>
+                            <span class="feature-tag" data-feature="WiFi gratuit">📶 WiFi gratuit</span>
+                            <span class="feature-tag" data-feature="Parking">🅿️ Parking</span>
+                            <span class="feature-tag" data-feature="Petit-déjeuner">🍳 Petit-déjeuner</span>
+                            <span class="feature-tag" data-feature="Salle de sport">💪 Salle de sport</span>
+                            <span class="feature-tag" data-feature="Vue mer">🌊 Vue mer</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{ form.description.errors }}
+        </div>
+
+        <div class="row">
+            <div>
+                <label for="id_price_per_night">💰 Price per night (€)</label>
+                {{ form.price_per_night }}
+                {{ form.price_per_night.errors }}
+            </div>
+            <div>
+                <label for="id_rating">⭐ Rating (1-5)</label>
+                {{ form.rating }}
+                {{ form.rating.errors }}
+            </div>
+        </div>
+
+        <div>
+            <label for="id_image">🖼️ Hotel Image</label>
+            {{ form.image }}
+            {{ form.image.errors }}
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px;">
+            {{ form.is_available }}
+            <label for="id_is_available" style="margin: 0; font-weight: normal;">✅ Available for booking</label>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 20px;">
+            <button type="submit" class="btn">💾 Save Hotel</button>
+            <a class="btn btn-secondary" href="{% url 'hotel_list' %}">❌ Cancel</a>
+        </div>
+    </form>
+
+    <!-- Loading overlay -->
+    <div id="ai-loading" class="ai-loading">
+        <div class="spinner"></div>
+        <p>L'IA génère votre description...</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const generateBtn = document.getElementById('generate-desc-btn');
+            const statusEl = document.getElementById('generate-desc-status');
+            const loadingEl = document.getElementById('ai-loading');
+            const descriptionEl = document.getElementById('id_description');
+            const nameEl = document.getElementById('id_name');
+            const cityEl = document.getElementById('id_city');
+            
+            let selectedFeatures = [];
+
+            // Gestion des tags de caractéristiques
+            document.querySelectorAll('.feature-tag').forEach(tag => {
+                tag.addEventListener('click', function() {
+                    const feature = this.getAttribute('data-feature');
+                    if (this.classList.contains('active')) {
+                        this.classList.remove('active');
+                        selectedFeatures = selectedFeatures.filter(f => f !== feature);
+                    } else {
+                        this.classList.add('active');
+                        selectedFeatures.push(feature);
+                    }
+                    updateStatusMessage();
+                });
+            });
+
+            function updateStatusMessage() {
+                if (selectedFeatures.length > 0) {
+                    statusEl.textContent = `${selectedFeatures.length} caractéristique(s) sélectionnée(s)`;
+                } else {
+                    statusEl.textContent = 'Cliquez pour générer une description automatique avec l\'IA';
+                }
+            }
+
+            generateBtn.addEventListener('click', async function() {
+                const hotelName = nameEl ? nameEl.value.trim() : '';
+                const city = cityEl ? cityEl.value.trim() : '';
+
+                // Validation
+                if (!hotelName) {
+                    statusEl.textContent = '❌ Veuillez d\'abord saisir le nom de l\'hôtel';
+                    statusEl.className = 'status-message status-error';
+                    nameEl.focus();
+                    return;
+                }
+
+                if (!city) {
+                    statusEl.textContent = '❌ Veuillez d\'abord saisir la ville';
+                    statusEl.className = 'status-message status-error';
+                    cityEl.focus();
+                    return;
+                }
+
+                try {
+                    // Afficher le loading
+                    generateBtn.disabled = true;
+                    generateBtn.innerHTML = '<span>⏳ Génération...</span>';
+                    loadingEl.style.display = 'block';
+                    statusEl.textContent = 'Connexion à l\'IA...';
+                    statusEl.className = 'status-message status-loading';
+
+                    // Récupérer le token CSRF
+                    function getCookie(name) {
+                        const value = `; ${document.cookie}`;
+                        const parts = value.split(`; ${name}=`);
+                        if (parts.length === 2) return parts.pop().split(';').shift();
+                    }
+
+                    const csrftoken = getCookie('csrftoken');
+
+                    // Appel à l'API
+                    const response = await fetch('{% url "api_generate_hotel_description" %}', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrftoken
+                        },
+                        body: JSON.stringify({ 
+                            hotel_name: hotelName, 
+                            city: city, 
+                            features: selectedFeatures 
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Mettre à jour la description
+                        if (descriptionEl) {
+                            descriptionEl.value = data.description;
+                        }
+                        statusEl.textContent = '✅ Description générée avec succès!' + (data.used_openai ? ' (IA OpenAI)' : ' (Mode démo)');
+                        statusEl.className = 'status-message status-success';
+                    } else {
+                        statusEl.textContent = '❌ Erreur: ' + (data.error || 'Impossible de générer la description');
+                        statusEl.className = 'status-message status-error';
+                    }
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    statusEl.textContent = '❌ Erreur de connexion: ' + error.message;
+                    statusEl.className = 'status-message status-error';
+                } finally {
+                    // Restaurer le bouton
+                    generateBtn.disabled = false;
+                    generateBtn.innerHTML = '<span>🤖 Générer avec IA</span>';
+                    loadingEl.style.display = 'none';
+                }
+            });
+
+            // Auto-sélection des caractéristiques si description existe déjà
+            if (descriptionEl && descriptionEl.value) {
+                const features = ['Piscine', 'Spa', 'Restaurant', 'WiFi gratuit', 'Parking', 'Petit-déjeuner', 'Salle de sport', 'Vue mer'];
+                features.forEach(feature => {
+                    if (descriptionEl.value.toLowerCase().includes(feature.toLowerCase())) {
+                        const tag = document.querySelector(`.feature-tag[data-feature="${feature}"]`);
+                        if (tag) {
+                            tag.classList.add('active');
+                            selectedFeatures.push(feature);
+                        }
+                    }
+                });
+                updateStatusMessage();
+            }
+        });
+    </script>
+</body>
+</html>

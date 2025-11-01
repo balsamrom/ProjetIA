@@ -1,0 +1,162 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Réserver des tickets - {{ event.name }}</title>
+    <link rel="stylesheet" href="{% static 'css/Home CSS/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/Home CSS/mobile.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/voguevue-theme.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --vv-brown: #6B4F3B;
+            --vv-yellow: #F2C94C;
+            --vv-white: #FFFFFF;
+            --vv-cream: #FFF8E7;
+        }
+        body {
+            background: var(--vv-cream);
+        }
+        .booking-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        .booking-card {
+            background: var(--vv-white);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 4px 12px rgba(107,79,59,.1);
+        }
+        .event-summary {
+            background: var(--vv-cream);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            font-weight: 700;
+            color: var(--vv-brown);
+            margin-bottom: 8px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--vv-brown);
+        }
+        .btn-submit {
+            background: var(--vv-yellow);
+            color: var(--vv-brown);
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: all .3s ease;
+        }
+        .btn-submit:hover {
+            background: var(--vv-brown);
+            color: var(--vv-yellow);
+        }
+        .btn-cancel {
+            display: inline-block;
+            margin-top: 15px;
+            color: var(--vv-brown);
+            text-decoration: none;
+        }
+        .error-list {
+            color: #dc3545;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <section class="nav-bar">
+        <div class="logo"><a href="/">VoyageVue</a></div>
+        <ul class="menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/hotels">Hotels</a></li>
+            <li><a href="/events" class="active">Events</a></li>
+            <li><a href="/travels">Travels</a></li>
+            <li><a href="/contact">Contact</a></li>
+            {% if user.is_authenticated %}
+            <li><a href="/profile">Profile</a></li>
+            <li><a href="/logout">Logout</a></li>
+            {% endif %}
+        </ul>
+    </section>
+
+    <div class="booking-container">
+        <div class="booking-card">
+            <h1 style="color: var(--vv-brown); margin-bottom: 20px;">Réserver des tickets</h1>
+            
+            <div class="event-summary">
+                <h3 style="color: var(--vv-brown); margin-bottom: 15px;">{{ event.name }}</h3>
+                <p><strong>📍 Lieu:</strong> {{ event.city }}{% if event.location %} - {{ event.location }}{% endif %}</p>
+                <p><strong>📅 Date:</strong> {{ event.date_start|date:"d F Y à H:i" }} - {{ event.date_end|date:"d F Y à H:i" }}</p>
+                <p><strong>💰 Prix par ticket:</strong> {{ event.price }} DT</p>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.quantity.id_for_label }}">
+                        Nombre de tickets
+                    </label>
+                    {{ form.quantity }}
+                    {% if form.quantity.errors %}
+                        <div class="error-list">{{ form.quantity.errors }}</div>
+                    {% endif %}
+                    <small style="color: #6b7280; display: block; margin-top: 5px;">
+                        Maximum 10 tickets par réservation
+                    </small>
+                </div>
+
+                <div style="background: var(--vv-cream); padding: 20px; border-radius: 12px; margin: 20px 0;">
+                    <p style="margin: 0; font-weight: 700; color: var(--vv-brown);">
+                        Total: <span id="total-price">{{ event.price }}</span> DT
+                    </p>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    🎫 Confirmer la réservation
+                </button>
+                
+                <a href="{% url 'event_detail' event.pk %}" class="btn-cancel">
+                    ← Annuler et retourner à l'événement
+                </a>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const quantityInput = document.getElementById('{{ form.quantity.id_for_label }}');
+        const totalPrice = document.getElementById('total-price');
+        const pricePerTicket = {{ event.price }};
+
+        quantityInput.addEventListener('input', function() {
+            const quantity = parseInt(this.value) || 1;
+            const total = quantity * pricePerTicket;
+            totalPrice.textContent = total.toFixed(2);
+        });
+    </script>
+</body>
+</html>
+

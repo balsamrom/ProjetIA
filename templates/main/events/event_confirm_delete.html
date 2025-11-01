@@ -1,0 +1,90 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supprimer l'événement</title>
+    <link rel="stylesheet" href="{% static 'css/Home CSS/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/voguevue-theme.css' %}">
+    <style>
+        :root {
+            --vv-brown: #6B4F3B;
+            --vv-yellow: #F2C94C;
+            --vv-white: #FFFFFF;
+            --vv-cream: #FFF8E7;
+        }
+        body {
+            background: var(--vv-cream);
+        }
+        .delete-container {
+            max-width: 600px;
+            margin: 60px auto;
+            padding: 20px;
+        }
+        .delete-card {
+            background: var(--vv-white);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 4px 12px rgba(107,79,59,.1);
+            text-align: center;
+        }
+        .warning-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .btn-secondary {
+            background: transparent;
+            color: var(--vv-brown);
+            padding: 16px 32px;
+            border: 2px solid var(--vv-brown);
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <section class="nav-bar">
+        <div class="logo"><a href="/">VoyageVue</a></div>
+        <ul class="menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/events" class="active">Events</a></li>
+        </ul>
+    </section>
+
+    <div class="delete-container">
+        <div class="delete-card">
+            <div class="warning-icon">⚠️</div>
+            <h1 style="color: var(--vv-brown); margin-bottom: 20px;">Supprimer l'événement</h1>
+            <p style="color: #6b7280; margin-bottom: 30px;">
+                Êtes-vous sûr de vouloir supprimer <strong>{{ event.name }}</strong> ?
+                <br>Cette action est irréversible.
+            </p>
+
+            <form method="post" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-danger">
+                    Supprimer définitivement
+                </button>
+            </form>
+            <a href="{% url 'event_detail' event.pk %}" class="btn-secondary">
+                Annuler
+            </a>
+        </div>
+    </div>
+</body>
+</html>
+

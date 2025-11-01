@@ -1,0 +1,48 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+<div class="py-4">
+  <h2 class="h4">Rooms</h2>
+  <a href="{% url 'volt_room_create' %}" class="btn btn-sm btn-primary">New Room</a>
+</div>
+<div class="card border-0 shadow">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-centered table-nowrap mb-0 rounded">
+        <thead class="thead-light">
+          <tr>
+            <th>Hotel</th>
+            <th>Name</th>
+            <th>Capacity</th>
+            <th>Price / night</th>
+            <th>Available</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rooms %}
+          <tr>
+            <td>{{ r.hotel.name }}</td>
+            <td>{{ r.name }}</td>
+            <td>{{ r.capacity }}</td>
+            <td>{{ r.price_per_night }}</td>
+            <td>
+              {% if r.is_available %}
+                <span class="badge bg-success">Yes</span>
+              {% else %}
+                <span class="badge bg-secondary">No</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <a href="{% url 'volt_room_update' r.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+              <a href="{% url 'volt_room_delete' r.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-center">No rooms.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

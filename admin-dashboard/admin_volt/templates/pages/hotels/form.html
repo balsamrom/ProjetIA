@@ -1,0 +1,93 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="py-4 d-flex justify-content-between">
+  <div>
+    <h1 class="h4">{% if mode == 'create' %}Créer un hôtel{% else %}Modifier l'hôtel{% endif %}</h1>
+    <p class="mb-0">Complétez le formulaire ci-dessous</p>
+  </div>
+  <div>
+    <a class="btn btn-outline-secondary btn-sm" href="{% url 'volt_hotel_list' %}">Retour</a>
+  </div>
+</div>
+
+<div class="card border-0 shadow p-4">
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    <div class="row g-3">
+      {% for field in form %}
+        <div class="col-md-6">
+          <label class="form-label">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+            <div class="text-danger small">{{ field.errors|striptags }}</div>
+          {% endif %}
+          {% if field.name == 'description' %}
+          <div class="mt-2 d-flex align-items-start gap-2">
+            <button type="button" id="vv-generate-desc" class="btn btn-warning btn-sm">🤖 Générer avec IA</button>
+            <small id="vv-gen-status" class="text-muted">Générer selon Nom et Ville</small>
+          </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if form.instance and form.instance.pk and form.instance.image %}
+    <div class="mt-3">
+      <label class="form-label">Image actuelle</label>
+      <div>
+        <img src="{{ form.instance.image.url }}" alt="{{ form.instance.name }}" class="img-fluid rounded border" style="max-height:180px;object-fit:cover;">
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="mt-4 d-flex gap-2">
+      <button class="btn btn-primary" type="submit">Enregistrer</button>
+      <a class="btn btn-outline-secondary" href="{% url 'volt_hotel_list' %}">Annuler</a>
+    </div>
+  </form>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var btn = document.getElementById('vv-generate-desc');
+  var statusEl = document.getElementById('vv-gen-status');
+  var nameEl = document.getElementById('id_name');
+  var cityEl = document.getElementById('id_city');
+  var descEl = document.getElementById('id_description');
+  var addressEl = document.getElementById('id_address');
+  function getCookie(name) {
+    var value = '; ' + document.cookie;
+    var parts = value.split('; ' + name + '=');
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+  var csrftoken = getCookie('csrftoken');
+  function generateDesc(){
+      var hotelName = (nameEl && nameEl.value) ? nameEl.value.trim() : '';
+      var city = (cityEl && cityEl.value) ? cityEl.value.trim() : '';
+      if (!hotelName) { if (statusEl) statusEl.textContent = 'Saisissez le nom de l\'hôtel'; if (nameEl) nameEl.focus(); return; }
+      if (!city) { if (statusEl) statusEl.textContent = 'Saisissez la ville'; if (cityEl) cityEl.focus(); return; }
+      btn.disabled = true;
+      btn.textContent = 'Génération...';
+      if (statusEl) statusEl.textContent = 'Connexion...';
+      fetch(`${window.location.origin}{% url "api_generate_hotel_description" %}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+        body: JSON.stringify({ hotel_name: hotelName, city: city, address: (addressEl && addressEl.value) ? addressEl.value.trim() : '', features: [] })
+      }).then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data && data.success) {
+            if (descEl) descEl.value = data.description || '';
+            if (statusEl) statusEl.textContent = 'Description générée';
+          } else {
+            if (statusEl) statusEl.textContent = (data && data.error) ? ('Erreur: ' + data.error) : 'Erreur inconnue';
+          }
+        })
+        .catch(function (e) { if (statusEl) statusEl.textContent = 'Erreur: ' + e.message; })
+        .finally(function () { btn.disabled = false; btn.textContent = '🤖 Générer avec IA'; });
+  }
+  if (btn) { btn.addEventListener('click', function(){ generateDesc(); }); }
+});
+</script>
+{% endblock content %}

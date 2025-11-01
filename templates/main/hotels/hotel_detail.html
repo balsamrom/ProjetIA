@@ -1,0 +1,812 @@
+{% load static %}
+
+<div class="vv-container">
+    <style>
+      @import url("/static/css/voguevue-theme.css");
+      :root{
+        --vv-primary: #6B4F3B;        /* brown */
+        --vv-primary-light:#5c4433;
+        --vv-secondary: #F2C94C;      /* yellow */
+        --vv-secondary-dark:#E0B73A;
+        --vv-accent:#6B4F3B;
+        --vv-white:#FFFFFF;
+        --vv-gray-50:#FFF8E7;         /* cream */
+      }
+      /* Minimal style overrides */
+      .vv-hero-section{ background: var(--vv-white); border:1px solid rgba(107,79,59,.12); box-shadow:none; border-radius:12px; }
+      .vv-hero-title{ color: var(--vv-primary); }
+      .vv-hero-subtitle{ color:#6b7280; }
+      .vv-hero-actions .vv-btn{ box-shadow:none; }
+      .vv-card{ background: var(--vv-white); border:1px solid rgba(107,79,59,.12); box-shadow:none; border-radius:12px; }
+      .vv-card-featured{ border-color: rgba(107,79,59,.18); }
+      .vv-card-header-featured{ background: var(--vv-gray-50); color: var(--vv-primary); }
+      .vv-btn-primary{ background: var(--vv-secondary); color: var(--vv-primary); }
+      .vv-btn-secondary{ background: var(--vv-primary); color: var(--vv-white); }
+      .vv-btn-accent{ background: var(--vv-secondary-dark); color: var(--vv-primary); }
+      .vv-btn-outline{ background: transparent; color: var(--vv-primary); border:1px solid rgba(107,79,59,.25); }
+      .vv-badge{ background: rgba(107,79,59,.08); color: var(--vv-primary); border:1px solid rgba(107,79,59,.12); }
+    </style>
+    <!-- Header Hero Section -->
+    <div class="vv-hero-section">
+        {% if hotel.image %}
+        <div class="vv-hero-media">
+            <img src="{{ hotel.image.url }}" alt="{{ hotel.name }}" />
+        </div>
+        {% endif %}
+        <div class="vv-hero-content">
+            <nav class="vv-breadcrumb">
+                <a href="{% url 'hotel_list' %}" class="vv-breadcrumb-link">
+                    <span class="vv-breadcrumb-arrow">←</span>
+                    Retour aux hôtels
+                </a>
+            </nav>
+            
+            <div class="vv-hero-main">
+                <div class="vv-hero-text">
+                    <h1 class="vv-hero-title">
+                        <span class="vv-hero-emoji">🏨</span>
+                        {{ hotel.name }}
+                    </h1>
+                    <p class="vv-hero-subtitle">Découvrez l'excellence hôtelière</p>
+                    
+                    <div class="vv-hero-badges">
+                        <div class="vv-badge vv-badge-location">
+                            <span class="vv-badge-icon">📍</span>
+                            {{ hotel.city }}
+                        </div>
+                        {% if hotel.category %}
+                        <div class="vv-badge vv-badge-category">
+                            <span class="vv-badge-icon">🏷️</span>
+                            {{ hotel.category }}
+                        </div>
+                        {% endif %}
+                        <div class="vv-badge vv-badge-reviews">
+                            <span class="vv-badge-icon">💬</span>
+                            {{ reviews.count }} avis
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="vv-hero-actions">
+                    <a href="{% url 'reputation_analysis' %}" 
+                       class="vv-btn vv-btn-primary vv-btn-with-icon">
+                        <span class="vv-btn-icon">🤖</span>
+                        Analyse Réputation IA
+                    </a>
+                    <a href="{% url 'hotel_reviews' hotel.pk %}" 
+                       class="vv-btn vv-btn-outline vv-btn-with-icon">
+                        <span class="vv-btn-icon">📝</span>
+                        Voir avis
+                    </a>
+                    <a href="{% url 'room_list' %}?hotel_id={{ hotel.pk }}" 
+                       class="vv-btn vv-btn-secondary vv-btn-with-icon">
+                        <span class="vv-btn-icon">🏷️</span>
+                        Voir disponibilités
+                    </a>
+                    <a href="{% url 'reserve_cheapest' hotel.pk %}"
+                       class="vv-btn vv-btn-accent vv-btn-with-icon">
+                        <span class="vv-btn-icon">🛏️</span>
+                        Réserver maintenant
+                    </a>
+                    <a href="{% url 'hotel_payment' hotel.pk %}"
+                       class="vv-btn vv-btn-primary vv-btn-with-icon">
+                        <span class="vv-btn-icon">💳</span>
+                        Payer / Réserver
+                    </a>
+                    {% if user.is_staff %}
+                    <a href="{% url 'hotel_update' hotel.pk %}" 
+                       class="vv-btn vv-btn-outline vv-btn-with-icon">
+                        <span class="vv-btn-icon">✏️</span>
+                        Modifier
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="vv-content-grid">
+        <!-- Sidebar - Hotel Information -->
+        <aside class="vv-sidebar">
+            <!-- Hotel Details Card -->
+            <div class="vv-card vv-card-sidebar">
+                <div class="vv-card-header vv-card-header-sidebar">
+                    <h3 class="vv-card-title">
+                        <span class="vv-card-icon">📋</span>
+                        Informations de l'Hôtel
+                    </h3>
+                </div>
+                <div class="vv-card-body">
+                    <!-- Location -->
+                    <div class="vv-info-group">
+                        <div class="vv-info-item">
+                            <div class="vv-info-icon-wrapper">
+                                <span class="vv-info-icon">📍</span>
+                            </div>
+                            <div class="vv-info-content">
+                                <label class="vv-info-label">Localisation</label>
+                                <p class="vv-info-value">{{ hotel.city }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category -->
+                    <div class="vv-info-group">
+                        <div class="vv-info-item">
+                            <div class="vv-info-icon-wrapper">
+                                <span class="vv-info-icon">🏷️</span>
+                            </div>
+                            <div class="vv-info-content">
+                                <label class="vv-info-label">Catégorie</label>
+                                <p class="vv-info-value">{{ hotel.category }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Availability -->
+                    <div class="vv-info-group">
+                        <div class="vv-info-item">
+                            <div class="vv-info-icon-wrapper">
+                                <span class="vv-info-icon">📅</span>
+                            </div>
+                            <div class="vv-info-content">
+                                <label class="vv-info-label">Disponibilité</label>
+                                <p class="vv-info-value">
+                                    <span class="vv-status {% if hotel.is_available %}vv-status-available{% else %}vv-status-unavailable{% endif %}">
+                                        {{ hotel.is_available|yesno:"Disponible,Non disponible" }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    {% if hotel.phone or hotel.email %}
+                    <div class="vv-info-section">
+                        <h4 class="vv-section-title">
+                            <span class="vv-section-icon">📞</span>
+                            Contact
+                        </h4>
+                        <div class="vv-contact-list">
+                            {% if hotel.phone %}
+                            <div class="vv-contact-item">
+                                <span class="vv-contact-icon">📞</span>
+                                <span class="vv-contact-text">{{ hotel.phone }}</span>
+                            </div>
+                            {% endif %}
+                            {% if hotel.email %}
+                            <div class="vv-contact-item">
+                                <span class="vv-contact-icon">📧</span>
+                                <span class="vv-contact-text">{{ hotel.email }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Statistics -->
+                    <div class="vv-info-section">
+                        <h4 class="vv-section-title">
+                            <span class="vv-section-icon">📊</span>
+                            Statistiques
+                        </h4>
+                        <div class="vv-stats-grid">
+                            <div class="vv-stat-card">
+                                <div class="vv-stat-number">{{ reviews.count }}</div>
+                                <div class="vv-stat-label">Avis total</div>
+                            </div>
+                            {% if avg_rating %}
+                            <div class="vv-stat-card">
+                                <div class="vv-stat-number">{{ avg_rating|floatformat:1 }}</div>
+                                <div class="vv-stat-label">Note moyenne</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="vv-actions-section">
+                        <a href="{% url 'create_review' hotel.pk %}" 
+                           class="vv-btn vv-btn-accent vv-btn-full vv-btn-with-icon">
+                            <span class="vv-btn-icon">⭐</span>
+                            Ajouter un Avis
+                        </a>
+                        {% if user.is_staff %}
+                        <a href="{% url 'hotel_update' hotel.pk %}" 
+                           class="vv-btn vv-btn-outline vv-btn-full vv-btn-with-icon">
+                            <span class="vv-btn-icon">✏️</span>
+                            Modifier l'Hôtel
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="vv-main-content">
+            <!-- AI Reputation Analysis -->
+            <section class="vv-section">
+                <div class="vv-card vv-card-featured">
+                    <div class="vv-card-header vv-card-header-featured">
+                        <div class="vv-card-header-content">
+                            <h3 class="vv-card-title">
+                                <span class="vv-card-icon">🤖</span>
+                                Analyse de Réputation IA
+                            </h3>
+                            <span class="vv-ai-badge">INTELLIGENCE ARTIFICIELLE</span>
+                        </div>
+                    </div>
+                    <div class="vv-card-body">
+                        {% if reputation_data %}
+                            <!-- Reputation Result -->
+                            <div class="vv-reputation-result">
+                                <div class="vv-reputation-main">
+                                    <div class="vv-reputation-score 
+                                        {% if reputation_data.reputation == 'Excellent' %}vv-score-excellent
+                                        {% elif reputation_data.reputation == 'Très bon' %}vv-score-very-good
+                                        {% elif reputation_data.reputation == 'Bon' %}vv-score-good
+                                        {% elif reputation_data.reputation == 'Moyen' %}vv-score-average
+                                        {% else %}vv-score-poor{% endif %}">
+                                        {{ reputation_data.reputation }}
+                                    </div>
+                                    <div class="vv-reputation-label">Réputation globale</div>
+                                </div>
+                                
+                                <div class="vv-confidence-meter">
+                                    <div class="vv-confidence-value">
+                                        {{ reputation_data.confidence|floatformat:3 }}
+                                    </div>
+                                    <div class="vv-confidence-label">Niveau de confiance</div>
+                                    <div class="vv-confidence-bar">
+                                        <div class="vv-confidence-fill" 
+                                             data-width="{{ reputation_data.confidence|default_if_none:0|floatformat:0 }}"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Prediction Breakdown -->
+                            <div class="vv-prediction-section">
+                                <h4 class="vv-section-title">
+                                    <span class="vv-section-icon">📈</span>
+                                    Répartition des Prédictions
+                                </h4>
+                                
+                                <div class="vv-prediction-grid">
+                                    {% for rep, stats in reputation_data.prediction_breakdown.items %}
+                                    <div class="vv-prediction-item">
+                                        <div class="vv-prediction-header">
+                                            <span class="vv-prediction-label 
+                                                {% if rep == 'Excellent' %}vv-label-excellent
+                                                {% elif rep == 'Très bon' %}vv-label-very-good
+                                                {% elif rep == 'Bon' %}vv-label-good
+                                                {% elif rep == 'Moyen' %}vv-label-average
+                                                {% else %}vv-label-poor{% endif %}">
+                                                {{ rep }}
+                                            </span>
+                                            <span class="vv-prediction-count">
+                                                {{ stats.count }} avis
+                                            </span>
+                                        </div>
+                                        <div class="vv-prediction-percentage">
+                                            {{ stats.percentage }}%
+                                        </div>
+                                        <div class="vv-progress-bar">
+                                            <div class="vv-progress-fill 
+                                                {% if rep == 'Excellent' %}vv-fill-excellent
+                                                {% elif rep == 'Très bon' %}vv-fill-very-good
+                                                {% elif rep == 'Bon' %}vv-fill-good
+                                                {% elif rep == 'Moyen' %}vv-fill-average
+                                                {% else %}vv-fill-poor{% endif %}"
+                                                data-width="{{ stats.percentage|default_if_none:0|floatformat:0 }}"></div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% elif model_available and reviews.count > 0 %}
+                            <!-- AI Analysis Ready State -->
+                            <div class="vv-empty-state vv-empty-state-ai">
+                                <div class="vv-ai-illustration">
+                                    <div class="vv-ai-robot">🤖</div>
+                                    <div class="vv-ai-pulse"></div>
+                                </div>
+                                <div class="vv-empty-content">
+                                    <h4 class="vv-empty-title">Analyse IA Prête</h4>
+                                    <p class="vv-empty-description">
+                                        Lancez l'analyse pour obtenir la réputation prédite basée sur les avis clients
+                                    </p>
+                                    <button class="vv-btn vv-btn-primary vv-btn-large vv-btn-with-icon" 
+                                            id="analyzeBtn" 
+                                            data-hotel-id="{{ hotel.pk }}">
+                                        <span class="vv-btn-icon">🚀</span>
+                                        Démarrer l'Analyse IA
+                                    </button>
+                                </div>
+                            </div>
+                        {% elif reviews.count == 0 %}
+                            <!-- No Reviews State -->
+                            <div class="vv-empty-state">
+                                <div class="vv-empty-illustration">
+                                    <span class="vv-empty-icon">💬</span>
+                                </div>
+                                <div class="vv-empty-content">
+                                    <h4 class="vv-empty-title">Aucun Avis Disponible</h4>
+                                    <p class="vv-empty-description">
+                                        Soyez le premier à partager votre expérience dans cet hôtel
+                                    </p>
+                                    <a href="{% url 'create_review' hotel.pk %}" 
+                                       class="vv-btn vv-btn-accent vv-btn-large vv-btn-with-icon">
+                                        <span class="vv-btn-icon">✍️</span>
+                                        Donner mon Avis
+                                    </a>
+                                </div>
+                            </div>
+                        {% else %}
+                            <!-- Model Not Available -->
+                            <div class="vv-alert vv-alert-warning">
+                                <div class="vv-alert-icon">⚠️</div>
+                                <div class="vv-alert-content">
+                                    <h5 class="vv-alert-title">Modèle d'Analyse IA Non Disponible</h5>
+                                    <p class="vv-alert-description">
+                                        L'analyse de réputation n'est pas opérationnelle pour le moment. 
+                                        Veuillez réessayer ultérieurement.
+                                    </p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- Customer Reviews -->
+            <section class="vv-section">
+                <div class="vv-card">
+                    <div class="vv-card-header">
+                        <div class="vv-card-header-content">
+                            <h3 class="vv-card-title">
+                                <span class="vv-card-icon">📝</span>
+                                Avis Clients
+                            </h3>
+                            <span class="vv-reviews-count">{{ reviews.count }} avis</span>
+                        </div>
+                    </div>
+                    <div class="vv-card-body">
+                        {% if reviews %}
+                            <div class="vv-reviews-container">
+                                {% for review in reviews %}
+                                <article class="vv-review-card {% if not forloop.last %}vv-review-divider{% endif %}">
+                                    <header class="vv-review-header">
+                                        <div class="vv-reviewer">
+                                            <div class="vv-reviewer-avatar">
+                                                <span class="vv-avatar">👤</span>
+                                            </div>
+                                            <div class="vv-reviewer-info">
+                                                <h4 class="vv-reviewer-name">
+                                                    {% if review.user.get_full_name %}
+                                                        {{ review.user.get_full_name }}
+                                                    {% else %}
+                                                        {{ review.user.username }}
+                                                    {% endif %}
+                                                </h4>
+                                                <div class="vv-review-meta">
+                                                    <div class="vv-review-rating">
+                                                        {% for i in "12345" %}
+                                                            {% if forloop.counter <= review.rating %}
+                                                                <span class="vv-star vv-star-filled">★</span>
+                                                            {% else %}
+                                                                <span class="vv-star">☆</span>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                        <span class="vv-rating-value">({{ review.rating }}/5)</span>
+                                                    </div>
+                                                    <span class="vv-review-date">
+                                                        📅 {{ review.created_at|date:"d/m/Y" }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </header>
+
+                                    <div class="vv-review-content">
+                                        <p class="vv-review-text">{{ review.review_text }}</p>
+                                    </div>
+
+                                    <footer class="vv-review-footer">
+                                        <div class="vv-review-analytics">
+                                            {% if review.sentiment_label %}
+                                            <span class="vv-analytic-tag vv-tag-sentiment 
+                                                {% if review.sentiment_label == 'Good' %}vv-tag-positive{% else %}vv-tag-negative{% endif %}">
+                                                <span class="vv-tag-icon">🧠</span>
+                                                Sentiment: {{ review.sentiment_label }}
+                                                <span class="vv-tag-score">({{ review.sentiment_score }}%)</span>
+                                            </span>
+                                            {% endif %}
+                                            
+                                            {% if reputation_data and reputation_data.individual_predictions %}
+                                                {% with prediction=reputation_data.individual_predictions|slice:forloop.counter0|first %}
+                                                {% if prediction %}
+                                                <span class="vv-analytic-tag vv-tag-ai 
+                                                    {% if prediction == 'Excellent' %}vv-tag-excellent
+                                                    {% elif prediction == 'Très bon' %}vv-tag-very-good
+                                                    {% elif prediction == 'Bon' %}vv-tag-good
+                                                    {% elif prediction == 'Moyen' %}vv-tag-average
+                                                    {% else %}vv-tag-poor{% endif %}">
+                                                    <span class="vv-tag-icon">🤖</span>
+                                                    IA: {{ prediction }}
+                                                </span>
+                                                {% endif %}
+                                                {% endwith %}
+                                            {% endif %}
+                                        </div>
+                                    </footer>
+                                </article>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="vv-empty-state">
+                                <div class="vv-empty-illustration">
+                                    <span class="vv-empty-icon">💬</span>
+                                </div>
+                                <div class="vv-empty-content">
+                                    <h4 class="vv-empty-title">Aucun Avis pour cet Hôtel</h4>
+                                    <p class="vv-empty-description">
+                                        Partagez votre expérience et aidez les autres voyageurs à choisir
+                                    </p>
+                                    <a href="{% url 'create_review' hotel.pk %}" 
+                                       class="vv-btn vv-btn-accent vv-btn-large vv-btn-with-icon">
+                                        <span class="vv-btn-icon">⭐</span>
+                                        Soyez le Premier à Donner votre Avis
+                                    </a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+
+<style>
+/* ===== PALETTE VOGUEVUE (marron/jaune/blanc) ===== */
+:root {
+    /* Couleurs principales */
+    --vv-primary: #6B4F3B;        /* Marron */
+    --vv-primary-light: #5c4433;  /* Marron foncé */
+    --vv-secondary: #F2C94C;      /* Jaune */
+    --vv-secondary-dark: #E0B73A; /* Jaune foncé */
+    --vv-accent: #6B4F3B;         /* Accent marron */
+    --vv-warning: #F7DC6F;        /* Jaune pâle */
+    
+    /* Couleurs neutres */
+    --vv-white: #FFFFFF;
+    --vv-gray-50: #FFF8E7;        /* Crème */
+    --vv-gray-100: #F3F4F6;
+    --vv-gray-200: #E5E7EB;
+    --vv-gray-300: #D1D5DB;
+    --vv-gray-400: #9CA3AF;
+    --vv-gray-500: #6B7280;
+    --vv-gray-600: #4B5563;
+    --vv-gray-700: #374151;
+    --vv-gray-800: #1F2937;
+    --vv-gray-900: #111827;
+    
+    /* Couleurs de statut */
+    --vv-success: #27AE60;        /* Vert */
+    --vv-danger: #E74C3C;         /* Rouge doux */
+    --vv-info: #6B4F3B;           /* Infos ton marron */
+    
+    /* Dégradés */
+    --vv-gradient-primary: linear-gradient(135deg, #F2C94C 0%, #E0B73A 60%, #6B4F3B 100%);
+    --vv-gradient-hero: linear-gradient(135deg, #FFFFFF 0%, #FFF8E7 100%);
+    --vv-gradient-card: linear-gradient(135deg, #FFFFFF 0%, #FFF8E7 100%);
+    
+    /* Ombres */
+    --vv-shadow-sm: 0 1px 3px rgba(107,79,59,0.12);
+    --vv-shadow: 0 4px 6px rgba(107,79,59,0.12);
+    --vv-shadow-lg: 0 10px 25px rgba(107,79,59,0.15);
+    --vv-shadow-xl: 0 20px 50px rgba(107,79,59,0.18);
+    
+    /* Radius & Spacing */
+    --vv-radius-sm: 8px;
+    --vv-radius: 12px;
+    --vv-radius-lg: 16px;
+    --vv-radius-xl: 20px;
+    --vv-radius-2xl: 24px;
+
+    --vv-space-xs: 4px;
+    --vv-space-sm: 8px;
+    --vv-space-md: 16px;
+    --vv-space-lg: 24px;
+    --vv-space-xl: 32px;
+    --vv-space-2xl: 48px;
+}
+
+/* ===== BASE ===== */
+.vv-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 var(--vv-space-lg);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    color: var(--vv-gray-800);
+}
+
+/* ===== HERO ===== */
+.vv-hero-section {
+    background: var(--vv-gradient-hero);
+    border-radius: var(--vv-radius-2xl);
+    margin: var(--vv-space-lg) 0 var(--vv-space-2xl) 0;
+    overflow: hidden;
+    box-shadow: var(--vv-shadow-lg);
+    position: relative;
+}
+.vv-hero-section::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+    opacity: 0.3;
+}
+.vv-hero-content {
+    position: relative; z-index: 1;
+    padding: var(--vv-space-2xl) var(--vv-space-xl);
+    color: var(--vv-primary);
+}
+.vv-breadcrumb { margin-bottom: var(--vv-space-lg); }
+.vv-breadcrumb-link {
+    display: inline-flex; align-items: center; gap: var(--vv-space-sm);
+    color: rgba(255,255,255,0.85); text-decoration: none; font-weight: 600;
+    transition: color .2s ease;
+}
+.vv-breadcrumb-link:hover { color: var(--vv-white); }
+.vv-breadcrumb-arrow { font-size: 16px; }
+
+.vv-hero-main { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--vv-space-2xl); }
+.vv-hero-text { flex: 1; }
+.vv-hero-title { font-size: 3rem; font-weight: 800; margin: 0 0 var(--vv-space-sm) 0; color: var(--vv-primary); line-height: 1.1; }
+.vv-hero-emoji { margin-right: var(--vv-space-md); }
+.vv-hero-subtitle { font-size: 1.125rem; color: var(--vv-gray-600); margin: 0 0 var(--vv-space-lg) 0; }
+.vv-hero-badges { display: flex; gap: var(--vv-space-md); flex-wrap: wrap; }
+.vv-hero-actions { display: flex; flex-direction: column; gap: var(--vv-space-md); flex-shrink: 0; }
+
+/* ===== BADGES ===== */
+.vv-badge {
+    display: inline-flex; align-items: center; gap: var(--vv-space-sm);
+    padding: var(--vv-space-sm) var(--vv-space-md);
+    border-radius: 20px; font-size: 14px; font-weight: 700;
+    backdrop-filter: blur(10px);
+    color: var(--vv-white);
+}
+.vv-badge-location { background: rgba(242,201,76,0.15); border: 1px solid rgba(242,201,76,0.35); color: var(--vv-primary); }
+.vv-badge-category { background: rgba(107,79,59,0.08); border: 1px solid rgba(107,79,59,0.2); color: var(--vv-primary); }
+.vv-badge-reviews  { background: rgba(107,79,59,0.06); border: 1px solid rgba(107,79,59,0.15); color: var(--vv-primary); }
+.vv-badge-icon { font-size: 16px; }
+
+/* ===== BUTTONS ===== */
+.vv-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: var(--vv-space-sm);
+    padding: var(--vv-space-md) var(--vv-space-lg);
+    border-radius: var(--vv-radius); font-weight: 700; font-size: 14px;
+    text-decoration: none; border: none; cursor: pointer;
+    transition: all .3s cubic-bezier(0.4,0,0.2,1);
+    position: relative; overflow: hidden;
+}
+.vv-btn::before {
+    content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
+    transition: left .5s;
+}
+.vv-btn:hover::before { left: 100%; }
+
+.vv-btn-primary { background: var(--vv-secondary); color: var(--vv-primary); box-shadow: var(--vv-shadow); }
+.vv-btn-primary:hover { background: var(--vv-secondary-dark); transform: translateY(-2px); box-shadow: var(--vv-shadow-lg); }
+.vv-btn-secondary { background: var(--vv-primary); color: var(--vv-white); box-shadow: var(--vv-shadow); }
+.vv-btn-secondary:hover { background: var(--vv-primary-light); transform: translateY(-2px); box-shadow: var(--vv-shadow-lg); }
+.vv-btn-accent { background: var(--vv-secondary-dark); color: var(--vv-primary); box-shadow: var(--vv-shadow); }
+.vv-btn-accent:hover { background: var(--vv-secondary); color: var(--vv-primary); transform: translateY(-2px); box-shadow: var(--vv-shadow-lg); }
+.vv-btn-outline { background: transparent; border: 2px solid var(--vv-gray-300); color: var(--vv-primary); }
+.vv-btn-outline:hover { border-color: var(--vv-primary); color: var(--vv-primary); background: rgba(107,79,59,0.05); transform: translateY(-2px); }
+.vv-btn-full { width: 100%; }
+.vv-btn-large { padding: var(--vv-space-lg) var(--vv-space-xl); font-size: 16px; }
+.vv-btn-with-icon { padding-left: var(--vv-space-lg); }
+.vv-btn-icon { font-size: 16px; }
+
+/* ===== LAYOUT ===== */
+.vv-content-grid { display: grid; grid-template-columns: 380px 1fr; gap: var(--vv-space-2xl); margin-bottom: var(--vv-space-2xl); }
+.vv-section { margin-bottom: var(--vv-space-2xl); }
+
+/* ===== CARDS ===== */
+.vv-card { background: var(--vv-white); border-radius: var(--vv-radius-lg); box-shadow: var(--vv-shadow); overflow: hidden; transition: transform .3s, box-shadow .3s; }
+.vv-card:hover { transform: translateY(-2px); box-shadow: var(--vv-shadow-lg); }
+.vv-card-featured { border: 2px solid var(--vv-primary); box-shadow: var(--vv-shadow-xl); }
+.vv-card-sidebar { position: sticky; top: var(--vv-space-lg); }
+
+.vv-card-header { padding: var(--vv-space-lg) var(--vv-space-xl); border-bottom: 1px solid var(--vv-gray-200); background: var(--vv-gradient-card); }
+.vv-card-header-featured { background: var(--vv-gradient-primary); color: var(--vv-white); border-bottom: none; }
+.vv-card-header-sidebar { background: var(--vv-gray-50); border-bottom: 1px solid var(--vv-gray-200); }
+
+.vv-card-header-content { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+.vv-card-title { display: flex; align-items: center; gap: var(--vv-space-sm); margin: 0; font-size: 1.25rem; font-weight: 700; color: inherit; }
+.vv-card-icon { font-size: 1.5rem; }
+.vv-card-body { padding: var(--vv-space-xl); }
+
+/* ===== SIDEBAR INFO ===== */
+.vv-info-group { margin-bottom: var(--vv-space-lg); }
+.vv-info-item { display: flex; align-items: flex-start; gap: var(--vv-space-md); padding: var(--vv-space-md) 0; }
+.vv-info-item:not(:last-child) { border-bottom: 1px solid var(--vv-gray-100); }
+.vv-info-icon-wrapper { flex-shrink: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: var(--vv-gray-50); border-radius: var(--vv-radius); border: 1px solid var(--vv-gray-200); }
+.vv-info-icon { font-size: 18px; }
+.vv-info-content { flex: 1; }
+.vv-info-label { display: block; font-size: 12px; color: var(--vv-gray-500); margin-bottom: var(--vv-space-xs); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+.vv-info-value { margin: 0; font-size: 15px; color: var(--vv-gray-800); font-weight: 700; }
+
+.vv-info-section { margin: var(--vv-space-xl) 0; padding: var(--vv-space-lg) 0; border-top: 1px solid var(--vv-gray-200); }
+.vv-section-title { display: flex; align-items: center; gap: var(--vv-space-sm); font-size: 16px; color: var(--vv-gray-700); margin: 0 0 var(--vv-space-lg) 0; font-weight: 700; }
+.vv-section-icon { font-size: 18px; }
+
+.vv-contact-item { display: flex; align-items: center; gap: var(--vv-space-sm); padding: var(--vv-space-sm) 0; font-size: 14px; }
+.vv-contact-icon { font-size: 16px; color: var(--vv-gray-500); }
+.vv-contact-text { color: var(--vv-gray-700); font-weight: 600; }
+
+.vv-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--vv-space-md); }
+.vv-stat-card { text-align: center; padding: var(--vv-space-lg); background: var(--vv-white); border: 1px solid var(--vv-gray-200); border-radius: var(--vv-radius); transition: all .3s; }
+.vv-stat-card:hover { border-color: var(--vv-primary); transform: translateY(-2px); box-shadow: var(--vv-shadow); }
+.vv-stat-number { font-size: 2rem; font-weight: 900; color: var(--vv-primary); line-height: 1; margin-bottom: var(--vv-space-sm); }
+.vv-stat-label { font-size: 12px; color: var(--vv-gray-500); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+
+.vv-actions-section { margin-top: var(--vv-space-xl); }
+
+/* ===== ANALYSE IA ===== */
+.vv-ai-badge { background: rgba(255,255,255,0.2); color: var(--vv-white); padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; letter-spacing: .5px; }
+
+.vv-reputation-result {
+    display: grid; grid-template-columns: 1fr auto; gap: var(--vv-space-2xl); align-items: center;
+    margin-bottom: var(--vv-space-2xl); padding: var(--vv-space-xl);
+    background: var(--vv-gray-50); border-radius: var(--vv-radius-lg); border: 1px solid var(--vv-gray-200);
+}
+.vv-reputation-main { text-align: center; }
+.vv-reputation-score {
+    font-size: 3.25rem; font-weight: 900; line-height: 1; margin-bottom: var(--vv-space-xs);
+    background: linear-gradient(135deg, var(--vv-primary), var(--vv-secondary));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.vv-score-excellent { background: linear-gradient(135deg, var(--vv-success), #58D68D); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+.vv-score-very-good { background: linear-gradient(135deg, var(--vv-primary), var(--vv-primary-light)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+.vv-score-good      { background: linear-gradient(135deg, var(--vv-secondary), #1ABC9C); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+.vv-score-average   { background: linear-gradient(135deg, var(--vv-warning), #F7DC6F); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+.vv-score-poor      { background: linear-gradient(135deg, var(--vv-danger), #EC7063); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+
+.vv-reputation-label { font-size: 14px; color: var(--vv-gray-600); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+
+.vv-confidence-meter { text-align: center; }
+.vv-confidence-value { font-size: 2.25rem; font-weight: 900; color: var(--vv-gray-800); margin-bottom: var(--vv-space-sm); }
+.vv-confidence-label { font-size: 12px; color: var(--vv-gray-500); margin-bottom: var(--vv-space-md); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+.vv-confidence-bar { width: 140px; height: 8px; background: var(--vv-gray-200); border-radius: 999px; margin: 0 auto; overflow: hidden; }
+.vv-confidence-fill { height: 100%; background: var(--vv-primary); border-radius: 999px; transition: width .8s ease; }
+
+/* Breakdown */
+/* .vv-prediction-section intentionally omitted to avoid empty ruleset */
+.vv-prediction-grid { display: grid; grid-template-columns: 1fr; gap: var(--vv-space-md); }
+.vv-prediction-item { background: var(--vv-white); border: 1px solid var(--vv-gray-200); border-radius: var(--vv-radius); padding: var(--vv-space-md); }
+.vv-prediction-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--vv-space-xs); }
+.vv-prediction-label { font-weight: 800; font-size: 14px; }
+.vv-label-excellent { color: var(--vv-success); }
+.vv-label-very-good { color: var(--vv-primary); }
+.vv-label-good { color: var(--vv-secondary); }
+.vv-label-average { color: var(--vv-warning); }
+.vv-label-poor { color: var(--vv-danger); }
+.vv-prediction-count { font-size: 12px; color: var(--vv-gray-500); }
+.vv-prediction-percentage { font-size: 12px; color: var(--vv-gray-600); margin-bottom: var(--vv-space-xs); }
+.vv-progress-bar { height: 8px; background: var(--vv-gray-200); border-radius: 999px; overflow: hidden; }
+.vv-progress-fill { height: 100%; border-radius: 999px; transition: width .8s ease; }
+.vv-fill-excellent { background: var(--vv-success); }
+.vv-fill-very-good { background: var(--vv-primary); }
+.vv-fill-good { background: var(--vv-secondary); }
+.vv-fill-average { background: var(--vv-warning); }
+.vv-fill-poor { background: var(--vv-danger); }
+
+/* ===== REVIEWS ===== */
+.vv-reviews-container { display: block; }
+.vv-review-card { padding: var(--vv-space-xl) 0; }
+.vv-review-divider { border-bottom: 1px solid var(--vv-gray-200); }
+.vv-review-header { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--vv-space-md); margin-bottom: var(--vv-space-sm); }
+.vv-reviewer { display: flex; align-items: flex-start; gap: var(--vv-space-md); }
+.vv-reviewer-avatar .vv-avatar { font-size: 20px; }
+.vv-reviewer-name { margin: 0 0 var(--vv-space-xs) 0; font-size: 14px; color: var(--vv-gray-800); }
+.vv-review-meta { display: flex; flex-wrap: wrap; gap: var(--vv-space-sm); align-items: center; }
+.vv-review-rating { display: inline-flex; align-items: center; gap: 4px; }
+.vv-star { color: var(--vv-gray-300); font-size: 16px; }
+.vv-star-filled { color: #F2C94C; }
+.vv-rating-value { font-size: 12px; color: var(--vv-gray-500); margin-left: 6px; }
+.vv-review-date { font-size: 12px; color: var(--vv-gray-500); }
+.vv-review-text { margin: 0; color: var(--vv-gray-700); }
+.vv-review-footer { margin-top: var(--vv-space-sm); }
+.vv-review-analytics { display: flex; gap: var(--vv-space-sm); flex-wrap: wrap; }
+
+.vv-analytic-tag, .vv-tag { padding: 6px 12px; border-radius: 999px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; }
+.vv-tag-sentiment { background: var(--vv-gray-100); }
+.vv-tag-positive { background: #d1fae5; color: #065f46; }
+.vv-tag-negative { background: #fee2e2; color: #991b1b; }
+.vv-tag-ai { color: var(--vv-white); }
+.vv-tag-excellent { background: var(--vv-success); }
+.vv-tag-very-good { background: var(--vv-primary); }
+.vv-tag-good { background: var(--vv-secondary); }
+.vv-tag-average { background: var(--vv-warning); }
+.vv-tag-poor { background: var(--vv-danger); }
+.vv-tag-icon { font-size: 14px; }
+.vv-tag-score { opacity: .9; }
+
+/* ===== EMPTY / ALERTS ===== */
+.vv-empty-state { text-align: center; padding: var(--vv-space-2xl) var(--vv-space-lg); }
+.vv-empty-state-ai { padding: var(--vv-space-xl) var(--vv-space-lg); }
+.vv-empty-icon { font-size: 4rem; margin-bottom: var(--vv-space-md); opacity: .5; }
+.vv-ai-robot { font-size: 4rem; margin-bottom: var(--vv-space-md); }
+.vv-empty-title { color: var(--vv-gray-700); margin: 0 0 var(--vv-space-xs) 0; }
+.vv-empty-description { color: var(--vv-gray-500); margin: 0 0 var(--vv-space-lg) 0; }
+/* Illustration containers */
+.vv-empty-illustration { display: flex; align-items: center; justify-content: center; margin-bottom: var(--vv-space-md); }
+.vv-ai-illustration { position: relative; display: inline-flex; align-items: center; justify-content: center; margin-bottom: var(--vv-space-md); }
+.vv-ai-pulse { position: absolute; width: 120px; height: 120px; border-radius: 999px; background: rgba(107,79,59,0.15); animation: aiPulse 2s ease-out infinite; }
+.vv-reviews-count { color: var(--vv-gray-600); font-weight: 700; }
+
+.vv-alert { display: flex; align-items: flex-start; gap: var(--vv-space-sm); padding: var(--vv-space-md); border-radius: var(--vv-radius); margin: var(--vv-space-md) 0; }
+.vv-alert-warning { background: #FFFBEB; border: 1px solid #FCD34D; }
+.vv-alert-icon { font-size: 20px; flex-shrink: 0; }
+.vv-alert-title { margin: 0 0 4px 0; font-size: 14px; color: var(--vv-gray-800); }
+.vv-alert-description { margin: 0; font-size: 13px; color: var(--vv-gray-600); }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+    .vv-content-grid { grid-template-columns: 1fr; gap: var(--vv-space-xl); }
+    .vv-hero-main { flex-direction: column; align-items: flex-start; }
+    .vv-hero-actions { width: 100%; justify-content: flex-start; }
+}
+@media (max-width: 768px) {
+    .vv-container { padding: 0 var(--vv-space-md); }
+    .vv-hero-content { padding: var(--vv-space-xl); }
+    .vv-hero-title { font-size: 2.25rem; }
+    .vv-reputation-result { grid-template-columns: 1fr; gap: var(--vv-space-lg); text-align: center; }
+    .vv-review-header { flex-direction: column; gap: var(--vv-space-sm); align-items: flex-start; }
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.vv-card { animation: slideIn .5s ease-out; }
+.vv-progress-fill { animation: slideIn .8s ease-out; }
+@keyframes aiPulse {
+    0% { transform: scale(0.8); opacity: 0.7; }
+    70% { transform: scale(1.2); opacity: 0.1; }
+    100% { transform: scale(0.8); opacity: 0; }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animation douce des barres de progression (prediction breakdown)
+    document.querySelectorAll('.vv-progress-fill').forEach(bar => {
+        const w = bar.dataset.width ? `${bar.dataset.width}%` : '0%';
+        bar.style.width = '0%';
+        setTimeout(() => { bar.style.width = w; }, 300);
+    });
+    // Animation jauge de confiance
+    document.querySelectorAll('.vv-confidence-fill').forEach(bar => {
+        const w = bar.dataset.width ? `${bar.dataset.width}%` : '0%';
+        bar.style.width = '0%';
+        setTimeout(() => { bar.style.width = w; }, 300);
+    });
+    // Bouton Analyse IA (hook)
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    if (analyzeBtn) {
+        analyzeBtn.addEventListener('click', function() {
+            const hotelId = this.dataset.hotelId;
+            console.log('Lancement analyse pour hôtel:', hotelId);
+        });
+    }
+});
+</script>

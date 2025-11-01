@@ -1,0 +1,42 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+<div class="py-4 d-flex justify-content-between align-items-center">
+  <h2 class="h4 mb-0">Reservations</h2>
+  <a href="{% url 'volt_reservation_create' %}" class="btn btn-sm btn-primary">New Reservation</a>
+</div>
+<div class="card border-0 shadow">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-centered table-nowrap mb-0 rounded">
+        <thead class="thead-light">
+          <tr>
+            <th>Hotel</th>
+            <th>Room</th>
+            <th>Customer</th>
+            <th>Check-in</th>
+            <th>Check-out</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in reservations %}
+          <tr>
+            <td>{{ r.room.hotel.name }}</td>
+            <td>{{ r.room.name }}</td>
+            <td>{{ r.customer_name }}</td>
+            <td>{{ r.check_in }}</td>
+            <td>{{ r.check_out }}</td>
+            <td class="text-end">
+              <a href="{% url 'volt_reservation_update' r.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+              <a href="{% url 'volt_reservation_delete' r.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-center">No reservations.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

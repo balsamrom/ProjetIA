@@ -1,0 +1,56 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="py-4">
+  <div class="d-flex justify-content-between w-100 flex-wrap">
+    <div class="mb-3 mb-lg-0">
+      <h1 class="h4">Hotels</h1>
+      <p class="mb-0">Gestion des hôtels</p>
+    </div>
+    <div>
+      <a href="{% url 'volt_hotel_create' %}" class="btn btn-sm btn-primary">Nouvel hôtel</a>
+    </div>
+  </div>
+</div>
+
+<div class="card border-0 shadow">
+  <div class="table-responsive p-3">
+    <table class="table table-centered table-nowrap mb-0 rounded">
+      <thead class="thead-light">
+        <tr>
+          <th>Nom</th>
+          <th>Ville</th>
+          <th>Prix/Nuit</th>
+          <th>Disponible</th>
+          <th>Créé</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for h in hotels %}
+        <tr>
+          <td><a href="{% url 'volt_hotel_detail' h.id %}">{{ h.name }}</a></td>
+          <td>{{ h.city }}</td>
+          <td>{{ h.price_per_night }}</td>
+          <td>
+            {% if h.is_available %}
+              <span class="badge bg-success">Oui</span>
+            {% else %}
+              <span class="badge bg-danger">Non</span>
+            {% endif %}
+          </td>
+          <td>{{ h.created_at|date:'Y-m-d H:i' }}</td>
+          <td class="text-end">
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'volt_hotel_update' h.id %}">Modifier</a>
+            <a class="btn btn-sm btn-outline-danger" href="{% url 'volt_hotel_delete' h.id %}">Supprimer</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center text-muted">Aucun hôtel</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock content %}

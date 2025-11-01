@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Delete Hotel</title>
+    <link rel="stylesheet" href="/static/css/Home CSS/style.css" />
+</head>
+<body>
+    <section class="nav-bar">
+        <div class="logo"><a href="/">VoyageVue</a></div>
+        <ul class="menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/hotels" class="active">Hotels</a></li>
+        </ul>
+    </section>
+    <div class="container" style="max-width:720px;margin:20px auto;background:#fff;padding:22px;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,.08);">
+        <h1>Delete Hotel</h1>
+        <p>Are you sure you want to delete "{{ hotel.name }}"?</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" style="background:#e63946;color:#fff;padding:8px 14px;border:none;border-radius:6px;cursor:pointer;">Yes, delete</button>
+            <a href="/hotels/{{ hotel.id }}" style="margin-left:10px;">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>
+
+

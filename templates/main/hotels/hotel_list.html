@@ -1,0 +1,189 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Hotels</title>
+    <link rel="stylesheet" href="{% static 'css/Home CSS/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/Home CSS/mobile.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/hotels/hotels.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/voguevue-theme.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <section class="nav-bar">
+        <div class="logo"><a href="/">VoyageVue</a></div>
+        <ul class="menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/hotels" class="active">Hotels</a></li>
+            <li><a href="/travels">travels</a></li>
+            <li><a href="/contact">Contact</a></li>
+        </ul>
+    </section>
+
+    <div class="container" style="max-width:1200px;margin: 20px auto;">
+        <div class="topbar">
+            <h1>Hotels</h1>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <form method="get" style="display:flex; gap:8px; align-items:center;">
+                    <a class="btn" href="/hotels" style="background:#6c757d">Reset</a>
+                </form>
+                <a class="btn btn-primary" href="/reputation-analysis/" title="Analyse IA des réputations">Analyse Réputation IA</a>
+            </div>
+        </div>
+        <style>
+          :root{ --vv-brown:#6B4F3B; --vv-brown-600:#5c4433; --vv-yellow:#F2C94C; --vv-yellow-600:#E0B73A; --vv-cream:#FFF8E7; --vv-white:#FFFFFF; }
+          body{ background: var(--vv-cream); }
+          .topbar h1{ color: var(--vv-brown); margin: 8px 0 16px 0; }
+          .hotel-grid{ display:grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap:18px; }
+          .hotel-card{ background: var(--vv-white); border:1px solid rgba(107,79,59,.15); border-radius:16px; overflow:hidden; box-shadow:0 6px 16px rgba(107,79,59,.08); transition: transform .2s ease, box-shadow .2s ease; }
+          .hotel-card:hover{ transform: translateY(-3px); box-shadow:0 12px 28px rgba(107,79,59,.14); }
+          .hotel-image{ width:100%; height:180px; object-fit:cover; display:block; }
+          .hotel-content{ padding:14px 16px 18px 16px; }
+          .best-seller-badge{ display:inline-block; padding:4px 10px; border-radius:999px; background: rgba(242,201,76,.25); color: var(--vv-brown); font-weight:700; font-size:12px; border:1px solid rgba(242,201,76,.5); }
+          .hotel-title{ margin:10px 0 6px 0; color: var(--vv-brown); }
+          .hotel-meta .city-badge{ background:#f3f4f6; color:#6b7280; padding:4px 10px; border-radius:999px; font-size:12px; border:1px solid #e5e7eb; }
+          .review-count{ background:#f8fafc; color:#374151; padding:4px 10px; border-radius:999px; font-weight:600; font-size:12px; }
+          .hotel-rank{ color:#6b7280; font-size:13px; margin:8px 0; }
+          .hotel-comment{ color:#4b5563; font-style:italic; font-size:13px; margin:6px 0 10px 0; }
+          .hotel-price{ color: var(--vv-brown); font-weight:800; margin:8px 0 12px 0; }
+          .check-availability{ display:inline-block; background: var(--vv-yellow); color: var(--vv-brown); text-decoration:none; padding:10px 14px; border-radius:10px; border:1px solid rgba(107,79,59,.15); font-weight:700; }
+          .check-availability:hover{ background: var(--vv-yellow-600); }
+          .stars{ display:inline-flex; gap:6px; vertical-align:middle; }
+          .stars .star{ color:#e5e7eb; font-size:18px; }
+          .stars .star.active{ color:#fbbf24; }
+        </style>
+        {% if messages %}
+        <ul>
+            {% for message in messages %}<li>{{ message }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if recommended %}
+        <h2>Meilleures ventes</h2>
+        <div class="hotel-grid">
+            {% for hotel in recommended %}
+            <div class="hotel-card">
+                {% if hotel.image %}
+                <img src="{{ hotel.image.url|default:hotel.image }}" alt="{{ hotel.name }}" class="hotel-image" loading="lazy">
+                {% elif hotel.image_url %}
+                <img src="{{ hotel.image_url }}" alt="{{ hotel.name }}" class="hotel-image" loading="lazy">
+                {% elif hotel.photo_url %}
+                <img src="{{ hotel.photo_url }}" alt="{{ hotel.name }}" class="hotel-image" loading="lazy">
+                {% elif hotel.picture %}
+                <img src="{{ hotel.picture }}" alt="{{ hotel.name }}" class="hotel-image" loading="lazy">
+                {% else %}
+                <img src="{% static 'assets/travels.jpg' %}" alt="{{ hotel.name }}" class="hotel-image" loading="lazy">
+                {% endif %}
+                <div class="hotel-content">
+                    <div class="best-seller-badge">Meilleures ventes</div>
+                    <h3 class="hotel-title">{{ hotel.name }}</h3>
+                    <div class="hotel-meta" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <span class="city-badge">{{ hotel.city }}</span>
+                        {% if hotel.star_rating %}
+                          <span class="city-badge">★ {{ hotel.star_rating }} étoiles</span>
+                        {% elif hotel.stars %}
+                          <span class="city-badge">★ {{ hotel.stars }} étoiles</span>
+                        {% endif %}
+                        <span class="review-count">{{ hotel.reviews.count }} avis</span>
+                        {% with hr=hotel.rating|default:0 %}
+                        <span class="stars" title="Note: {{ hr|floatformat:1 }}/5">
+                          <span class="star {% if hr|floatformat:0 == '1' or hr|floatformat:0 == '2' or hr|floatformat:0 == '3' or hr|floatformat:0 == '4' or hr|floatformat:0 == '5' %}active{% endif %}">★</span>
+                          <span class="star {% if hr|floatformat:0 == '2' or hr|floatformat:0 == '3' or hr|floatformat:0 == '4' or hr|floatformat:0 == '5' %}active{% endif %}">★</span>
+                          <span class="star {% if hr|floatformat:0 == '3' or hr|floatformat:0 == '4' or hr|floatformat:0 == '5' %}active{% endif %}">★</span>
+                          <span class="star {% if hr|floatformat:0 == '4' or hr|floatformat:0 == '5' %}active{% endif %}">★</span>
+                          <span class="star {% if hr|floatformat:0 == '5' %}active{% endif %}">★</span>
+                        </span>
+                        
+                        {% endwith %}
+                    </div>
+                    <div class="hotel-rank">
+                        Rapport qualité prix n°{{ forloop.counter }} sur {{ recommended|length }} hébergements pour : {{ hotel.city }}
+                    </div>
+                    {% if hotel.description %}
+                    <div class="hotel-comment">
+                        {{ hotel.description|striptags|truncatechars:150 }}
+                    </div>
+                    {% endif %}
+                    {% with hotel.reviews.first as latest_review %}
+                    {% if latest_review and latest_review.review_text and latest_review.review_text|lower != 'null' %}
+                    <div class="hotel-comment">
+                        "{{ latest_review.review_text|truncatechars:100 }}"
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    <div class="hotel-price">
+                        à partir de {{ hotel.price_per_night }}€
+                    </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                      <a href="/hotels/{{ hotel.id }}/payment/" class="check-availability" style="background:#fff;border-color:#e5e7eb;color:#374151;">Plus d’infos</a>
+                      <a href="/hotels/{{ hotel.id }}/reviews/" class="check-availability">Analyser les avis</a>
+                    </div>
+                    
+                    
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="hotel-grid">
+            {% for hotel in hotels %}
+            <div class="hotel-card">
+                {% if hotel.image %}
+                <img src="{{ hotel.image.url|default:hotel.image }}" alt="{{ hotel.name }}" class="hotel-image">
+                {% else %}
+                <img src="{% static 'assets/travels.jpg' %}" alt="{{ hotel.name }}" class="hotel-image">
+                {% endif %}
+                <div class="hotel-content">
+                    <h3 class="hotel-title">{{ hotel.name }}</h3>
+                    <div class="hotel-meta" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <span class="city-badge">{{ hotel.city }}</span>
+                        {% if hotel.star_rating %}
+                          <span class="city-badge">★ {{ hotel.star_rating }} étoiles</span>
+                        {% elif hotel.stars %}
+                          <span class="city-badge">★ {{ hotel.stars }} étoiles</span>
+                        {% endif %}
+                        <span class="review-count">{{ hotel.reviews.count }} avis</span>
+                        {% with hr=hotel.rating|default:0 %}
+                        <span class="stars" title="Note: {{ hr|floatformat:1 }}/5">
+                          <span class="star {% if hr|floatformat:0|stringformat:"s" == '1' %}active{% endif %}">★</span>
+                          <span class="star {% if hr|floatformat:0|stringformat:"s" == '2' %}active{% endif %}">★</span>
+                          <span class="star {% if hr|floatformat:0|stringformat:"s" == '3' %}active{% endif %}">★</span>
+                          <span class="star {% if hr|floatformat:0|stringformat:"s" == '4' %}active{% endif %}">★</span>
+                          <span class="star {% if hr|floatformat:0|stringformat:"s" == '5' %}active{% endif %}">★</span>
+                        </span>
+                        {% endwith %}
+                    </div>
+                    <div class="hotel-rank">
+                        Rapport qualité prix n°{{ forloop.counter }} sur {{ hotels|length }} hébergements pour : {{ hotel.city }}
+                    </div>
+                    {% if hotel.description %}
+                    <div class="hotel-comment">
+                        {{ hotel.description|striptags|truncatechars:150 }}
+                    </div>
+                    {% endif %}
+                    {% with hotel.reviews.first as latest_review %}
+                    {% if latest_review and latest_review.review_text and latest_review.review_text|lower != 'null' %}
+                    <div class="hotel-comment">
+                        "{{ latest_review.review_text|truncatechars:100 }}"
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    <div class="hotel-price">
+                        à partir de {{ hotel.price_per_night }}€
+                    </div>
+                    <a href="/hotels/{{ hotel.id }}/reviews/" class="check-availability">Analyser les avis</a>
+                    
+                    
+                </div>
+            </div>
+            {% empty %}
+            <p>Aucun hôtel disponible.</p>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
+
+

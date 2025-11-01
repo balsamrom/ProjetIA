@@ -1,0 +1,165 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Réservation confirmée</title>
+    <link rel="stylesheet" href="{% static 'css/Home CSS/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/voguevue-theme.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --vv-brown: #6B4F3B;
+            --vv-yellow: #F2C94C;
+            --vv-white: #FFFFFF;
+            --vv-cream: #FFF8E7;
+        }
+        body {
+            background: var(--vv-cream);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .success-container {
+            max-width: 600px;
+            padding: 40px;
+            text-align: center;
+        }
+        .success-card {
+            background: var(--vv-white);
+            border-radius: 16px;
+            padding: 50px;
+            box-shadow: 0 4px 12px rgba(107,79,59,.1);
+        }
+        .success-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        .success-title {
+            color: var(--vv-brown);
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        .success-message {
+            color: #4b5563;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .booking-details {
+            background: var(--vv-cream);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 30px 0;
+            text-align: left;
+        }
+        .booking-details h3 {
+            color: var(--vv-brown);
+            margin-bottom: 20px;
+        }
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(107,79,59,.1);
+        }
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #6b7280;
+        }
+        .detail-value {
+            font-weight: 700;
+            color: var(--vv-brown);
+        }
+        .btn-primary {
+            background: var(--vv-yellow);
+            color: var(--vv-brown);
+            padding: 14px 28px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-block;
+            margin: 10px;
+            transition: all .3s ease;
+        }
+        .btn-primary:hover {
+            background: var(--vv-brown);
+            color: var(--vv-yellow);
+        }
+        .btn-secondary {
+            background: transparent;
+            color: var(--vv-brown);
+            padding: 14px 28px;
+            border: 2px solid var(--vv-brown);
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-block;
+            margin: 10px;
+            transition: all .3s ease;
+        }
+        .btn-secondary:hover {
+            background: var(--vv-brown);
+            color: var(--vv-white);
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <div class="success-card">
+            <div class="success-icon">✅</div>
+            <h1 class="success-title">Réservation confirmée !</h1>
+            <p class="success-message">
+                Votre réservation a été enregistrée avec succès. Vous recevrez un email de confirmation.
+            </p>
+
+            <div class="booking-details">
+                <h3>Détails de la réservation</h3>
+                <div class="detail-item">
+                    <span class="detail-label">Événement:</span>
+                    <span class="detail-value">{{ event.name }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Date:</span>
+                    <span class="detail-value">{{ event.date_start|date:"d F Y à H:i" }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Lieu:</span>
+                    <span class="detail-value">{{ event.city }}{% if event.location %} - {{ event.location }}{% endif %}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Nombre de tickets:</span>
+                    <span class="detail-value">{{ booking.quantity }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Prix unitaire:</span>
+                    <span class="detail-value">{{ event.price }} DT</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Total:</span>
+                    <span class="detail-value">{{ total_price|floatformat:2 }} DT</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Date de réservation:</span>
+                    <span class="detail-value">{{ booking.booking_date|date:"d F Y à H:i" }}</span>
+                </div>
+            </div>
+
+            <div>
+                <a href="{% url 'event_detail' event.pk %}" class="btn-primary">
+                    Voir l'événement
+                </a>
+                <a href="{% url 'event_list' %}" class="btn-secondary">
+                    Autres événements
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,174 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if mode == 'create' %}Créer un événement{% else %}Modifier l'événement{% endif %}</title>
+    <link rel="stylesheet" href="{% static 'css/Home CSS/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/voguevue-theme.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --vv-brown: #6B4F3B;
+            --vv-yellow: #F2C94C;
+            --vv-white: #FFFFFF;
+            --vv-cream: #FFF8E7;
+        }
+        body {
+            background: var(--vv-cream);
+        }
+        .form-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        .form-card {
+            background: var(--vv-white);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 4px 12px rgba(107,79,59,.1);
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        .form-label {
+            display: block;
+            font-weight: 700;
+            color: var(--vv-brown);
+            margin-bottom: 10px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--vv-brown);
+        }
+        textarea.form-control {
+            resize: vertical;
+            min-height: 120px;
+        }
+        .btn-submit {
+            background: var(--vv-yellow);
+            color: var(--vv-brown);
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: all .3s ease;
+        }
+        .btn-submit:hover {
+            background: var(--vv-brown);
+            color: var(--vv-yellow);
+        }
+        .btn-cancel {
+            background: transparent;
+            color: var(--vv-brown);
+            padding: 16px 32px;
+            border: 2px solid var(--vv-brown);
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-block;
+        }
+        .btn-cancel:hover {
+            background: var(--vv-brown);
+            color: var(--vv-white);
+        }
+        .error-list {
+            color: #dc3545;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+        .current-image {
+            margin-top: 15px;
+        }
+        .current-image img {
+            max-width: 300px;
+            max-height: 200px;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+    <section class="nav-bar">
+        <div class="logo"><a href="/">VoyageVue</a></div>
+        <ul class="menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/hotels">Hotels</a></li>
+            <li><a href="/events" class="active">Events</a></li>
+            <li><a href="/travels">Travels</a></li>
+            <li><a href="/contact">Contact</a></li>
+            {% if user.is_authenticated %}
+            <li><a href="/profile">Profile</a></li>
+            <li><a href="/logout">Logout</a></li>
+            {% endif %}
+        </ul>
+    </section>
+
+    <div class="form-container">
+        <div class="form-card">
+            <h1 style="color: var(--vv-brown); margin-bottom: 30px;">
+                {% if mode == 'create' %}Créer un événement{% else %}Modifier l'événement{% endif %}
+            </h1>
+
+            {% if messages %}
+            <div style="margin-bottom: 20px;">
+                {% for message in messages %}
+                <div style="padding: 12px; background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 8px; color: #0c5460;">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                {% for field in form %}
+                <div class="form-group">
+                    <label class="form-label" for="{{ field.id_for_label }}">
+                        {{ field.label }}
+                    </label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <div class="error-list">{{ field.errors }}</div>
+                    {% endif %}
+                    {% if field.help_text %}
+                        <small style="color: #6b7280; display: block; margin-top: 5px;">{{ field.help_text }}</small>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                {% if event and event.image %}
+                <div class="current-image">
+                    <label class="form-label">Image actuelle</label>
+                    <img src="{{ event.image.url }}" alt="{{ event.name }}">
+                </div>
+                {% endif %}
+
+                <div style="margin-top: 30px;">
+                    <button type="submit" class="btn-submit">
+                        💾 Enregistrer
+                    </button>
+                    <a href="{% if event %}{% url 'event_detail' event.pk %}{% else %}{% url 'event_list' %}{% endif %}" class="btn-cancel">
+                        Annuler
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
+

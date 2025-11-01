@@ -1,0 +1,197 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajouter un avis - {{ event.name }}</title>
+    <link rel="stylesheet" href="{% static 'css/Home CSS/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/voguevue-theme.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --vv-brown: #6B4F3B;
+            --vv-yellow: #F2C94C;
+            --vv-white: #FFFFFF;
+            --vv-cream: #FFF8E7;
+        }
+        body {
+            background: var(--vv-cream);
+        }
+        .review-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        .review-card {
+            background: var(--vv-white);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 4px 12px rgba(107,79,59,.1);
+        }
+        .event-info {
+            background: var(--vv-cream);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        .form-label {
+            display: block;
+            font-weight: 700;
+            color: var(--vv-brown);
+            margin-bottom: 10px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--vv-brown);
+        }
+        textarea.form-control {
+            resize: vertical;
+            min-height: 120px;
+        }
+        .btn-submit {
+            background: var(--vv-yellow);
+            color: var(--vv-brown);
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: all .3s ease;
+        }
+        .btn-submit:hover {
+            background: var(--vv-brown);
+            color: var(--vv-yellow);
+        }
+        .btn-cancel {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: var(--vv-brown);
+            text-decoration: none;
+        }
+        .error-list {
+            color: #dc3545;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+        .rating-display {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .star-preview {
+            font-size: 24px;
+            color: #e5e7eb;
+            cursor: pointer;
+        }
+        .star-preview.active {
+            color: #fbbf24;
+        }
+    </style>
+</head>
+<body>
+    <section class="nav-bar">
+        <div class="logo"><a href="/">VoyageVue</a></div>
+        <ul class="menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/hotels">Hotels</a></li>
+            <li><a href="/events" class="active">Events</a></li>
+            <li><a href="/travels">Travels</a></li>
+            <li><a href="/contact">Contact</a></li>
+            {% if user.is_authenticated %}
+            <li><a href="/profile">Profile</a></li>
+            <li><a href="/logout">Logout</a></li>
+            {% endif %}
+        </ul>
+    </section>
+
+    <div class="review-container">
+        <div class="review-card">
+            <h1 style="color: var(--vv-brown); margin-bottom: 20px;">Ajouter un avis</h1>
+            
+            <div class="event-info">
+                <h3 style="color: var(--vv-brown); margin-bottom: 10px;">{{ event.name }}</h3>
+                <p style="margin: 0; color: #6b7280;">📍 {{ event.city }}{% if event.location %} - {{ event.location }}{% endif %}</p>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.rating.id_for_label }}">
+                        Note (1 à 5 étoiles)
+                    </label>
+                    {{ form.rating }}
+                    {% if form.rating.errors %}
+                        <div class="error-list">{{ form.rating.errors }}</div>
+                    {% endif %}
+                    <div class="rating-display" id="rating-preview">
+                        <span class="star-preview">★</span>
+                        <span class="star-preview">★</span>
+                        <span class="star-preview">★</span>
+                        <span class="star-preview">★</span>
+                        <span class="star-preview">★</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.review_text.id_for_label }}">
+                        Votre avis
+                    </label>
+                    {{ form.review_text }}
+                    {% if form.review_text.errors %}
+                        <div class="error-list">{{ form.review_text.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    ✍️ Publier l'avis
+                </button>
+                
+                <a href="{% url 'event_detail' event.pk %}" class="btn-cancel">
+                    ← Annuler et retourner à l'événement
+                </a>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const ratingSelect = document.getElementById('{{ form.rating.id_for_label }}');
+        const stars = document.querySelectorAll('.star-preview');
+
+        function updateStars(rating) {
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+        }
+
+        ratingSelect.addEventListener('change', function() {
+            updateStars(parseInt(this.value) || 0);
+        });
+
+        // Initialize stars on page load
+        updateStars(parseInt(ratingSelect.value) || 0);
+    </script>
+</body>
+</html>
+
