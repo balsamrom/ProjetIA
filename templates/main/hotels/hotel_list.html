@@ -49,6 +49,9 @@
           .hotel-price{ color: var(--vv-brown); font-weight:800; margin:8px 0 12px 0; }
           .check-availability{ display:inline-block; background: var(--vv-yellow); color: var(--vv-brown); text-decoration:none; padding:10px 14px; border-radius:10px; border:1px solid rgba(107,79,59,.15); font-weight:700; }
           .check-availability:hover{ background: var(--vv-yellow-600); }
+          .stars{ display:inline-flex; gap:6px; vertical-align:middle; }
+          .stars .star{ color:#e5e7eb; font-size:18px; }
+          .stars .star.active{ color:#fbbf24; }
         </style>
         {% if messages %}
         <ul>
@@ -83,10 +86,25 @@
                           <span class="city-badge">★ {{ hotel.stars }} étoiles</span>
                         {% endif %}
                         <span class="review-count">{{ hotel.reviews.count }} avis</span>
+                        {% with hr=hotel.rating|default:0 %}
+                        <span class="stars" title="Note: {{ hr|floatformat:1 }}/5">
+                          <span class="star {% if hr|floatformat:0 == '1' or hr|floatformat:0 == '2' or hr|floatformat:0 == '3' or hr|floatformat:0 == '4' or hr|floatformat:0 == '5' %}active{% endif %}">★</span>
+                          <span class="star {% if hr|floatformat:0 == '2' or hr|floatformat:0 == '3' or hr|floatformat:0 == '4' or hr|floatformat:0 == '5' %}active{% endif %}">★</span>
+                          <span class="star {% if hr|floatformat:0 == '3' or hr|floatformat:0 == '4' or hr|floatformat:0 == '5' %}active{% endif %}">★</span>
+                          <span class="star {% if hr|floatformat:0 == '4' or hr|floatformat:0 == '5' %}active{% endif %}">★</span>
+                          <span class="star {% if hr|floatformat:0 == '5' %}active{% endif %}">★</span>
+                        </span>
+                        
+                        {% endwith %}
                     </div>
                     <div class="hotel-rank">
                         Rapport qualité prix n°{{ forloop.counter }} sur {{ recommended|length }} hébergements pour : {{ hotel.city }}
                     </div>
+                    {% if hotel.description %}
+                    <div class="hotel-comment">
+                        {{ hotel.description|striptags|truncatechars:150 }}
+                    </div>
+                    {% endif %}
                     {% with hotel.reviews.first as latest_review %}
                     {% if latest_review and latest_review.review_text and latest_review.review_text|lower != 'null' %}
                     <div class="hotel-comment">
@@ -124,10 +142,24 @@
                           <span class="city-badge">★ {{ hotel.stars }} étoiles</span>
                         {% endif %}
                         <span class="review-count">{{ hotel.reviews.count }} avis</span>
+                        {% with hr=hotel.rating|default:0 %}
+                        <span class="stars" title="Note: {{ hr|floatformat:1 }}/5">
+                          <span class="star {% if hr|floatformat:0|stringformat:"s" == '1' %}active{% endif %}">★</span>
+                          <span class="star {% if hr|floatformat:0|stringformat:"s" == '2' %}active{% endif %}">★</span>
+                          <span class="star {% if hr|floatformat:0|stringformat:"s" == '3' %}active{% endif %}">★</span>
+                          <span class="star {% if hr|floatformat:0|stringformat:"s" == '4' %}active{% endif %}">★</span>
+                          <span class="star {% if hr|floatformat:0|stringformat:"s" == '5' %}active{% endif %}">★</span>
+                        </span>
+                        {% endwith %}
                     </div>
                     <div class="hotel-rank">
                         Rapport qualité prix n°{{ forloop.counter }} sur {{ hotels|length }} hébergements pour : {{ hotel.city }}
                     </div>
+                    {% if hotel.description %}
+                    <div class="hotel-comment">
+                        {{ hotel.description|striptags|truncatechars:150 }}
+                    </div>
+                    {% endif %}
                     {% with hotel.reviews.first as latest_review %}
                     {% if latest_review and latest_review.review_text and latest_review.review_text|lower != 'null' %}
                     <div class="hotel-comment">

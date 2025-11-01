@@ -14,6 +14,9 @@ from django.http import JsonResponse
 from django.conf import settings
 from sklearn.feature_extraction.text import TfidfVectorizer
 import json
+import requests
+import urllib.parse
+import random
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from django.contrib.admin.views.decorators import staff_member_required
@@ -22,6 +25,14 @@ try:
     import openai
 except Exception:
     openai = None
+else:
+    # Initialiser la clé API OpenAI à partir des settings si disponible
+    try:
+        api_key = getattr(settings, 'OPENAI_API_KEY', None)
+        if api_key:
+            openai.api_key = api_key
+    except Exception:
+        pass
 
 # Importez vos modèles et forms
 from .models import Contact, register_table, Hotel, Room, Reservation, Review
@@ -403,90 +414,183 @@ def api_generate_hotel_description(request):
     """Génère une description d'hôtel avec OpenAI"""
     try:
         if request.method != 'POST':
-            return JsonResponse({
-                'status': 'error', 
-                'message': 'Méthode POST requise'
-            }, status=405)
+            return JsonResponse({'success': False, 'error': 'Méthode POST requise'}, status=405)
 
         # Charger les données JSON
         data = json.loads(request.body)
         hotel_name = data.get('hotel_name', '').strip()
         city = data.get('city', '').strip()
         features = data.get('features', [])
+        address = data.get('address', '').strip()
         
         # Validation
         if not hotel_name:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Le nom de l\'hôtel est requis'
-            }, status=400)
+            return JsonResponse({'success': False, 'error': "Le nom de l'hôtel est requis"}, status=400)
         
         if not city:
-            return JsonResponse({
-                'status': 'error', 
-                'message': 'La ville est requise'
-            }, status=400)
+            return JsonResponse({'success': False, 'error': 'La ville est requise'}, status=400)
 
         # Préparer les caractéristiques
         features_text = ", ".join(features) if features else "confortable et accueillant"
         
         # Prompt optimisé
         prompt = f"""
-        Tu es un expert en marketing hôtelier. Crée une description attractive et unique en français pour l'hôtel suivant :
+        Tu es un expert en marketing hôtelier. Rédige une description ORIGINALE et UNIQUE en français pour l'hôtel ci-dessous.
 
         NOM: {hotel_name}
         VILLE: {city}
-        CARACTÉRISTIQUES: {features_text}
+        ADRESSE: {address or 'N/A'}
+        CARACTÉRISTIQUES (pistes): {features_text}
 
-        La description doit :
-        - Faire 80-120 mots
-        - Être engageante et professionnelle
-        - Mettre en valeur l'emplacement et les services
-        - Utiliser un langage élégant et accueillant
-        - Donner envie de réserver
-        - Inclure une touche d'originalité
+        Contraintes de style:
+        - 90 à 130 mots, ton chaleureux et professionnel.
+        - Ne commence PAS par "Situé à" ni par une formule générique.
+        - Varie les tournures, pas de clichés (« atmosphère chaleureuse », « emplacement idéal »).
+        - Mets en avant l'emplacement et 3 atouts concrets (ex: vue, accès, services, ambiance), même si tu dois les déduire du nom/ville.
+        - Phrase d'ouverture marquante, dynamique.
+        - Pas de listes, 1 paragraphe fluide.
         """
 
-        # Appel OpenAI
-        response = openai.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {
-                    "role": "system", 
-                    "content": "Tu es un copywriter expert en hôtellerie de luxe. Tu crées des descriptions engageantes qui donnent envie de voyager."
-                },
-                {
-                    "role": "user", 
-                    "content": prompt
-                }
-            ],
-            max_tokens=300,
-            temperature=0.8,
-            top_p=0.9
-        )
-        
-        description = response.choices[0].message.content.strip()
-
-        return JsonResponse({
-            'status': 'success',
-            'hotel_name': hotel_name,
-            'city': city,
-            'features': features,
-            'generated_description': description,
-            'word_count': len(description.split()),
-            'model_used': 'gpt-3.5-turbo'
-        })
+        used_openai = False
+        description = ''
+        # SerpApi (Google Search) — unique source
+        def try_serpapi(qname, qcity, qaddress):
+            try:
+                api_key = getattr(settings, 'SERPAPI_API_KEY', None)
+                if not api_key:
+                    return None
+                # Essayer plusieurs variantes de requêtes et moteurs
+                variants = [
+                    f"hôtel {qname} {qcity} {qaddress}",
+                    f"hotel {qname} {qcity}",
+                    f"{qname} {qcity}",
+                    f"{qname}",
+                ]
+                for query in variants:
+                    q = query.strip()
+                    if not q:
+                        continue
+                    loc = f"{qcity}, Tunisie" if qcity else "Tunisie"
+                    # 1) Moteur google (web)
+                    try:
+                        sresp = requests.get(
+                            'https://serpapi.com/search.json',
+                            params={
+                                'engine': 'google',
+                                'q': q,
+                                'hl': 'fr',
+                                'gl': 'fr',
+                                'google_domain': 'google.fr',
+                                'location': loc,
+                                'num': 10,
+                                'api_key': api_key,
+                            }, timeout=12
+                        )
+                        if sresp.ok:
+                            js = sresp.json()
+                            kg = js.get('knowledge_graph') or {}
+                            kg_desc = (kg.get('description') or kg.get('title') or '').strip()
+                            if kg_desc and len(kg_desc) > 40:
+                                return kg_desc
+                            org = js.get('organic_results') or []
+                            for item in org:
+                                snip = (item.get('snippet') or '').strip()
+                                if snip and len(snip) > 40:
+                                    return snip
+                            locals_block = js.get('local_results') or {}
+                            if isinstance(locals_block, dict):
+                                places = locals_block.get('places') or []
+                                for p in places:
+                                    desc = (p.get('description') or p.get('snippet') or '').strip()
+                                    if desc and len(desc) > 40:
+                                        return desc
+                    except Exception:
+                        pass
+                    # 2) Moteur google_maps
+                    try:
+                        maps_resp = requests.get(
+                            'https://serpapi.com/search.json',
+                            params={
+                                'engine': 'google_maps',
+                                'q': q,
+                                'hl': 'fr',
+                                'type': 'search',
+                                'api_key': api_key,
+                            }, timeout=12
+                        )
+                        if maps_resp.ok:
+                            mjs = maps_resp.json()
+                            pr = mjs.get('place_results') or {}
+                            if isinstance(pr, dict):
+                                ed = (pr.get('editorial_summary') or {}).get('overview')
+                                if ed and len(ed) > 40:
+                                    return ed
+                                desc2 = (pr.get('description') or pr.get('snippet') or '').strip()
+                                if desc2 and len(desc2) > 40:
+                                    return desc2
+                    except Exception:
+                        pass
+            except Exception:
+                return None
+            return None
+        # SerpApi en premier
+        serp_text = try_serpapi(hotel_name, city, address)
+        if serp_text:
+            return JsonResponse({'success': True, 'description': serp_text, 'used_openai': False})
+        # Fallback: OpenAI si clé disponible
+        api_key = getattr(settings, 'OPENAI_API_KEY', None)
+        if api_key:
+            try:
+                prompt = (
+                    f"Écris un paragraphe bref (80-120 mots) en français décrivant l'hôtel '{hotel_name}' à '{city}'. "
+                    f"Évite les clichés trop génériques et ne commence pas par 'Situé à'."
+                )
+                http_resp = requests.post(
+                    'https://api.openai.com/v1/chat/completions',
+                    headers={
+                        'Authorization': f'Bearer {api_key}',
+                        'Content-Type': 'application/json',
+                    },
+                    json={
+                        'model': 'gpt-3.5-turbo',
+                        'messages': [
+                            { 'role': 'system', 'content': 'Tu écris des descriptions d’hôtels claires et utiles.' },
+                            { 'role': 'user', 'content': prompt }
+                        ],
+                        'max_tokens': 280,
+                        'temperature': 0.9,
+                        'top_p': 0.9
+                    },
+                    timeout=20
+                )
+                if http_resp.ok:
+                    payload = http_resp.json()
+                    description = (payload.get('choices') or [{}])[0].get('message', {}).get('content', '').strip()
+                    if description:
+                        return JsonResponse({'success': True, 'description': description, 'used_openai': True})
+            except Exception:
+                pass
+        return JsonResponse({'success': False, 'error': 'serp_no_result'}, status=200)
 
     except json.JSONDecodeError:
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Données JSON invalides'
-        }, status=400)
+        return JsonResponse({'success': False, 'error': 'Données JSON invalides'}, status=400)
     except Exception as e:
-        return JsonResponse({
-            'status': 'error',
-            'message': f'Erreur: {str(e)}'
-        }, status=500)
+        # Dernier filet de sécurité: renvoyer un fallback plutôt qu'une erreur serveur quand c'est possible
+        try:
+            data = json.loads(request.body)
+            hotel_name = data.get('hotel_name', '').strip()
+            city = data.get('city', '').strip()
+            features = data.get('features', [])
+            if hotel_name and city:
+                text = (
+                    f"Situé à {city}, l'hôtel {hotel_name} accueille ses hôtes dans une atmosphère chaleureuse. "
+                    f"Chambres confortables, service attentionné et emplacement idéal pour découvrir la région. "
+                    f"{', '.join(features)}." if features else ""
+                ).strip()
+                return JsonResponse({'success': True, 'description': text, 'used_openai': False})
+        except Exception:
+            pass
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 # === API: Filters & Search ===
 def api_hotels(request):
@@ -816,11 +920,21 @@ def create_review(request, hotel_id):
             return redirect('signin')
         
         if request.method == 'POST':
-            form = ReviewForm(request.POST)
+            # Forcer la note de l'avis à être celle de l'hôtel (borne 1..5)
+            data = request.POST.copy()
+            try:
+                hrat = float(hotel.rating) if hotel.rating is not None else 5.0
+            except Exception:
+                hrat = 5.0
+            hrat = max(1, min(5, int(round(hrat))))
+            data['rating'] = str(hrat)
+            form = ReviewForm(data)
             if form.is_valid():
                 review = form.save(commit=False)
                 review.hotel = hotel
                 review.user = request.user
+                # Sécurité supplémentaire
+                review.rating = hrat
                 review.save()
                 messages.success(request, f"Votre avis sur {hotel.name} a été publié !")
                 return redirect('hotel_reviews', hotel_id=hotel_id)

@@ -186,5 +186,15 @@ LOGIN_REDIRECT_URL = '/volt/'
 LOGOUT_REDIRECT_URL = '/volt/accounts/login/'
 
 
-# Clé OpenAI
-OPENAI_API_KEY = "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"
+# API Keys (use environment variables or a local .env file)
+import os
+try:
+    from dotenv import load_dotenv
+    # Charge .env à la racine du projet s'il existe
+    load_dotenv(os.path.join(BASE_DIR, '.env'))
+except Exception:
+    pass
+
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+GOOGLE_PLACES_API_KEY = os.environ.get("GOOGLE_PLACES_API_KEY")
+SERPAPI_API_KEY = os.environ.get("SERPAPI_API_KEY")
