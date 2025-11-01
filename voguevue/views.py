@@ -260,12 +260,17 @@ def blog(request):
 def hotel_list(request):
     hotels = Hotel.objects.order_by('-created_at')
     city = request.GET.get('city') or None
+    q = (request.GET.get('q') or '').strip()
     budget_str = request.GET.get('budget')
     
     try:
         budget = float(budget_str) if budget_str else None
     except ValueError:
         budget = None
+
+    # Recherche simple par nom/ville
+    if q:
+        hotels = hotels.filter(models.Q(name__icontains=q) | models.Q(city__icontains=q))
 
     recommended = recommend_hotels(hotels, city=city, budget=budget, top_k=6)
     
@@ -280,6 +285,7 @@ def hotel_list(request):
         'recommended': recommended,
         'q_city': city or '',
         'q_budget': budget_str or '',
+        'q': q,
         'model_available': PREDICTOR_AVAILABLE,
     })
 
@@ -339,6 +345,40 @@ def hotel_delete(request, pk):
         messages.success(request, 'Hôtel supprimé')
         return redirect('hotel_list')
     return render(request, 'main/hotels/hotel_confirm_delete.html', {'hotel': hotel})
+
+def hotel_payment(request, pk):
+    """Page de paiement / récapitulatif pour un hôtel"""
+    hotel = get_object_or_404(Hotel, pk=pk)
+    rooms = hotel.rooms.all() if hasattr(hotel, 'rooms') else []
+    if request.method == 'POST':
+        name = request.POST.get('fullname', '').strip()
+        room_id = request.POST.get('room_id')
+        check_in = request.POST.get('check_in')
+        check_out = request.POST.get('check_out')
+        # Validations minimales
+        if not name or not room_id or not check_in or not check_out:
+            messages.error(request, "Merci de renseigner tous les champs obligatoires.")
+        else:
+            try:
+                room = Room.objects.get(id=int(room_id), hotel=hotel)
+                # Créer la réservation
+                Reservation.objects.create(
+                    hotel=hotel,
+                    room=room,
+                    customer_name=name,
+                    check_in=check_in,
+                    check_out=check_out,
+                )
+                messages.success(request, "Réservation enregistrée. Vous recevrez une confirmation.")
+                return redirect('hotel_detail', pk=pk)
+            except Room.DoesNotExist:
+                messages.error(request, "Chambre invalide pour cet hôtel.")
+            except Exception as e:
+                messages.error(request, f"Erreur: {e}")
+    return render(request, 'main/hotels/hotel_payment.html', {
+        'hotel': hotel,
+        'rooms': rooms,
+    })
 
 def reputation_analysis(request):
     """Analyse de réputation de tous les hôtels"""
@@ -408,6 +448,62 @@ def predict_hotel_reputation_api(request, pk):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+
+def ai_hotel_summary(request, pk):
+    """Résumé IA des avis: paragraphe + 3 pros/3 cons (fallback extractif)."""
+    hotel = get_object_or_404(Hotel, pk=pk)
+    reviews = list(hotel.reviews.values_list('review_text', flat=True))[:80]
+    try:
+        if not reviews:
+            return JsonResponse({'success': False, 'error': 'no_reviews'})
+
+        # OpenAI si dispo
+        api_key = getattr(settings, 'OPENAI_API_KEY', None)
+        if api_key:
+            try:
+                joined = "\n- ".join([r for r in reviews if r])[:6000]
+                prompt = (
+                    "Voici une liste d'avis d'hôtel (français). Fais: \n"
+                    "1) Un résumé concis (3-5 lignes) en français. \n"
+                    "2) Trois points forts (Pros). \n"
+                    "3) Trois points faibles (Cons). \n"
+                    "Garde un ton neutre et utile.\n\nAvis:\n- " + joined
+                )
+                r = requests.post(
+                    'https://api.openai.com/v1/chat/completions',
+                    headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+                    json={
+                        'model': 'gpt-3.5-turbo',
+                        'messages': [
+                            {'role':'system','content':'Tu es un analyste qui synthétise des avis clients.'},
+                            {'role':'user','content': prompt}
+                        ],
+                        'max_tokens': 400,
+                        'temperature': 0.4
+                    }, timeout=20
+                )
+                if r.ok:
+                    text = r.json().get('choices',[{}])[0].get('message',{}).get('content','').strip()
+                    # Separation simple
+                    summary = text
+                    pros, cons = [], []
+                    # Essayer d'extraire des lignes pros/cons si présentes
+                    for line in text.splitlines():
+                        s=line.strip('-• ').lower()
+                        if s.startswith('pros') or s.startswith('points forts'):
+                            continue
+                        if s.startswith('cons') or s.startswith('points faibles'):
+                            continue
+                    return JsonResponse({'success': True, 'summary': summary, 'pros': pros, 'cons': cons})
+            except Exception:
+                pass
+
+        # Fallback extractif simple: premiers avis + ngram
+        head = [r for r in reviews if r][:3]
+        summary = " ".join(head)[:600]
+        return JsonResponse({'success': True, 'summary': summary, 'pros': [], 'cons': []})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
 
 @csrf_exempt
 def api_generate_hotel_description(request):
@@ -601,9 +697,12 @@ def api_hotels(request):
         min_price = request.GET.get('min_price')
         max_price = request.GET.get('max_price')
         available = request.GET.get('available')
+        q = (request.GET.get('q') or '').strip()
 
         if city:
             qs = qs.filter(city__icontains=city)
+        if q:
+            qs = qs.filter(models.Q(name__icontains=q) | models.Q(city__icontains=q))
         try:
             if min_price:
                 qs = qs.filter(price_per_night__gte=float(min_price))
@@ -637,12 +736,15 @@ def api_rooms(request):
         min_price = request.GET.get('min_price')
         max_price = request.GET.get('max_price')
         available = request.GET.get('available')
+        q = (request.GET.get('q') or '').strip()
 
         if hotel_id:
             try:
                 qs = qs.filter(hotel_id=int(hotel_id))
             except ValueError:
                 pass
+        if q:
+            qs = qs.filter(models.Q(name__icontains=q) | models.Q(hotel__name__icontains=q))
         try:
             if min_price:
                 qs = qs.filter(price_per_night__gte=float(min_price))
@@ -751,6 +853,10 @@ def room_list(request, hotel_id=None):
             hotel_id = None
     if hotel_id:
         qs = qs.filter(hotel_id=hotel_id)
+    # Recherche texte
+    q = (request.GET.get('q') or '').strip()
+    if q:
+        qs = qs.filter(models.Q(name__icontains=q) | models.Q(hotel__name__icontains=q))
     return render(request, 'main/hotels/room_list.html', {'rooms': qs, 'hotel_id': hotel_id})
 
 def room_create(request):

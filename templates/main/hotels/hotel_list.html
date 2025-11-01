@@ -115,7 +115,10 @@
                     <div class="hotel-price">
                         à partir de {{ hotel.price_per_night }}€
                     </div>
-                    <a href="/hotels/{{ hotel.id }}/reviews/" class="check-availability">Analyser les avis</a>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                      <a href="/hotels/{{ hotel.id }}/payment/" class="check-availability" style="background:#fff;border-color:#e5e7eb;color:#374151;">Plus d’infos</a>
+                      <a href="/hotels/{{ hotel.id }}/reviews/" class="check-availability">Analyser les avis</a>
+                    </div>
                     
                     
                 </div>

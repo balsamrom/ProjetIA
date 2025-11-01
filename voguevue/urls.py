@@ -20,11 +20,12 @@ urlpatterns = [
     path('hotels/<int:hotel_id>/reviews/create/', views.create_review, name='create_review'),
     path("hotels/<int:pk>/", views.hotel_detail, name="hotel_detail"),
     path("hotels/<int:pk>/edit/", views.hotel_update, name="hotel_update"),
+    path("hotels/<int:pk>/payment/", views.hotel_payment, name="hotel_payment"),
     path("hotels/<int:pk>/delete/", views.hotel_delete, name="hotel_delete"),
     path("hotels/<int:hotel_id>/reviews/", views.hotel_reviews, name="hotel_reviews"),
     path("hotels/<int:hotel_id>/reviews/create/", views.create_review, name="create_review"),
     path('api/hotels/<int:pk>/predict-reputation/', views.predict_hotel_reputation_api, name='predict_hotel_reputation_api'),
-    
+ 
     # OU si vous voulez l'URL plus courte :
     path('hotels/<int:pk>/predict-reputation/', views.predict_hotel_reputation_api, name='predict_hotel_reputation_api'),
     # Rooms & Reservations

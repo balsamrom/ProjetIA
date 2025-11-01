@@ -88,6 +88,11 @@
                         <span class="vv-btn-icon">🛏️</span>
                         Réserver maintenant
                     </a>
+                    <a href="{% url 'hotel_payment' hotel.pk %}"
+                       class="vv-btn vv-btn-primary vv-btn-with-icon">
+                        <span class="vv-btn-icon">💳</span>
+                        Payer / Réserver
+                    </a>
                     {% if user.is_staff %}
                     <a href="{% url 'hotel_update' hotel.pk %}" 
                        class="vv-btn vv-btn-outline vv-btn-with-icon">
@@ -354,6 +359,7 @@
                     </div>
                 </div>
             </section>
+
 
             <!-- Customer Reviews -->
             <section class="vv-section">
