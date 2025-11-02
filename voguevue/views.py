@@ -6,15 +6,16 @@ from django.contrib.auth import logout as django_logout, authenticate, login
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.http import JsonResponse
-from .recommendation import HybridRecommendationEngine, get_weather_for_city
+from .recommendation import get_engine
 from django.utils import timezone
 
 import json
 
-# 🆕 Initialiser le moteur de recommandation une seule fois au démarrage
+# 🆕 Initialiser le moteur LightGBM une seule fois
 try:
-    recommendation_engine = HybridRecommendationEngine()
+    recommendation_engine = get_engine()
     ENGINE_LOADED = True
+    print("✅ Moteur LightGBM chargé avec succès")
 except Exception as e:
     print(f"❌ Erreur lors du chargement du moteur : {e}")
     recommendation_engine = None
@@ -43,7 +44,7 @@ def contact(request):
 
 def travels(request):
     """
-    🆕 Vue améliorée avec système de recommandation hybride
+    🆕 Vue avec système de recommandation LightGBM
     """
     context = {
         'activities': [],
@@ -65,21 +66,21 @@ def travels(request):
             return render(request, 'main/travels.html', context)
 
         try:
-            # 1️⃣ Récupérer la météo
-            weather = get_weather_for_city(city_name)
+            # 🎯 TOP 5 activités comme dans le script Python
+            recommendations, weather = recommendation_engine.get_recommendations(
+                city_name=city_name,
+                top_n=5  # ✅ CHANGÉ DE 20 À 5
+            )
+
             context['weather_info'] = weather
             context['city_searched'] = city_name.title()
 
-            # 2️⃣ Obtenir les recommandations hybrides
-            recommendations = recommendation_engine.get_recommendations(
-                city_name=city_name,
-                weather=weather,
-                top_n=20
-            )
-
             if recommendations:
                 context['activities'] = recommendations
-                messages.success(request, f"✅ {len(recommendations)} activités trouvées pour {city_name.title()}")
+                messages.success(
+                    request, 
+                    f"✅ Top {len(recommendations)} activités trouvées pour {city_name.title()} (LightGBM AI)"
+                )
             else:
                 context['error'] = f"Aucune activité trouvée pour {city_name.title()}. Essayez une autre ville."
 
@@ -160,25 +161,25 @@ def blog(request):
     return render(request, 'main/blog.html')
 
 
-# 🆕 Vue API pour récupérer les recommandations en JSON (optionnel)
+# 🆕 API endpoint pour récupérer les recommandations en JSON
 def get_recommendations_api(request):
     """
-    API endpoint pour obtenir des recommandations
-    Usage: /api/recommendations?city=Paris
+    API endpoint pour obtenir des recommandations LightGBM
+    Usage: /api/recommendations?city=Bizerte&top_n=5
     """
     if not ENGINE_LOADED:
         return JsonResponse({'error': 'Engine not loaded'}, status=500)
 
     city_name = request.GET.get('city', '')
+    top_n = int(request.GET.get('top_n', 5))  # Par défaut 5
+    
     if not city_name:
         return JsonResponse({'error': 'City parameter required'}, status=400)
 
     try:
-        weather = get_weather_for_city(city_name)
-        recommendations = recommendation_engine.get_recommendations(
+        recommendations, weather = recommendation_engine.get_recommendations(
             city_name=city_name,
-            weather=weather,
-            top_n=20
+            top_n=top_n
         )
 
         return JsonResponse({

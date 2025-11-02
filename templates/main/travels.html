@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recherche d'activités</title>
+    <title>Recherche d'activités - LightGBM AI</title>
     <style>
         * {
             margin: 0;
@@ -99,6 +99,18 @@
             opacity: 0.9;
         }
 
+        .ai-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #000;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+        }
+
         .search-section {
             background: white;
             border-radius: 20px;
@@ -169,8 +181,8 @@
         }
 
         .weather-card {
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-            color: #000;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             padding: 30px;
             border-radius: 20px;
             margin-bottom: 30px;
@@ -181,6 +193,9 @@
         .weather-card h3 {
             font-size: 2em;
             margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
         .weather-info {
@@ -191,7 +206,7 @@
         }
 
         .weather-item {
-            background: rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.2);
             padding: 15px;
             border-radius: 12px;
             backdrop-filter: blur(10px);
@@ -200,6 +215,11 @@
         .weather-item p {
             font-size: 1.1em;
             margin: 5px 0;
+        }
+
+        .weather-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
         }
 
         .section-title {
@@ -266,7 +286,7 @@
 
         .info-item strong {
             color: #333;
-            min-width: 80px;
+            min-width: 100px;
         }
 
         .description {
@@ -284,10 +304,27 @@
             right: 20px;
             background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
             color: #000;
-            padding: 8px 15px;
-            border-radius: 20px;
+            padding: 10px 18px;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 1em;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .source-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            background: #667eea;
+            color: white;
+            border-radius: 15px;
+            font-size: 0.85em;
             font-weight: 600;
-            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .source-badge.new {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            animation: pulse 2s infinite;
         }
 
         .popularity-bar {
@@ -301,7 +338,7 @@
 
         .popularity-fill {
             height: 100%;
-            background: linear-gradient(90deg, #ffd700 0%, #ffed4e 100%);
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
             border-radius: 10px;
             transition: width 1s ease;
         }
@@ -314,6 +351,18 @@
             background: rgba(255,255,255,0.1);
             border-radius: 20px;
             backdrop-filter: blur(10px);
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.5em;
+            padding: 40px;
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s infinite;
         }
 
         /* Hamburger menu */
@@ -370,6 +419,23 @@
             }
         }
 
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(245, 87, 108, 0.7);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 0 10px rgba(245, 87, 108, 0);
+            }
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
         @media (max-width: 768px) {
             header h1 {
                 font-size: 2em;
@@ -418,7 +484,7 @@
     <nav class="navbar">
         <div class="navbar-container">
             <a href="/" class="navbar-brand">
-                🌍 ActivitésFinder
+                🤖 ActivitésFinder AI
             </a>
             <div class="hamburger" onclick="toggleMenu()">
                 <span></span>
@@ -427,9 +493,9 @@
             </div>
             <ul class="navbar-menu" id="navMenu">
                 <li><a href="/">🏠 Accueil</a></li>
-                <li><a href="/search" class="active">🔍 Rechercher</a></li>
-                <li><a href="/favorites">⭐ Favoris</a></li>
+                <li><a href="/travels" class="active">🔍 Rechercher</a></li>
                 <li><a href="/about">ℹ️ À propos</a></li>
+                <li><a href="/contact">📧 Contact</a></li>
             </ul>
         </div>
     </nav>
@@ -437,14 +503,15 @@
     <div class="container">
         <header>
             <h1>🌍 Découvrez des Activités</h1>
-            <p>Trouvez les meilleures activités près de chez vous</p>
+            <p>Recommandations intelligentes adaptées à la météo</p>
+            <span class="ai-badge">⚡ Propulsé par LightGBM AI</span>
         </header>
 
         <div class="search-section">
             <form method="POST" class="search-form">
                 {% csrf_token %}
-                <input type="text" name="city" class="search-input" placeholder="🔍 Entrez une ville..." required>
-                <button type="submit" class="search-btn">Rechercher</button>
+                <input type="text" name="city" class="search-input" placeholder="🔍 Entrez une ville (ex: Bizerte, Tunis, Sousse...)" required>
+                <button type="submit" class="search-btn">🚀 Rechercher</button>
             </form>
         </div>
 
@@ -458,25 +525,33 @@
             <div class="alert alert-danger">❌ {{ error }}</div>
         {% endif %}
 
-        {% if weather_info and weather_info.success %}
+        {% if weather_info %}
             <div class="weather-card">
-                <h3>🌤️ Météo à {{ city_searched }}</h3>
+                <h3>
+                    {% if 'rain' in weather_info.description or 'storm' in weather_info.description %}
+                        🌧️
+                    {% elif 'cloud' in weather_info.description %}
+                        ⛅
+                    {% else %}
+                        ☀️
+                    {% endif %}
+                    Météo à {{ city_searched }}
+                </h3>
                 <div class="weather-info">
                     <div class="weather-item">
-                        <p><strong>🌡️ Température</strong></p>
-                        <p style="font-size: 1.5em;">{{ weather_info.temp }}°C</p>
+                        <div class="weather-icon">🌡️</div>
+                        <p><strong>Température</strong></p>
+                        <p style="font-size: 1.8em; font-weight: 700;">{{ weather_info.temp }}°C</p>
                     </div>
                     <div class="weather-item">
-                        <p><strong>☁️ Conditions</strong></p>
-                        <p>{{ weather_info.description }}</p>
+                        <div class="weather-icon">☁️</div>
+                        <p><strong>Conditions</strong></p>
+                        <p style="text-transform: capitalize;">{{ weather_info.description }}</p>
                     </div>
                     <div class="weather-item">
-                        <p><strong>💨 Vent</strong></p>
-                        <p>{{ weather_info.wind_speed }} km/h</p>
-                    </div>
-                    <div class="weather-item">
-                        <p><strong>💧 Humidité</strong></p>
-                        <p>{{ weather_info.humidity }}%</p>
+                        <div class="weather-icon">💨</div>
+                        <p><strong>Confort</strong></p>
+                        <p>{{ weather_info.comfort_index|floatformat:0|floatformat:0 }}%</p>
                     </div>
                 </div>
             </div>
@@ -487,7 +562,7 @@
             <div class="activities-grid">
                 {% for activity in activities %}
                     <div class="activity-card">
-                        <span class="score-badge">⭐ {{ activity.score|floatformat:1 }}</span>
+                        <span class="score-badge">🎯 {{ activity.score|floatformat:2 }}</span>
                         <h3>{{ activity.activity_name }}</h3>
                         
                         <div class="activity-info">
@@ -497,25 +572,23 @@
                             </div>
                             <div class="info-item">
                                 <strong>🏷️ Catégorie</strong>
-                                <span>{{ activity.category }}</span>
-                            </div>
-                            <div class="info-item">
-                                <strong>🌦️ Météo</strong>
-                                <span>{{ activity.weather }}</span>
+                                <span style="text-transform: capitalize;">{{ activity.category }}</span>
                             </div>
                             <div class="info-item">
                                 <strong>⏱️ Durée</strong>
-                                <span>{{ activity.duration }}</span>
+                                <span>{{ activity.duration|default:"Non spécifié" }}</span>
                             </div>
                             <div class="info-item">
                                 <strong>💰 Prix</strong>
-                                <span>{{ activity.price }}</span>
+                                <span>{{ activity.price }} TND</span>
                             </div>
                         </div>
 
+                        {% if activity.description %}
                         <div class="description">
-                            {{ activity.description|truncatewords:30 }}
+                            {{ activity.description|truncatewords:25 }}
                         </div>
+                        {% endif %}
 
                         <div class="info-item">
                             <strong>📊 Popularité</strong>
@@ -524,14 +597,26 @@
                         <div class="popularity-bar">
                             <div class="popularity-fill" style="width: {{ activity.popularity }}%"></div>
                         </div>
+
+                        <span class="source-badge {% if 'NOUVEAU' in activity.source %}new{% endif %}">
+                            {{ activity.source }}
+                        </span>
                     </div>
                 {% endfor %}
             </div>
         {% elif city_searched %}
             <div class="no-results">
-                <p>😔 Aucune activité trouvée pour cette ville.</p>
-                <p style="font-size: 0.9em; margin-top: 10px; opacity: 0.8;">Essayez une autre ville !</p>
+                <p>😔 Aucune activité trouvée pour {{ city_searched }}.</p>
+                <p style="font-size: 0.9em; margin-top: 10px; opacity: 0.8;">
+                    Essayez une autre ville tunisienne comme Bizerte, Tunis, Sousse, Hammamet...
+                </p>
             </div>
+        {% else %}
+            {% if not engine_loaded %}
+            <div class="alert alert-danger">
+                ⚠️ Le moteur de recommandation n'est pas chargé. Vérifiez la console serveur.
+            </div>
+            {% endif %}
         {% endif %}
     </div>
 
@@ -540,6 +625,18 @@
             const menu = document.getElementById('navMenu');
             menu.classList.toggle('active');
         }
+
+        // Animation des barres de popularité au chargement
+        document.addEventListener('DOMContentLoaded', function() {
+            const bars = document.querySelectorAll('.popularity-fill');
+            bars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 100);
+            });
+        });
     </script>
 </body>
 </html>

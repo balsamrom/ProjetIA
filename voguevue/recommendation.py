@@ -1,53 +1,151 @@
-import pandas as pd
-import joblib
+"""
+===============================================================
+🤖 MOTEUR DE RECOMMANDATION LIGHTGBM POUR DJANGO
+Version : Intégration modèle .pkl + Base de données MySQL
+===============================================================
+"""
 import os
+import numpy as np
+import pandas as pd
+import requests
+import joblib
 from datetime import datetime
 from django.conf import settings
-from sklearn.metrics.pairwise import cosine_similarity
-from .models import Activity
-import requests
+from sentence_transformers import SentenceTransformer
+from sklearn.preprocessing import MinMaxScaler, LabelEncoder
+import warnings
+warnings.filterwarnings("ignore")
 
 
-class HybridRecommendationEngine:
+class LightGBMRecommendationEngine:
     """
-    Moteur hybride amélioré :
-    - Combine modèle ML (PKL) ET base MySQL
-    - Vectorise les nouvelles activités à la volée
-    - Gère les villes absentes du modèle
+    Moteur hybride utilisant LightGBM + MySQL
+    - Charge le modèle .pkl entraîné
+    - Vectorise les activités à la volée avec SentenceTransformer
+    - Combine activités du dataset initial + nouvelles activités DB
     """
 
     def __init__(self):
-        """Charge le modèle PKL au démarrage"""
-        model_path = os.path.join(settings.BASE_DIR, 'tourism_recommendation_model.pkl')
-
-        if not os.path.exists(model_path):
+        """Initialisation du modèle et des composants"""
+        print("🔄 Chargement du moteur LightGBM...")
+        
+        # Chemin du fichier modèle
+        model_pkl_path = os.path.join(settings.BASE_DIR, 'activity_model.pkl')
+        
+        # 1️⃣ Charger le modèle et les composants
+        if not os.path.exists(model_pkl_path):
             raise FileNotFoundError(
-                f"❌ Fichier modèle introuvable : {model_path}\n"
-                "📥 Place 'tourism_recommendation_model.pkl' dans le dossier racine du projet."
+                f"❌ Fichier modèle introuvable : {model_pkl_path}\n"
+                "📥 Placez 'activity_model.pkl' dans le dossier racine du projet."
             )
+        
+        model_data = joblib.load(model_pkl_path)
+        
+        # Gérer différents formats de sauvegarde
+        if isinstance(model_data, dict):
+            # Format dictionnaire (notre format)
+            self.model = model_data.get('model')
+            self.df_trained = model_data.get('df')
+            self.price_scaler = model_data.get('price_scaler')
+            self.category_encoder = model_data.get('category_encoder')
+            self.model_date = model_data.get('model_date', datetime(2025, 1, 1))
+        else:
+            # Format direct (juste le modèle Booster)
+            raise ValueError(
+                "❌ Format de modèle non reconnu.\n"
+                "Le fichier .pkl doit contenir un dictionnaire avec:\n"
+                "- 'model': le modèle LightGBM\n"
+                "- 'df': le dataset\n"
+                "- 'price_scaler': le scaler MinMaxScaler\n"
+                "- 'category_encoder': le LabelEncoder\n"
+                "- 'model_date': la date de création\n\n"
+                "Utilisez le script save_model.py pour créer le bon format."
+            )
+        
+        print(f"✅ Modèle LightGBM chargé")
+        print(f"✅ Données chargées : {len(self.df_trained)} activités historiques")
+        print(f"📅 Date du modèle : {self.model_date.strftime('%Y-%m-%d')}")
+        
+        # 2️⃣ Charger le modèle NLP (SentenceTransformer)
+        print("🧠 Chargement du modèle NLP...")
+        self.nlp_model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
+        print("✅ Modèle NLP prêt\n")
 
-        print("🔄 Chargement du modèle ML...")
-        self.model_data = joblib.load(model_path)
+    def enrich_text(self, row):
+        """Crée un texte enrichi pour l'embedding"""
+        parts = []
+        weights = {
+            "activity_name": 10,
+            "category": 6,
+            "description": 5,
+            "location": 2
+        }
+        for col, weight in weights.items():
+            val = str(row.get(col, "")).strip()
+            if val:
+                parts.extend([val] * weight)
+        return " ".join(parts)
 
-        # Extraire les composants du modèle
-        self.df_trained = self.model_data['df']
-        self.tfidf = self.model_data['tfidf']
-        self.X_tfidf = self.model_data['X_tfidf']
-        self.kmeans = self.model_data['kmeans']
-        self.available_cities = self.model_data['available_cities']
-        self.weather_map = self.model_data['weather_map']
+    def get_weather_for_city(self, city_name, api_key="73f4a7564f5417d8d9928fbc4c39159d"):
+        """Récupère la météo actuelle via OpenWeather API"""
+        try:
+            # Géolocalisation
+            geo_url = f"http://api.openweathermap.org/geo/1.0/direct?q={city_name}&limit=1&appid={api_key}"
+            geo_res = requests.get(geo_url, timeout=8).json()
+            
+            if not geo_res:
+                raise ValueError("Ville non trouvée")
 
-        # Date du modèle (utilisée uniquement pour identifier les "nouvelles" activités)
-        self.model_date = self.model_data.get('model_date', datetime(2025, 1, 1))
+            lat, lon = geo_res[0]['lat'], geo_res[0]['lon']
+            
+            # Données météo
+            weather_url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=metric&appid={api_key}&lang=fr"
+            weather_res = requests.get(weather_url, timeout=10).json()
 
-        print(f"✅ Modèle chargé : {len(self.df_trained)} activités historiques")
-        print(f"📅 Date du modèle : {self.model_date.strftime('%Y-%m-%d')}\n")
+            if weather_res.get("cod") == 200:
+                temp = weather_res["main"]["temp"]
+                description = weather_res["weather"][0]["description"]
+                
+                # Calculer comfort_index
+                comfort = (1 - abs(temp - 22) / 22)
+                comfort = float(np.clip(comfort, 0, 1))
+                
+                return {
+                    "temp": round(temp, 1),
+                    "description": description,
+                    "comfort_index": comfort,
+                    "success": True
+                }
+
+        except Exception as e:
+            print(f"⚠️ Erreur météo : {e}")
+
+        # Valeurs par défaut
+        return {
+            "success": False,
+            "temp": 22,
+            "description": "ensoleillé",
+            "comfort_index": 1.0
+        }
+
+    def get_weather_category_boost(self, weather_desc):
+        """
+        Retourne les catégories privilégiées selon la météo
+        """
+        desc_lower = weather_desc.lower()
+        
+        if "rain" in desc_lower or "storm" in desc_lower or "overcast" in desc_lower:
+            return ["culture", "gastronomy", "entertainment"], "🌧️"
+        elif "cloud" in desc_lower:
+            return ["culture", "nature", "entertainment"], "⛅"
+        else:
+            return ["adventure", "nature", "entertainment"], "☀️"
 
     def get_activities_from_db(self, city_normalized):
-        """
-        Récupère TOUTES les activités pour une ville depuis la DB
-        (pas seulement les nouvelles)
-        """
+        """Récupère les activités depuis MySQL"""
+        from .models import Activity
+        from django.utils import timezone as django_timezone
+        
         activities_qs = Activity.objects.filter(
             location__icontains=city_normalized
         ).values(
@@ -58,19 +156,9 @@ class HybridRecommendationEngine:
         df_db = pd.DataFrame(list(activities_qs))
         
         if len(df_db) > 0:
-            # 🔧 FIX: Convert model_date to timezone-aware datetime
-            from django.utils import timezone as django_timezone
-            
-            # Make model_date timezone-aware if it isn't already
-            if self.model_date.tzinfo is None:
-                model_date_aware = django_timezone.make_aware(self.model_date)
-            else:
-                model_date_aware = self.model_date
-            
-            # Ensure created_at is timezone-aware (it should be by default from Django)
+            # Marquer les nouvelles activités
+            model_date_aware = django_timezone.make_aware(self.model_date) if self.model_date.tzinfo is None else self.model_date
             df_db['created_at'] = pd.to_datetime(df_db['created_at'])
-            
-            # Now compare
             df_db['is_new'] = df_db['created_at'] > model_date_aware
             
             print(f"💾 {len(df_db)} activités trouvées en DB (dont {df_db['is_new'].sum()} nouvelles)")
@@ -79,110 +167,117 @@ class HybridRecommendationEngine:
 
         return df_db
 
-    def vectorize_db_activities(self, df_db):
-        """Vectorise et calcule la similarité sémantique pour les activités DB"""
-        if df_db.empty:
-            return df_db
+    def predict_scores(self, df, weather):
+        """Calcule les scores LightGBM pour un DataFrame d'activités"""
+        if df.empty:
+            return df
+        
+        # 1️⃣ Embeddings NLP
+        df['text_rich'] = df.apply(self.enrich_text, axis=1)
+        embeddings = self.nlp_model.encode(df['text_rich'].tolist(), show_progress_bar=False)
+        
+        # 2️⃣ Features numériques
+        try:
+            price_scaled = self.price_scaler.transform(
+                pd.to_numeric(df['price'], errors='coerce').fillna(0).values.reshape(-1, 1)
+            )
+        except Exception as e:
+            print(f"⚠️ Erreur scaling prix: {e}")
+            price_scaled = np.zeros((len(df), 1))
+        
+        popularity_scaled = (df['popularity'].fillna(50) / 100.0).values.reshape(-1, 1)
+        comfort_index = np.full((len(df), 1), weather['comfort_index'])
+        weekday = np.full((len(df), 1), datetime.now().weekday())
+        month = np.full((len(df), 1), datetime.now().month)
+        
+        # Encoder les catégories
+        try:
+            category_encoded = self.category_encoder.transform(df['category'])
+        except Exception as e:
+            print(f"⚠️ Erreur encoding catégorie: {e}")
+            # Catégories inconnues = première catégorie connue
+            category_encoded = np.zeros(len(df))
+        
+        category_encoded = category_encoded.reshape(-1, 1)
+        
+        # 3️⃣ Concaténation des features (même ordre que l'entraînement)
+        X_pred = np.concatenate([
+            embeddings,              # 384 dimensions (SentenceTransformer)
+            price_scaled,            # 1 dimension
+            popularity_scaled,       # 1 dimension
+            comfort_index,           # 1 dimension
+            weekday,                 # 1 dimension
+            month,                   # 1 dimension
+            category_encoded         # 1 dimension
+        ], axis=1)
+        
+        # 4️⃣ Prédiction LightGBM
+        scores = self.model.predict(X_pred)
+        df['score'] = scores
+        
+        # 5️⃣ Bonus selon météo
+        preferred_categories, weather_icon = self.get_weather_category_boost(weather['description'])
+        df['score'] = df.apply(
+            lambda row: row['score'] + 0.1 if row['category'] in preferred_categories else row['score'] - 0.05,
+            axis=1
+        )
+        
+        return df
 
-        # Créer le texte pour TF-IDF
-        df_db['text'] = df_db['description'].fillna('') + ' ' + df_db['category'].fillna('')
-        X_db_tfidf = self.tfidf.transform(df_db['text'])
-
-        # Calculer la similarité moyenne avec le modèle ML
-        cosine_sim = cosine_similarity(X_db_tfidf, self.X_tfidf)
-        df_db['semantic_similarity'] = cosine_sim.mean(axis=1)
-
-        print("📐 Similarité sémantique calculée pour activités DB")
-        return df_db
-
-    def calculate_activity_score(self, row, weather, is_new=False, is_from_db=False):
+    def get_recommendations(self, city_name, top_n=20):
         """
-        Calcule le score d'une activité
-        - is_new : activité ajoutée après la génération du modèle
-        - is_from_db : activité provenant de la DB (peut être ancienne ou nouvelle)
-        """
-        base_score = row.get('popularity', 50) / 100
-
-        # Bonus pour nouvelles activités
-        if is_new:
-            base_score *= 1.3  # +30% pour les nouvelles activités
-
-        # Bonus léger pour les activités DB (même anciennes)
-        if is_from_db and not is_new:
-            base_score *= 1.1  # +10% pour assurer qu'elles apparaissent
-
-        # Compatibilité météo
-        if weather and weather.get('success'):
-            user_weather = weather['category']
-            activity_weather = self.weather_map.get(str(row.get('weather', '')).lower().strip(), 'unknown')
-
-            if user_weather == activity_weather:
-                base_score *= 2.5  # Match parfait
-            elif user_weather in ['hot', 'sunny'] and activity_weather in ['hot', 'sunny']:
-                base_score *= 2.0
-            elif user_weather in ['cold', 'rainy'] and activity_weather in ['cold', 'rainy']:
-                base_score *= 1.8
-            else:
-                base_score *= 0.8  # Météo incompatible
-
-        # Bonus de similarité sémantique (pour activités DB uniquement)
-        if is_from_db and 'semantic_similarity' in row:
-            base_score *= (1 + row['semantic_similarity'] * 0.5)
-
-        return base_score
-
-    def get_recommendations(self, city_name, weather, top_n=20):
-        """
-        Recommandation finale (LOGIQUE HYBRIDE)
+        Recommandation finale avec LightGBM
+        Combine : modèle historique + base de données
         """
         city_normalized = city_name.lower().strip()
-        print(f"\n🔍 Recherche hybride pour : {city_name.title()}")
-        print(f"🌤️ Météo : {weather.get('category', 'unknown')} ({weather.get('temp', 'N/A')}°C)")
-
+        print(f"\n🔍 Recherche LightGBM pour : {city_name.title()}")
+        
+        # 1️⃣ Météo
+        weather = self.get_weather_for_city(city_name)
+        preferred_categories, weather_icon = self.get_weather_category_boost(weather['description'])
+        
+        print(f"🌤️ Météo : {weather['description']} ({weather['temp']}°C)")
+        print(f"{weather_icon} Catégories privilégiées : {', '.join(preferred_categories)}")
+        
         all_activities = []
-
-        # --- SOURCE 1 : Modèle ML (activités historiques) ---
+        
+        # 2️⃣ Activités historiques (dataset CSV)
         ml_activities = self.df_trained[
-            self.df_trained['location_normalized'].str.contains(city_normalized, na=False)
+            self.df_trained['location'].str.lower().str.contains(city_normalized, na=False)
         ].copy()
-
+        
         if len(ml_activities) > 0:
-            ml_activities['score'] = ml_activities.apply(
-                lambda row: self.calculate_activity_score(row, weather, is_new=False, is_from_db=False),
-                axis=1
-            )
-            ml_activities['source'] = 'Modèle ML'
-            print(f"✅ {len(ml_activities)} activités du modèle ML")
+            ml_activities = self.predict_scores(ml_activities, weather)
+            ml_activities['source'] = 'Modèle LightGBM'
+            print(f"✅ {len(ml_activities)} activités du modèle historique")
             
             for _, row in ml_activities.iterrows():
                 all_activities.append({
                     'activity_name': row['activity_name'],
                     'category': row['category'],
                     'location': row['location'],
-                    'description': row['description'],
+                    'description': row.get('description', ''),
                     'weather': row.get('weather', 'unknown'),
-                    'popularity': row.get('popularity', 50),
+                    'popularity': int(row.get('popularity', 50)),
                     'duration': row.get('duration', 'N/A'),
                     'price': row.get('price', 'N/A'),
-                    'score': row['score'],
+                    'score': float(row['score']),
                     'source': row['source']
                 })
-        else:
-            print("⚠️ Aucune activité trouvée dans le modèle ML pour cette ville")
-
-        # --- SOURCE 2 : Base de données (TOUTES les activités) ---
+        
+        # 3️⃣ Activités de la base de données
         db_activities = self.get_activities_from_db(city_normalized)
         
         if len(db_activities) > 0:
-            db_activities = self.vectorize_db_activities(db_activities)
-            db_activities['location_normalized'] = db_activities['location'].str.lower()
-            db_activities['weather_clean'] = db_activities['weather'].apply(
-                lambda x: self.weather_map.get(str(x).lower().strip(), 'unknown')
-            )
+            db_activities = self.predict_scores(db_activities, weather)
             
             for _, row in db_activities.iterrows():
                 is_new = row.get('is_new', False)
-                score = self.calculate_activity_score(row, weather, is_new=is_new, is_from_db=True)
+                
+                # Bonus pour nouvelles activités
+                score = row['score']
+                if is_new:
+                    score *= 1.3
                 
                 source_label = 'DB (NOUVEAU ⭐)' if is_new else 'Base de données'
                 
@@ -190,24 +285,23 @@ class HybridRecommendationEngine:
                     'activity_name': row['activity_name'],
                     'category': row['category'],
                     'location': row['location'],
-                    'description': row['description'],
+                    'description': row.get('description', ''),
                     'weather': row.get('weather', 'unknown'),
-                    'popularity': row.get('popularity', 50),
+                    'popularity': int(row.get('popularity', 50)),
                     'duration': row.get('duration', 'N/A'),
                     'price': row.get('price', 'N/A'),
-                    'score': score,
+                    'score': float(score),
                     'source': source_label
                 })
-
-        # --- Fusion et dédoublonnage ---
+        
+        # 4️⃣ Fusion et tri
         if not all_activities:
-            print("❌ Aucune activité trouvée pour cette ville (ni ML, ni DB)")
-            return []
-
-        # Tri par score décroissant
+            print("❌ Aucune activité trouvée")
+            return [], weather
+        
         all_activities.sort(key=lambda x: x['score'], reverse=True)
         
-        # Supprimer les doublons (même activité = même nom + même lieu)
+        # Dédoublonnage
         seen = set()
         unique_activities = []
         for a in all_activities:
@@ -215,59 +309,17 @@ class HybridRecommendationEngine:
             if key not in seen:
                 seen.add(key)
                 unique_activities.append(a)
+        
+        print(f"✅ {len(unique_activities[:top_n])} recommandations générées\n")
+        return unique_activities[:top_n], weather
 
-        print(f"✅ {len(unique_activities[:top_n])} recommandations générées (après dédoublonnage)\n")
-        return unique_activities[:top_n]
 
+# Instance globale (pour éviter de recharger à chaque requête)
+_engine = None
 
-def get_weather_for_city(city_name, api_key="73f4a7564f5417d8d9928fbc4c39159d"):
-    """Récupère la météo actuelle via OpenWeather"""
-    try:
-        geo_url = f"http://api.openweathermap.org/geo/1.0/direct?q={city_name}&limit=1&appid={api_key}"
-        geo_res = requests.get(geo_url, timeout=8).json()
-        if not geo_res:
-            raise ValueError("Ville non trouvée")
-
-        lat, lon = geo_res[0]['lat'], geo_res[0]['lon']
-        weather_url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=metric&appid={api_key}&lang=fr"
-        weather_res = requests.get(weather_url, timeout=10).json()
-
-        if weather_res.get("cod") == 200:
-            temp = weather_res["main"]["temp"]
-            description = weather_res["weather"][0]["description"]
-            main_weather = weather_res["weather"][0]["main"]
-            wind_speed = weather_res.get("wind", {}).get("speed", 0)
-
-            category = "sunny"
-            if "rain" in description.lower() or main_weather == "Rain":
-                category = "rainy"
-            elif "snow" in description.lower() or main_weather == "Snow":
-                category = "snowy"
-            elif wind_speed > 10:
-                category = "windy"
-            elif temp >= 32:
-                category = "hot"
-            elif temp < 10:
-                category = "cold"
-
-            return {
-                "temp": round(temp, 1),
-                "description": description,
-                "main": main_weather,
-                "category": category,
-                "success": True,
-                "humidity": weather_res["main"]["humidity"],
-                "wind_speed": wind_speed
-            }
-
-    except Exception as e:
-        print(f"⚠️ Erreur météo : {e}")
-
-    return {
-        "success": False,
-        "category": "sunny",
-        "temp": 22,
-        "description": "ensoleillé",
-        "humidity": 60,
-        "wind_speed": 3.0
-    }
+def get_engine():
+    """Singleton : retourne l'instance unique du moteur"""
+    global _engine
+    if _engine is None:
+        _engine = LightGBMRecommendationEngine()
+    return _engine
