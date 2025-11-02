@@ -84,7 +84,13 @@ TEMPLATES = [
 WSGI_APPLICATION = 'hackathon.wsgi.application'
 
 
-# Database
+# 🎨 Hugging Face (Génération d'images)
+# Obtenir une clé gratuite : https://huggingface.co/settings/tokens
+HUGGINGFACE_TOKEN = "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"  # ⚠️ Remplacez par votre token
+
+# 🤖 Google Gemini (Chatbot IA)
+# Obtenir une clé gratuite : https://makersuite.google.com/app/apikey
+GROQ_API_KEY = "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"  # Collez votre clé
 # Use MySQL if env vars are provided, otherwise fallback to sensible defaults
 MYSQL_NAME = os.getenv('MYSQL_DATABASE', 'voguevue_db')
 MYSQL_USER = os.getenv('MYSQL_USER', 'root')

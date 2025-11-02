@@ -19,7 +19,6 @@
             padding-top: 80px;
         }
 
-        /* Navbar */
         .navbar {
             position: fixed;
             top: 0;
@@ -212,16 +211,6 @@
             backdrop-filter: blur(10px);
         }
 
-        .weather-item p {
-            font-size: 1.1em;
-            margin: 5px 0;
-        }
-
-        .weather-icon {
-            font-size: 2em;
-            margin-bottom: 10px;
-        }
-
         .section-title {
             color: white;
             font-size: 2em;
@@ -240,27 +229,51 @@
         .activity-card {
             background: white;
             border-radius: 20px;
-            padding: 25px;
+            overflow: hidden;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             transition: all 0.3s ease;
             animation: fadeInUp 0.8s ease;
             position: relative;
-            overflow: hidden;
-        }
-
-        .activity-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 5px;
-            background: linear-gradient(90deg, #ffd700 0%, #ffed4e 100%);
         }
 
         .activity-card:hover {
             transform: translateY(-10px);
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .activity-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .activity-image-placeholder {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3em;
+        }
+
+        .ai-badge-small {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 215, 0, 0.95);
+            color: #000;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.75em;
+            font-weight: 600;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .activity-content {
+            padding: 25px;
         }
 
         .activity-card h3 {
@@ -300,7 +313,7 @@
 
         .score-badge {
             position: absolute;
-            top: 20px;
+            top: 210px;
             right: 20px;
             background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
             color: #000;
@@ -343,42 +356,156 @@
             transition: width 1s ease;
         }
 
-        .no-results {
-            text-align: center;
-            color: white;
-            font-size: 1.3em;
-            padding: 60px 20px;
-            background: rgba(255,255,255,0.1);
+        /* 🤖 Chatbot Styles */
+        #chatbot-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 400px;
+            max-height: 600px;
+            background: white;
             border-radius: 20px;
-            backdrop-filter: blur(10px);
-        }
-
-        .loading {
-            text-align: center;
-            color: white;
-            font-size: 1.5em;
-            padding: 40px;
-        }
-
-        .loading::after {
-            content: '...';
-            animation: dots 1.5s infinite;
-        }
-
-        /* Hamburger menu */
-        .hamburger {
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
             display: none;
             flex-direction: column;
-            cursor: pointer;
-            gap: 5px;
+            z-index: 9999;
+            overflow: hidden;
         }
 
-        .hamburger span {
-            width: 25px;
-            height: 3px;
-            background: #000;
-            border-radius: 3px;
+        #chatbot-container.show {
+            display: flex;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h3 {
+            margin: 0;
+            font-size: 1.2em;
+        }
+
+        .close-chat {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .close-chat:hover {
+            transform: rotate(90deg);
+        }
+
+        #chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            max-height: 400px;
+            background: #f8f9fa;
+        }
+
+        .chat-message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 15px;
+            max-width: 80%;
+            animation: messageSlide 0.3s ease;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            background: #e3f2fd;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .ai-message {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .chat-loading {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            border-radius: 15px;
+            text-align: center;
+            animation: pulse 1.5s infinite;
+        }
+
+        #chat-form {
+            padding: 15px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            background: white;
+        }
+
+        #chat-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 1em;
+        }
+
+        #chat-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .chat-send-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
             transition: all 0.3s ease;
+        }
+
+        .chat-send-btn:hover {
+            background: #5568d3;
+            transform: scale(1.05);
+        }
+
+        .chat-send-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        #chat-toggle-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.5em;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 9998;
+            transition: all 0.3s ease;
+        }
+
+        #chat-toggle-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(0,0,0,0.4);
+        }
+
+        #chat-toggle-btn.hidden {
+            display: none;
         }
 
         @keyframes fadeInDown {
@@ -422,18 +549,23 @@
         @keyframes pulse {
             0%, 100% {
                 transform: scale(1);
-                box-shadow: 0 0 0 0 rgba(245, 87, 108, 0.7);
+                opacity: 1;
             }
             50% {
                 transform: scale(1.05);
-                box-shadow: 0 0 0 10px rgba(245, 87, 108, 0);
+                opacity: 0.8;
             }
         }
 
-        @keyframes dots {
-            0%, 20% { content: '.'; }
-            40% { content: '..'; }
-            60%, 100% { content: '...'; }
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @media (max-width: 768px) {
@@ -457,41 +589,21 @@
                 grid-template-columns: 1fr;
             }
 
-            .hamburger {
-                display: flex;
-            }
-
-            .navbar-menu {
-                position: absolute;
-                top: 100%;
-                left: 0;
-                right: 0;
-                background: rgba(255, 255, 255, 0.98);
-                flex-direction: column;
-                padding: 20px;
-                gap: 10px;
-                display: none;
-            }
-
-            .navbar-menu.active {
-                display: flex;
+            #chatbot-container {
+                width: 90%;
+                right: 5%;
+                bottom: 10px;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Navbar -->
     <nav class="navbar">
         <div class="navbar-container">
             <a href="/" class="navbar-brand">
                 🤖 ActivitésFinder AI
             </a>
-            <div class="hamburger" onclick="toggleMenu()">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-            <ul class="navbar-menu" id="navMenu">
+            <ul class="navbar-menu">
                 <li><a href="/">🏠 Accueil</a></li>
                 <li><a href="/travels" class="active">🔍 Rechercher</a></li>
                 <li><a href="/about">ℹ️ À propos</a></li>
@@ -503,8 +615,8 @@
     <div class="container">
         <header>
             <h1>🌍 Découvrez des Activités</h1>
-            <p>Recommandations intelligentes adaptées à la météo</p>
-            <span class="ai-badge">⚡ Propulsé par LightGBM AI</span>
+            <p>Recommandations intelligentes avec images IA</p>
+            <span class="ai-badge">⚡ LightGBM + Hugging Face + Groq Llama 3.1 (GRATUIT)</span>
         </header>
 
         <div class="search-section">
@@ -539,19 +651,16 @@
                 </h3>
                 <div class="weather-info">
                     <div class="weather-item">
-                        <div class="weather-icon">🌡️</div>
                         <p><strong>Température</strong></p>
                         <p style="font-size: 1.8em; font-weight: 700;">{{ weather_info.temp }}°C</p>
                     </div>
                     <div class="weather-item">
-                        <div class="weather-icon">☁️</div>
                         <p><strong>Conditions</strong></p>
                         <p style="text-transform: capitalize;">{{ weather_info.description }}</p>
                     </div>
                     <div class="weather-item">
-                        <div class="weather-icon">💨</div>
                         <p><strong>Confort</strong></p>
-                        <p>{{ weather_info.comfort_index|floatformat:0|floatformat:0 }}%</p>
+                        <p>{{ weather_info.comfort_index|floatformat:0 }}%</p>
                     </div>
                 </div>
             </div>
@@ -562,71 +671,103 @@
             <div class="activities-grid">
                 {% for activity in activities %}
                     <div class="activity-card">
-                        <span class="score-badge">🎯 {{ activity.score|floatformat:2 }}</span>
-                        <h3>{{ activity.activity_name }}</h3>
-                        
-                        <div class="activity-info">
-                            <div class="info-item">
-                                <strong>📍 Lieu</strong>
-                                <span>{{ activity.location }}</span>
-                            </div>
-                            <div class="info-item">
-                                <strong>🏷️ Catégorie</strong>
-                                <span style="text-transform: capitalize;">{{ activity.category }}</span>
-                            </div>
-                            <div class="info-item">
-                                <strong>⏱️ Durée</strong>
-                                <span>{{ activity.duration|default:"Non spécifié" }}</span>
-                            </div>
-                            <div class="info-item">
-                                <strong>💰 Prix</strong>
-                                <span>{{ activity.price }} TND</span>
-                            </div>
-                        </div>
-
-                        {% if activity.description %}
-                        <div class="description">
-                            {{ activity.description|truncatewords:25 }}
-                        </div>
+                        {% if activity.image_url %}
+                            <img src="{{ activity.image_url }}" alt="{{ activity.activity_name }}" class="activity-image">
+                            {% if activity.ai_generated %}
+                                <span class="ai-badge-small">🎨 IA</span>
+                            {% endif %}
+                        {% else %}
+                            <div class="activity-image-placeholder">🏖️</div>
                         {% endif %}
+                        
+                        <span class="score-badge">🎯 {{ activity.score|floatformat:2 }}</span>
+                        
+                        <div class="activity-content">
+                            <h3>{{ activity.activity_name }}</h3>
+                            
+                            <div class="activity-info">
+                                <div class="info-item">
+                                    <strong>📍 Lieu</strong>
+                                    <span>{{ activity.location }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <strong>🏷️ Catégorie</strong>
+                                    <span style="text-transform: capitalize;">{{ activity.category }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <strong>⏱️ Durée</strong>
+                                    <span>{{ activity.duration|default:"Non spécifié" }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <strong>💰 Prix</strong>
+                                    <span>{{ activity.price }} TND</span>
+                                </div>
+                            </div>
 
-                        <div class="info-item">
-                            <strong>📊 Popularité</strong>
-                            <span>{{ activity.popularity }}/100</span>
-                        </div>
-                        <div class="popularity-bar">
-                            <div class="popularity-fill" style="width: {{ activity.popularity }}%"></div>
-                        </div>
+                            {% if activity.description %}
+                            <div class="description">
+                                {{ activity.description|truncatewords:25 }}
+                            </div>
+                            {% endif %}
 
-                        <span class="source-badge {% if 'NOUVEAU' in activity.source %}new{% endif %}">
-                            {{ activity.source }}
-                        </span>
+                            <div class="info-item">
+                                <strong>📊 Popularité</strong>
+                                <span>{{ activity.popularity }}/100</span>
+                            </div>
+                            <div class="popularity-bar">
+                                <div class="popularity-fill" style="width: {{ activity.popularity }}%"></div>
+                            </div>
+
+                            <span class="source-badge {% if 'NOUVEAU' in activity.source %}new{% endif %}">
+                                {{ activity.source }}
+                            </span>
+                        </div>
                     </div>
                 {% endfor %}
             </div>
         {% elif city_searched %}
             <div class="no-results">
                 <p>😔 Aucune activité trouvée pour {{ city_searched }}.</p>
-                <p style="font-size: 0.9em; margin-top: 10px; opacity: 0.8;">
-                    Essayez une autre ville tunisienne comme Bizerte, Tunis, Sousse, Hammamet...
-                </p>
             </div>
-        {% else %}
-            {% if not engine_loaded %}
-            <div class="alert alert-danger">
-                ⚠️ Le moteur de recommandation n'est pas chargé. Vérifiez la console serveur.
-            </div>
-            {% endif %}
         {% endif %}
     </div>
 
+    <!-- 🤖 Chatbot IA Groq (GRATUIT) -->
+    {% if groq_enabled %}
+    <div id="chatbot-container">
+        <div class="chat-header">
+            <h3>🤖 Assistant Voyage IA (Llama 3.1)</h3>
+            <button onclick="toggleChat()" class="close-chat">✕</button>
+        </div>
+        
+        <div id="chat-messages">
+            <div class="chat-message ai-message">
+                👋 Bonjour ! Je suis votre assistant voyage IA. Posez-moi vos questions sur la Tunisie !
+            </div>
+        </div>
+        
+        <form id="chat-form">
+            <input type="text" id="chat-input" placeholder="Posez votre question..." required autocomplete="off">
+            <button type="submit" class="chat-send-btn" id="send-btn">Envoyer</button>
+        </form>
+    </div>
+
+    <button onclick="toggleChat()" id="chat-toggle-btn">💬</button>
+
     <script>
-        function toggleMenu() {
-            const menu = document.getElementById('navMenu');
-            menu.classList.toggle('active');
+        const chatContainer = document.getElementById('chatbot-container');
+        const chatToggleBtn = document.getElementById('chat-toggle-btn');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        function toggleChat() {
+            chatContainer.classList.toggle('show');
+            chatToggleBtn.classList.toggle('hidden');
         }
 
-        // Animation des barres de popularité au chargement
+        // Animation des barres de popularité
         document.addEventListener('DOMContentLoaded', function() {
             const bars = document.querySelectorAll('.popularity-fill');
             bars.forEach(bar => {
@@ -637,6 +778,84 @@
                 }, 100);
             });
         });
+
+        // Chatbot IA
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const userMessage = chatInput.value.trim();
+            if (!userMessage) return;
+            
+            // Désactiver le formulaire pendant l'envoi
+            chatInput.disabled = true;
+            sendBtn.disabled = true;
+            
+            // Message utilisateur
+            const userDiv = document.createElement('div');
+            userDiv.className = 'chat-message user-message';
+            userDiv.textContent = userMessage;
+            chatMessages.appendChild(userDiv);
+            
+            chatInput.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Loader
+            const loaderDiv = document.createElement('div');
+            loaderDiv.className = 'chat-loading';
+            loaderDiv.id = 'chat-loader';
+            loaderDiv.innerHTML = '🤔 Réflexion en cours...';
+            chatMessages.appendChild(loaderDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            try {
+                const formData = new FormData();
+                formData.append('message', userMessage);
+                formData.append('city', '{{ city_searched|default:"Tunisie" }}');
+                
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                // Supprimer loader
+                const loader = document.getElementById('chat-loader');
+                if (loader) loader.remove();
+                
+                // Réponse IA
+                const aiDiv = document.createElement('div');
+                aiDiv.className = 'chat-message ai-message';
+                aiDiv.textContent = data.success ? data.reply : (data.reply || "Erreur de connexion");
+                chatMessages.appendChild(aiDiv);
+                
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            } catch (error) {
+                console.error('Erreur:', error);
+                
+                const loader = document.getElementById('chat-loader');
+                if (loader) loader.remove();
+                
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'chat-message ai-message';
+                errorDiv.style.background = '#ff4444';
+                errorDiv.textContent = '❌ Erreur de connexion. Réessayez.';
+                chatMessages.appendChild(errorDiv);
+            } finally {
+                // Réactiver le formulaire
+                chatInput.disabled = false;
+                sendBtn.disabled = false;
+                chatInput.focus();
+            }
+        });
     </script>
+    {% else %}
+    <script>
+        console.warn('⚠️ Groq chatbot désactivé. Obtenez une clé gratuite sur https://console.groq.com/keys');
+    </script>
+    {% endif %}
 </body>
 </html>
