@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmer la suppression</title>
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/Home CSS/mobile.css' %}">
+    <style>
+        :root{
+            --vv-primary: #6B4F3B;
+            --vv-primary-light:#5c4433;
+            --vv-secondary: #F2C94C;
+            --vv-secondary-dark:#E0B73A;
+            --vv-accent:#6B4F3B;
+            --vv-white:#FFFFFF;
+            --vv-gray-50:#FFF8E7;
+        }
+        .container{ max-width: 700px; margin: 2rem auto; padding: 2rem; background: #fff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.08); }
+        .preview{ width:100%;max-width:360px;border-radius:12px; }
+        .btn{ display: inline-flex; align-items: center; gap: .5rem; font-weight: 600; border: 0; cursor: pointer;
+            border-radius: 999px; padding: .65rem 1.15rem; text-decoration: none; transition: transform .2s ease, box-shadow .2s ease; }
+        .btn:focus-visible{ outline: 3px solid var(--vv-secondary); outline-offset: 2px; }
+        .btn-danger{ color: var(--vv-white); background: linear-gradient(45deg, var(--vv-primary-light), var(--vv-primary)); }
+        .btn-danger:hover{ transform: translateY(-2px); box-shadow: 0 6px 20px rgba(107,79,59,.25); }
+        .btn-secondary{ color: var(--vv-white); background: linear-gradient(45deg, var(--vv-primary), var(--vv-primary-light)); }
+        .btn-secondary:hover{ transform: translateY(-2px); box-shadow: 0 6px 20px rgba(107,79,59,.25); }
+        .actions{ margin-top: 1rem; display:flex; align-items:center; gap:.75rem; }
+    </style>
+</head>
+<body>
+    <section class="nav-bar" style="z-index: 1000;">
+        <div class="logo"><a href="/">VoyageVue</a></div>
+        <ul class="menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/travels">travels</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/multimedia">Multimédia</a></li>
+            {% if user.is_authenticated %}
+            <li><a href="/profile">Profile</a></li>
+            <li><a href="/logout">logout</a></li>
+            {% else %}
+            <li><a href="/signin">Sign In</a></li>
+            <li><a href="/signup">Sign Up</a></li>
+            {% endif %}
+        </ul>
+        <div class="mobile">
+            <i class="fa-solid fa-bars"></i>
+        </div>
+    </section>
+
+    <div class="container">
+        <h1>Supprimer ce contenu ?</h1>
+        <p>Êtes-vous sûr de vouloir supprimer ce contenu ? Cette action est irréversible.</p>
+        <div style="margin: 1rem 0;">
+            {% if avis.image %}
+                <img src="{{ avis.image.url }}" alt="image" class="preview" />
+            {% endif %}
+            <p style="white-space: pre-line;">{{ avis.comment }}</p>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <div class="actions">
+                <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Supprimer</button>
+                <a href="/multimedia" class="btn btn-secondary"><i class="fas fa-times"></i> Annuler</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

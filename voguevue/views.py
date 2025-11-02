@@ -128,21 +128,22 @@ def blog(request):
 
 def avis_list(request):
     avis_queryset = Avis.objects.select_related('user').order_by('-created_at')
-    return render(request, 'main/avis_list.html', { 'avis_list': avis_queryset })
+    return render(request, 'main/multimedia_list.html', { 'avis_list': avis_queryset })
 
 
 @login_required
 def avis_create(request):
     if request.method == 'POST':
+        title = request.POST.get('title', '')
         comment = request.POST.get('comment')
         image = request.FILES.get('image')
         if not comment:
             messages.error(request, 'Le commentaire est obligatoire.')
-            return render(request, 'main/avis_form.html')
-        Avis.objects.create(user=request.user, comment=comment, image=image)
+            return render(request, 'main/multimedia_form.html')
+        Avis.objects.create(user=request.user, title=title, comment=comment, image=image)
         messages.success(request, 'Votre avis a été ajouté.')
         return redirect('/multimedia')
-    return render(request, 'main/avis_form.html')
+    return render(request, 'main/multimedia_form.html')
 
 
 @login_required
@@ -156,7 +157,7 @@ def avis_delete(request, avis_id):
         avis.delete()
         messages.success(request, 'Avis supprimé.')
         return redirect('/multimedia')
-    return render(request, 'main/avis_confirm_delete.html', { 'avis': avis })
+    return render(request, 'main/multimedia_confirm_delete.html', { 'avis': avis })
 
 
 @login_required
@@ -168,11 +169,13 @@ def avis_update(request, avis_id):
         return redirect('/multimedia')
 
     if request.method == 'POST':
+        title = request.POST.get('title', avis.title)
         comment = request.POST.get('comment')
         image = request.FILES.get('image')
         if not comment:
             messages.error(request, 'Le commentaire est obligatoire.')
         else:
+            avis.title = title
             avis.comment = comment
             if image is not None:
                 avis.image = image
@@ -180,7 +183,7 @@ def avis_update(request, avis_id):
             messages.success(request, 'Contenu mis à jour.')
             return redirect('/multimedia')
 
-    return render(request, 'main/avis_update.html', { 'avis': avis })
+    return render(request, 'main/multimedia_update.html', { 'avis': avis })
 
 
 def _classify_image_keywords(text: str) -> dict:

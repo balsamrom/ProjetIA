@@ -1,21 +1,31 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scanner d'Image IA</title>
-    <link rel="stylesheet" href="/static/css/base.css">
-    <link rel="stylesheet" href="/static/css/Home CSS/mobile.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/Home CSS/mobile.css' %}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        :root{
+            --vv-primary: #6B4F3B;
+            --vv-primary-light:#5c4433;
+            --vv-secondary: #F2C94C;
+            --vv-secondary-dark:#E0B73A;
+            --vv-accent:#6B4F3B;
+            --vv-white:#FFFFFF;
+            --vv-gray-50:#FFF8E7;
+        }
         .scanner-container {
             max-width: 1000px;
             margin: 2rem auto;
             padding: 1rem;
         }
         .scanner-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: linear-gradient(135deg, var(--vv-primary-light) 0%, var(--vv-primary) 100%);
+            color: var(--vv-white);
             padding: 2rem;
             border-radius: 20px;
             margin-bottom: 2rem;
@@ -79,11 +89,11 @@
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            background: linear-gradient(45deg, #667eea, #764ba2);
+            background: linear-gradient(45deg, var(--vv-primary), var(--vv-primary-light));
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            color: var(--vv-white);
             font-weight: bold;
             font-size: 1.2rem;
         }
@@ -110,8 +120,8 @@
             text-align: center;
         }
         .scan-btn {
-            background: linear-gradient(45deg, #3498db, #2980b9);
-            color: white;
+            background: linear-gradient(45deg, var(--vv-secondary), var(--vv-secondary-dark));
+            color: var(--vv-white);
             border: none;
             padding: 1rem 2rem;
             border-radius: 50px;
@@ -122,12 +132,12 @@
             display: inline-flex;
             align-items: center;
             gap: 0.75rem;
-            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            box-shadow: 0 4px 15px rgba(224, 183, 58, 0.35);
         }
         .scan-btn:hover {
-            background: linear-gradient(45deg, #2980b9, #1f618d);
+            background: linear-gradient(45deg, var(--vv-secondary-dark), var(--vv-secondary));
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+            box-shadow: 0 6px 20px rgba(224, 183, 58, 0.45);
         }
         .scan-btn:disabled {
             background: #bdc3c7;
@@ -135,8 +145,8 @@
             transform: none;
         }
         .back-btn {
-            background: linear-gradient(45deg, #95a5a6, #7f8c8d);
-            color: white;
+            background: linear-gradient(45deg, var(--vv-primary-light), var(--vv-primary));
+            color: var(--vv-white);
             text-decoration: none;
             padding: 0.75rem 1.5rem;
             border-radius: 25px;
@@ -148,8 +158,8 @@
             margin-left: 1rem;
         }
         .back-btn:hover {
-            background: linear-gradient(45deg, #7f8c8d, #6c7b7d);
-            color: white;
+            background: linear-gradient(45deg, var(--vv-primary), var(--vv-primary-light));
+            color: var(--vv-white);
             text-decoration: none;
             transform: translateY(-2px);
         }
@@ -168,8 +178,8 @@
             margin-bottom: 0.5rem;
         }
         .success-banner {
-            background: linear-gradient(45deg, #2ecc71, #27ae60);
-            color: white;
+            background: linear-gradient(45deg, var(--vv-secondary), var(--vv-secondary-dark));
+            color: var(--vv-white);
             padding: 1rem 2rem;
             border-radius: 15px;
             margin-bottom: 2rem;
@@ -177,8 +187,8 @@
             font-weight: 600;
         }
         .error-banner {
-            background: linear-gradient(45deg, #e74c3c, #c0392b);
-            color: white;
+            background: linear-gradient(45deg, var(--vv-primary-light), var(--vv-primary));
+            color: var(--vv-white);
             padding: 1rem 2rem;
             border-radius: 15px;
             margin-bottom: 2rem;
@@ -201,8 +211,8 @@
             gap: 0.75rem;
         }
         .class-tag {
-            background: linear-gradient(45deg, #3498db, #2980b9);
-            color: white;
+            background: linear-gradient(45deg, var(--vv-primary), var(--vv-primary-light));
+            color: var(--vv-white);
             padding: 0.75rem 1.5rem;
             border-radius: 25px;
             font-weight: 600;
@@ -226,7 +236,7 @@
             background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             padding: 1.5rem;
             border-radius: 15px;
-            border-left: 5px solid #3498db;
+            border-left: 5px solid var(--vv-secondary);
             transition: transform 0.3s ease;
         }
         .probability-card:hover {
@@ -245,7 +255,7 @@
         }
         .probability-value {
             font-weight: bold;
-            color: #3498db;
+            color: var(--vv-secondary);
             font-size: 1.2rem;
         }
         .progress-bar {
@@ -256,7 +266,7 @@
             margin-bottom: 0.5rem;
         }
         .progress-fill {
-            background: linear-gradient(45deg, #3498db, #2980b9);
+            background: linear-gradient(45deg, var(--vv-secondary), var(--vv-secondary-dark));
             height: 100%;
             border-radius: 6px;
             transition: width 1s ease;
@@ -268,7 +278,7 @@
         }
         .spinner {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
+            border-top: 4px solid var(--vv-secondary);
             border-radius: 50%;
             width: 40px;
             height: 40px;
