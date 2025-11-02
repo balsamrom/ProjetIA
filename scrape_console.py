@@ -48,7 +48,7 @@ def scrape_jenkins_log(log_path):
 
         log_message("🔍 Analyse du log Jenkins...", logfile)
 
-        error_keywords = ["ERROR", "Exception", "Traceback", "FAILURE", "BUILD FAILURE"]
+        error_keywords = ["ERROR", "Exception", "Traceback", "FAILURE", "BUILD FAILURE","WARN"]
         error_pattern = re.compile(r"|".join(re.escape(k) for k in error_keywords), re.IGNORECASE)
         error_lines = [line for line in log.splitlines() if error_pattern.search(line)]
 
