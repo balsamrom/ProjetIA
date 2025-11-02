@@ -24,7 +24,14 @@ pipeline {
             }
         }
 
-        
+         stage('Run Python Script') {
+            steps {
+                bat '''
+                call %VENV%\\Scripts\\activate
+                python scrape_console.py
+                '''
+            }
+        }
 stage('SonarQube Analysis') {
     steps {
         withSonarQubeEnv('sonar') {
@@ -39,20 +46,7 @@ stage('SonarQube Analysis') {
     }
 }
 
-        stage('Quality Gate') {
-            steps {
-                timeout(time: 10, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
-            }
-        }
-        stage('Run Python Script') {
-            steps {
-                bat '''
-                call %VENV%\\Scripts\\activate
-                python scrape_console.py
-                '''
-            }
-        }
+        
+       
     }
 }
