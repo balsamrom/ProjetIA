@@ -24,14 +24,6 @@ pipeline {
             }
         }
 
-         stage('Run Python Script') {
-            steps {
-                bat '''
-                call %VENV%\\Scripts\\activate
-                python scrape_console.py
-                '''
-            }
-        }
 stage('SonarQube Analysis') {
     steps {
         withSonarQubeEnv('sonar') {
