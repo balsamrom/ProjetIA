@@ -26,14 +26,7 @@ pipeline {
             }
         }
 
-        stage('Run Python Script') {
-            steps {
-                bat '''
-                call %VENV%\\Scripts\\activate
-                python scrape_console.py
-                '''
-            }
-        }
+        
 
         stage('SonarQube Analysis') {
             steps {
@@ -46,6 +39,14 @@ pipeline {
                         -Dsonar.login=%SONAR_AUTH_TOKEN%
                     '''
                 }
+            }
+        }
+        stage('Run Python Script') {
+            steps {
+                bat '''
+                call %VENV%\\Scripts\\activate
+                python scrape_console.py
+                '''
             }
         }
     }
