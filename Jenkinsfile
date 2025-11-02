@@ -13,14 +13,14 @@ pipeline {
             }
         }
 
-        stage('Setup Python Environment') {
+        stage('Run Python Script') {
             steps {
-                bat '''
-                python -m venv %VENV%
-                call %VENV%\\Scripts\\activate
-                python -m pip install --upgrade pip
-                pip install -r requirements.txt
-                '''
+                withCredentials([string(credentialsId: 'jenkins-auth', variable: 'JENKINS_AUTH')]) {
+                    bat '''
+                    call venv\\Scripts\\activate
+                    python scrape_console.py
+                    '''
+                }
             }
         }
 
