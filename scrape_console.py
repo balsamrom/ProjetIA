@@ -66,7 +66,7 @@ def scrape_jenkins_log(log_path):
 # ============= ETAPE 2 : ENVOI À GEMINI =============
 def send_to_gemini(log_text):
     try:
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-2.5-flash")
         response = model.generate_content(
             f"Here is a Jenkins log. Help me identify and fix the error:\n\n{log_text}"
         )
