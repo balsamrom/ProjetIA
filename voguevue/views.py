@@ -278,7 +278,7 @@ def blog(request):
 def get_ai_chat(request):
     """
     🤖 Chatbot IA avec Groq (GRATUIT et RAPIDE)
-    API 100% GRATUITE - Llama 3.1 70B
+    API 100% GRATUITE - Llama 3.3 70B
     """
     if not GROQ_ENABLED:
         return JsonResponse({
@@ -314,7 +314,7 @@ Règles importantes :
 - Réponds UNIQUEMENT en français
 - Concentre-toi sur les aspects touristiques de la Tunisie"""
 
-            # Appel API Groq
+            # Appel API Groq avec le nouveau modèle
             groq_url = "https://api.groq.com/openai/v1/chat/completions"
             headers = {
                 "Authorization": f"Bearer {GROQ_API_KEY}",
@@ -322,7 +322,7 @@ Règles importantes :
             }
             
             payload = {
-                "model": "llama-3.1-70b-versatile",  # Modèle gratuit et puissant
+                "model": "llama-3.3-70b-versatile",  # 🆕 Modèle mis à jour
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_message}
@@ -380,7 +380,6 @@ Règles importantes :
             }, status=500)
     
     return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
-
 
 def get_recommendations_api(request):
     """

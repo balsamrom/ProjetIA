@@ -107,9 +107,10 @@ if MYSQL_NAME and MYSQL_USER:
             'PASSWORD': MYSQL_PASSWORD or '',
             'HOST': MYSQL_HOST,
             'PORT': MYSQL_PORT,
-            'OPTIONS': {
-                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            },
+             'OPTIONS': {
+            'charset': 'utf8mb4',  # 🆕 Support pour les emojis
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
         }
     }
 else:
