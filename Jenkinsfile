@@ -2,28 +2,24 @@ pipeline {
     agent any
 
     environment {
-        SONARQUBE = 'sonar' // Nom du serveur Sonar configuré dans Jenkins
+        SONARQUBE = 'sonar'
         VENV = 'venv'
+        JENKINS_AUTH = credentials('jenkins-auth') // secret text required
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/balsamrom/ProjetIA.git'
             }
         }
 
-        stage('Create & Activate Virtual Env') {
+        stage('Setup Virtualenv') {
             steps {
                 bat '''
                 if not exist %VENV% (
-                    echo Creating virtual environment...
                     python -m venv %VENV%
-                ) else (
-                    echo Virtualenv already exists.
                 )
-
                 call %VENV%\\Scripts\\activate
                 pip install -r requirements.txt
                 '''
@@ -32,12 +28,10 @@ pipeline {
 
         stage('Run Python Script') {
             steps {
-                withCredentials([string(credentialsId: 'jenkins-auth', variable: 'JENKINS_AUTH')]) {
-                    bat '''
-                    call %VENV%\\Scripts\\activate
-                    python scrape_console.py
-                    '''
-                }
+                bat '''
+                call %VENV%\\Scripts\\activate
+                python scrape_console.py
+                '''
             }
         }
 
@@ -45,7 +39,6 @@ pipeline {
             steps {
                 withSonarQubeEnv('sonar') {
                     bat '''
-                    call %VENV%\\Scripts\\activate
                     "C:\\sonar-scanner-7.3.0.5189-windows-x64\\bin\\sonar-scanner.bat" ^
                         -Dsonar.projectKey=ProjetIA ^
                         -Dsonar.sources=. ^
