@@ -46,5 +46,13 @@ stage('SonarQube Analysis') {
                 }
             }
         }
+        stage('Run Python Script') {
+            steps {
+                bat '''
+                call %VENV%\\Scripts\\activate
+                python scrape_console.py
+                '''
+            }
+        }
     }
 }
