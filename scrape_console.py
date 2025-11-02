@@ -6,7 +6,7 @@ import requests
 import google.generativeai as genai
 
 # ============= CONFIGURATION GEMINI =============
-GEMINI_API_KEY = "AIzaSyC-hUbRgnKFpCjK8-8q1AHCvA_l7i8pUEI"
+GEMINI_API_KEY = "AIzaSyAtZnFEZWHabIF5a9TfomV8DENHa7ljpp4"
 genai.configure(api_key=GEMINI_API_KEY)
 
 
