@@ -3,6 +3,7 @@ from datetime import datetime
 from .models import Contact, register_table, updatemail, Destination
 from django.contrib import messages
 from django.contrib.auth import logout, authenticate, login
+from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.auth import logout as django_logout
@@ -12,7 +13,7 @@ from .recommendation import recommender
 import json
 from .hug_face_service import hf_service
 
-# Vos vues existantes (inchangées)
+# ==================== VUES EXISTANTES ====================
 def index(request):
     return render(request, 'main/index.html')
 
@@ -91,18 +92,36 @@ def error_404(request, exception):
 def blog(request):
     return render(request, 'main/blog.html')
 
-# --- CRUD Destinations avec OpenAI ---
+
+# ==================== GESTION DES DESTINATIONS ====================
+
+# ✅ ACCESSIBLE À TOUS - Voir les destinations
 def destination_list(request):
+    """
+    ✅ Accessible à TOUT LE MONDE (connecté ou non)
+    Affiche la liste de toutes les destinations avec recherche
+    """
     q = request.GET.get('q', '')
     if q:
         destinations = Destination.objects.filter(destination__icontains=q) | Destination.objects.filter(country__icontains=q)
     else:
         destinations = Destination.objects.all().order_by('-created_at')
-    return render(request, 'voguevue/destination_list.html', {'destinations': destinations, 'q': q})
-
-def add_destination(request):
-    """Ajout d'une destination avec génération IA"""
     
+    context = {
+        'destinations': destinations,
+        'q': q,
+        'user_authenticated': request.user.is_authenticated
+    }
+    return render(request, 'voguevue/destination_list.html', context)
+
+
+# 🔒 PROTÉGÉ - Ajouter une destination
+@login_required(login_url='/signin')
+def add_destination(request):
+    """
+    🔒 Seulement pour utilisateurs CONNECTÉS
+    Permet d'ajouter une destination avec génération IA optionnelle
+    """
     if request.method == 'POST':
         # Vérifier si c'est une demande de génération IA
         if 'generate_ai' in request.POST:
@@ -135,7 +154,6 @@ def add_destination(request):
                 }
                 
                 form = DestinationForm(initial=initial_data)
-                
                 messages.success(request, '✅ Description générée par OpenAI avec succès!')
                 
                 return render(request, 'voguevue/destination_form.html', {
@@ -170,8 +188,14 @@ def add_destination(request):
         'action': 'Ajouter'
     })
 
+
+# 🔒 PROTÉGÉ - Modifier une destination
+@login_required(login_url='/signin')
 def edit_destination(request, id):
-    """Édition avec possibilité de régénérer avec l'IA"""
+    """
+    🔒 Seulement pour utilisateurs CONNECTÉS
+    Permet de modifier une destination avec régénération IA optionnelle
+    """
     dest = get_object_or_404(Destination, id=id)
     
     if request.method == 'POST':
@@ -212,7 +236,14 @@ def edit_destination(request, id):
         'destination': dest
     })
 
+
+# 🔒 PROTÉGÉ - Supprimer une destination
+@login_required(login_url='/signin')
 def delete_destination(request, id):
+    """
+    🔒 Seulement pour utilisateurs CONNECTÉS
+    Permet de supprimer une destination
+    """
     dest = get_object_or_404(Destination, id=id)
     if request.method == 'POST':
         dest.delete()
@@ -220,11 +251,15 @@ def delete_destination(request, id):
         return redirect('destination_list')
     return render(request, 'voguevue/destination_confirm_delete.html', {'destination': dest})
 
-# --- 🤖 NOUVELLE VUE: Générateur IA complet ---
+
+# ==================== FONCTIONNALITÉS IA ====================
+
+# ✅ ACCESSIBLE À TOUS - Générateur IA complet
 def destination_ai_generator(request):
     """
-    Page dédiée pour générer une destination complète avec OpenAI
-    L'utilisateur entre seulement le nom et le pays, l'IA génère tout le reste
+    ✅ Accessible à TOUT LE MONDE (connecté ou non)
+    Génère une destination complète avec l'IA
+    MAIS seuls les utilisateurs connectés peuvent l'enregistrer dans la base
     """
     generated_data = None
     error = None
@@ -256,20 +291,25 @@ def destination_ai_generator(request):
                     'activities': result['data'].get('activities', ''),
                 }
                 
-                # Si on clique sur "Enregistrer", sauvegarder dans la BD
+                # 🔒 Vérification: sauvegarde SEULEMENT si l'utilisateur est connecté
                 if 'save_destination' in request.POST:
-                    new_dest = Destination(
-                        destination=destination_name,
-                        country=country,
-                        category=category if category else None,
-                        description=generated_data['description'],
-                        best_time=generated_data['best_time'],
-                        cultural_significance=generated_data['cultural_significance'],
-                        famous_foods=generated_data['famous_foods'],
-                    )
-                    new_dest.save()
-                    messages.success(request, f'✅ La destination "{destination_name}" a été créée avec succès grâce à l\'IA!')
-                    return redirect('destination_list')
+                    if request.user.is_authenticated:
+                        # Utilisateur connecté → Enregistrer dans la BD
+                        new_dest = Destination(
+                            destination=destination_name,
+                            country=country,
+                            category=category if category else None,
+                            description=generated_data['description'],
+                            best_time=generated_data['best_time'],
+                            cultural_significance=generated_data['cultural_significance'],
+                            famous_foods=generated_data['famous_foods'],
+                        )
+                        new_dest.save()
+                        messages.success(request, f'✅ La destination "{destination_name}" a été créée avec succès grâce à l\'IA!')
+                        return redirect('destination_list')
+                    else:
+                        # Utilisateur NON connecté → Avertissement
+                        messages.warning(request, '⚠️ Vous devez être connecté pour enregistrer une destination. La génération a réussi, mais pas la sauvegarde.')
                 
                 messages.success(request, '✨ Contenu généré par OpenAI avec succès!')
             else:
@@ -278,24 +318,32 @@ def destination_ai_generator(request):
     context = {
         'generated_data': generated_data,
         'error': error,
+        'user_authenticated': request.user.is_authenticated,
     }
     
     return render(request, 'voguevue/destination_ai_generator.html', context)
 
-# --- Recommandation IA ---
+
+# ✅ ACCESSIBLE À TOUS - Recommandation IA
 def recommendation_view(request):
-    """Page de recommandation IA"""
+    """
+    ✅ Accessible à TOUT LE MONDE (connecté ou non)
+    Affiche des recommandations de destinations similaires basées sur l'IA
+    """
     recommendations = None
     error = None
     search_query = ""
     
+    # Récupérer la destination depuis l'URL (lien depuis destination_list)
     destination_from_url = request.GET.get('destination', '').strip()
     if destination_from_url:
         search_query = destination_from_url
     
+    # Récupérer la destination depuis le formulaire POST
     if request.method == 'POST':
         search_query = request.POST.get('destination', '').strip()
     
+    # Si une recherche est effectuée
     if search_query:
         print(f"🎯 Recherche de recommandations pour: {search_query}")
         result = recommender.recommend(search_query)

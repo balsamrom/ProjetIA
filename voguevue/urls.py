@@ -30,6 +30,7 @@ urlpatterns = [
     
     # 🤖 Générateur IA complet
     path("destinations/ai-generator/", views.destination_ai_generator, name='destination_ai_generator'),
+    
 ]
 
 # Configuration pour servir les fichiers média en développement
