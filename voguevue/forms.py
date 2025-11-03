@@ -12,5 +12,11 @@ class DestinationForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
             'cultural_significance': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
             'cost_of_living': forms.TextInput(attrs={'class': 'form-control'}),
-            'image': forms.FileInput(attrs={'class': 'form-control'}),
+            'image': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*'  # N'accepte que les images
+            }),
+        }
+        labels = {
+            'image': '📸 Image de la destination',
         }

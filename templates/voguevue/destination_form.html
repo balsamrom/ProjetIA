@@ -19,7 +19,20 @@
                             <label for="{{ field.id_for_label }}" class="form-label fw-bold">
                                 {{ field.label }}
                             </label>
+                            
+                            <!-- Affichage spécial pour l'image -->
+                            {% if field.name == 'image' %}
+                                {% if destination.image %}
+                                <div class="mb-2">
+                                    <img src="{{ destination.image.url }}" alt="Image actuelle" 
+                                         style="max-width: 200px; border-radius: 8px; border: 2px solid #dee2e6;">
+                                    <p class="text-muted small mt-1">Image actuelle</p>
+                                </div>
+                                {% endif %}
+                            {% endif %}
+                            
                             {{ field }}
+                            
                             {% if field.help_text %}
                             <div class="form-text">{{ field.help_text }}</div>
                             {% endif %}
@@ -38,6 +51,12 @@
                             <a href="{% url 'destination_list' %}" class="btn btn-secondary">
                                 ↩ Retour
                             </a>
+                            
+                            {% if action == 'Modifier' and destination %}
+                            <button type="submit" name="regenerate_ai" class="btn btn-info ms-auto">
+                                🔄 Régénérer avec IA
+                            </button>
+                            {% endif %}
                         </div>
                     </form>
                 </div>
