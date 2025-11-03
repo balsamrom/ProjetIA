@@ -22,4 +22,5 @@ urlpatterns = [
     path('analyse/', views.upload_and_analyse, name='upload_and_analyse'),
     path('multimedia/upload_and_analyse/', views.upload_and_analyse, name='upload_and_analyse'),
     path('ai-scanner/', views.ai_scanner, name='ai_scanner'),
+    path('clarifai/classify', views.clarifai_classify, name='clarifai_classify'),
 ]

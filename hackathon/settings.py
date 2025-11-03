@@ -142,3 +142,6 @@ STATICFILES_DIRS = [
 # Media files (user uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+CLARIFAI_API_KEY = '48577011126c4b79b48cf0a333d189ff'
+CLARIFAI_USER_ID = 'bhy3otiwgfeo'
+CLARIFAI_APP_ID = 'hello123'

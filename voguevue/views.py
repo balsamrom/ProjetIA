@@ -1,4 +1,6 @@
 import email
+import os
+import base64
 from django.shortcuts import redirect, render , HttpResponse
 from datetime import datetime
 from .models import Contact , register_table , updatemail, Avis
@@ -9,6 +11,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth import logout as django_logout
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import FileSystemStorage
+from django.conf import settings
+from clarifai.client.model import Model
 # Import conditionnel du module IA
 def get_analyse_function():
     """Retourne la fonction d'analyse ou une fonction de remplacement"""
@@ -273,3 +277,56 @@ def upload_and_analyse(request):
 def ai_scanner(request):
     """Page dédiée au scanner IA avec interface améliorée"""
     return render(request, "main/ai_scanner.html")
+
+
+def clarifai_classify(request):
+    """Classification via Clarifai.
+    - GET avec ?avis_id=<id>: affiche l'image du contenu et lance la classification.
+    - POST avec upload: classifie le fichier envoyé.
+    """
+    result = None
+    error = None
+    image_url = None
+    image_data_url = None
+
+    # Prépare le modèle Clarifai
+    pat = getattr(settings, 'CLARIFAI_API_KEY', None)
+    if not pat:
+        return render(request, 'classifier/classify.html', { 'result': None, 'error': 'CLARIFAI_API_KEY manquant dans settings.' })
+    model = Model(user_id='clarifai', app_id='main', model_id='general-image-recognition', pat=pat)
+
+    # Cas 1: classification depuis un contenu existant
+    avis_id = request.GET.get('avis_id')
+    if avis_id:
+        try:
+            avis = Avis.objects.get(id=avis_id)
+            if avis.image and hasattr(avis.image, 'path'):
+                image_url = avis.image.url
+                with open(avis.image.path, 'rb') as f:
+                    img_bytes = f.read()
+                pred = model.predict_by_bytes(img_bytes, input_type='image')
+                outputs = getattr(pred, 'outputs', [])
+                concepts = outputs[0].data.concepts if outputs and getattr(outputs[0], 'data', None) else []
+                result = [(c.name, round(c.value * 100, 2)) for c in (concepts[:5] if concepts else [])]
+        except Avis.DoesNotExist:
+            error = "Contenu introuvable."
+        except Exception as e:
+            error = str(e)
+
+    # Cas 2: upload manuel
+    elif request.method == 'POST' and request.FILES.get('image'):
+        try:
+            uploaded = request.FILES['image']
+            img_bytes = uploaded.read()
+            # Prévisualisation via data URL
+            mime = getattr(uploaded, 'content_type', 'image/jpeg') or 'image/jpeg'
+            b64 = base64.b64encode(img_bytes).decode('ascii')
+            image_data_url = f"data:{mime};base64,{b64}"
+            pred = model.predict_by_bytes(img_bytes, input_type='image')
+            outputs = getattr(pred, 'outputs', [])
+            concepts = outputs[0].data.concepts if outputs and getattr(outputs[0], 'data', None) else []
+            result = [(c.name, round(c.value * 100, 2)) for c in (concepts[:5] if concepts else [])]
+        except Exception as e:
+            error = str(e)
+
+    return render(request, 'classifier/classify.html', { 'result': result, 'error': error, 'image_url': image_url, 'image_data_url': image_data_url, 'avis_id': avis_id })

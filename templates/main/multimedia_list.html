@@ -87,6 +87,9 @@
                 <a href="/ai-scanner/" class="add-content-btn">
                     <i class="fas fa-brain"></i> Scanner IA
                 </a>
+                <a href="/clarifai/classify" class="add-content-btn">
+                    <i class="fas fa-cloud-upload-alt"></i> Scanner Clarifai (Upload)
+                </a>
             </div>
             {% else %}
             <p><a href="/signin" style="color: var(--vv-secondary); text-decoration: underline;">Connectez-vous</a> pour ajouter du contenu.</p>
@@ -139,6 +142,9 @@
                     <div class="card-actions">
                         <a href="/multimedia/{{ a.id }}/scan" class="action-btn scan-btn">
                             <i class="fas fa-search"></i> Scanner l'image
+                        </a>
+                        <a href="/clarifai/classify?avis_id={{ a.id }}" class="action-btn scan-btn">
+                            <i class="fas fa-brain"></i> Clarifai
                         </a>
                         {% if user.is_authenticated and user.id == a.user_id %}
                         <a href="/multimedia/{{ a.id }}/edit" class="action-btn edit-btn">
