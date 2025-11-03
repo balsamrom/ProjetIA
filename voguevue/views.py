@@ -1,18 +1,18 @@
-import email
 from django.shortcuts import redirect, render, HttpResponse
 from datetime import datetime
-from .models import Contact, register_table, updatemail
+from .models import Contact, register_table, updatemail, Destination
 from django.contrib import messages
 from django.contrib.auth import logout, authenticate, login
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.auth import logout as django_logout
-from .models import Destination
 from .forms import DestinationForm
 from django.shortcuts import get_object_or_404, redirect, render
 from .recommendation import recommender
+import json
+from .hug_face_service import hf_service
 
-# Create your views here.
+# Vos vues existantes (inchangées)
 def index(request):
     return render(request, 'main/index.html')
 
@@ -27,7 +27,6 @@ def contact(request):
         contact = Contact(name=name, email=email, message=message, date=datetime.today())
         contact.save()
         messages.success(request, 'Your message has been sent')
-        
     return render(request, 'main/contact.html')
 
 def travels(request):
@@ -37,18 +36,12 @@ def signin(request):
     if request.method == "POST":
         username = request.POST.get('uname')
         password = request.POST.get('password')
-
-        # check if the user entered the correct credentials
         user = authenticate(username=username, password=password)
-
         if user is not None:
-            # A backend authenticated the credentials
             login(request, user)
             return render(request, 'main/index.html', {"success": " Logged in Successfully "})
         else:
-            # No backend authenticated the credentials
             return render(request, 'authentication/signin.html', {"msg": " Enter the Correct Credentials "})
-
     return render(request, 'authentication/signin.html')
 
 def signup(request):
@@ -60,19 +53,16 @@ def signup(request):
         em = request.POST.get("email")
         con = request.POST.get("contact_number")
 
-        # Vérifier si le username existe déjà
         if User.objects.filter(username=un).exists():
             return render(request, 'authentication/signup.html', {
                 "error": "Ce nom d'utilisateur existe déjà. Veuillez en choisir un autre."
             })
         
-        # Vérifier si l'email existe déjà
         if User.objects.filter(email=em).exists():
             return render(request, 'authentication/signup.html', {
                 "error": "Cet email est déjà utilisé."
             })
 
-        # Créer l'utilisateur
         usr = User.objects.create_user(un, em, pwd)
         usr.first_name = fname
         usr.last_name = last
@@ -83,7 +73,6 @@ def signup(request):
 
         messages.success(request, f"{fname}, votre compte a été créé avec succès!")
         return redirect('/signin')
-
     return render(request, 'authentication/signup.html')
 
 def logout(request):
@@ -91,7 +80,6 @@ def logout(request):
     return redirect("/signin", {"logsign": " Logged Out Successfully"})
 
 def profile(request):
-    # check if user is authenticated
     if request.user.is_authenticated:
         return render(request, 'main/profile.html')
     else:
@@ -103,7 +91,7 @@ def error_404(request, exception):
 def blog(request):
     return render(request, 'main/blog.html')
 
-# --- CRUD Destinations ---
+# --- CRUD Destinations avec OpenAI ---
 def destination_list(request):
     q = request.GET.get('q', '')
     if q:
@@ -113,32 +101,186 @@ def destination_list(request):
     return render(request, 'voguevue/destination_list.html', {'destinations': destinations, 'q': q})
 
 def add_destination(request):
+    """Ajout d'une destination avec génération IA"""
+    
     if request.method == 'POST':
-        form = DestinationForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            return redirect('destination_list')
+        # Vérifier si c'est une demande de génération IA
+        if 'generate_ai' in request.POST:
+            destination_name = request.POST.get('destination', '').strip()
+            country = request.POST.get('country', '').strip()
+            category = request.POST.get('category', '').strip()
+            
+            if not destination_name or not country:
+                messages.error(request, '❌ Veuillez renseigner au minimum le nom et le pays')
+                form = DestinationForm()
+                return render(request, 'voguevue/destination_form.html', {'form': form, 'action': 'Ajouter'})
+            
+            print(f"🤖 Génération IA pour: {destination_name}, {country}")
+            
+            # Appeler OpenAI pour générer la description
+            result = hf_service.generate_destination_description(
+                destination_name, country, category if category else None
+            )
+            
+            if result['success']:
+                # Pré-remplir le formulaire avec les données générées
+                initial_data = {
+                    'destination': destination_name,
+                    'country': country,
+                    'category': category if category else '',
+                    'description': result['data'].get('description', ''),
+                    'best_time': result['data'].get('best_time', ''),
+                    'cultural_significance': result['data'].get('cultural_significance', ''),
+                    'famous_foods': result['data'].get('famous_foods', ''),
+                }
+                
+                form = DestinationForm(initial=initial_data)
+                
+                messages.success(request, '✅ Description générée par OpenAI avec succès!')
+                
+                return render(request, 'voguevue/destination_form.html', {
+                    'form': form,
+                    'action': 'Ajouter',
+                    'ai_generated': True,
+                    'ai_activities': result['data'].get('activities', ''),
+                })
+            else:
+                messages.error(request, f'❌ Erreur lors de la génération: {result["error"]}')
+                form = DestinationForm(initial={
+                    'destination': destination_name,
+                    'country': country,
+                    'category': category
+                })
+                return render(request, 'voguevue/destination_form.html', {'form': form, 'action': 'Ajouter'})
+        
+        # Sinon, sauvegarde normale du formulaire
+        else:
+            form = DestinationForm(request.POST, request.FILES)
+            if form.is_valid():
+                form.save()
+                messages.success(request, '✅ Destination ajoutée avec succès!')
+                return redirect('destination_list')
+            else:
+                messages.error(request, '❌ Erreur dans le formulaire')
     else:
         form = DestinationForm()
-    return render(request, 'voguevue/destination_form.html', {'form': form, 'action': 'Ajouter'})
+    
+    return render(request, 'voguevue/destination_form.html', {
+        'form': form,
+        'action': 'Ajouter'
+    })
 
 def edit_destination(request, id):
+    """Édition avec possibilité de régénérer avec l'IA"""
     dest = get_object_or_404(Destination, id=id)
+    
     if request.method == 'POST':
-        form = DestinationForm(request.POST, request.FILES, instance=dest)
-        if form.is_valid():
-            form.save()
-            return redirect('destination_list')
+        # Vérifier si régénération IA demandée
+        if 'regenerate_ai' in request.POST:
+            print(f"🔄 Régénération IA pour: {dest.destination}")
+            
+            result = hf_service.generate_destination_description(
+                dest.destination, dest.country, dest.category
+            )
+            
+            if result['success']:
+                # Mettre à jour avec les nouvelles données
+                dest.description = result['data'].get('description', dest.description)
+                dest.best_time = result['data'].get('best_time', dest.best_time)
+                dest.cultural_significance = result['data'].get('cultural_significance', dest.cultural_significance)
+                dest.famous_foods = result['data'].get('famous_foods', dest.famous_foods)
+                dest.save()
+                
+                messages.success(request, '✅ Description régénérée avec OpenAI!')
+                return redirect('edit_destination', id=id)
+            else:
+                messages.error(request, f'❌ Erreur lors de la régénération: {result["error"]}')
+        
+        # Sauvegarde normale
+        else:
+            form = DestinationForm(request.POST, request.FILES, instance=dest)
+            if form.is_valid():
+                form.save()
+                messages.success(request, '✅ Destination modifiée avec succès!')
+                return redirect('destination_list')
     else:
         form = DestinationForm(instance=dest)
-    return render(request, 'voguevue/destination_form.html', {'form': form, 'action': 'Modifier'})
+    
+    return render(request, 'voguevue/destination_form.html', {
+        'form': form,
+        'action': 'Modifier',
+        'destination': dest
+    })
 
 def delete_destination(request, id):
     dest = get_object_or_404(Destination, id=id)
     if request.method == 'POST':
         dest.delete()
+        messages.success(request, '✅ Destination supprimée avec succès!')
         return redirect('destination_list')
     return render(request, 'voguevue/destination_confirm_delete.html', {'destination': dest})
+
+# --- 🤖 NOUVELLE VUE: Générateur IA complet ---
+def destination_ai_generator(request):
+    """
+    Page dédiée pour générer une destination complète avec OpenAI
+    L'utilisateur entre seulement le nom et le pays, l'IA génère tout le reste
+    """
+    generated_data = None
+    error = None
+    
+    if request.method == 'POST':
+        destination_name = request.POST.get('destination', '').strip()
+        country = request.POST.get('country', '').strip()
+        category = request.POST.get('category', '').strip()
+        
+        if not destination_name or not country:
+            error = '❌ Veuillez renseigner le nom de la destination et le pays'
+        else:
+            print(f"🤖 Génération IA complète pour: {destination_name}, {country}")
+            
+            # Génération avec OpenAI
+            result = hf_service.generate_destination_description(
+                destination_name, country, category if category else None
+            )
+            
+            if result['success']:
+                generated_data = {
+                    'destination': destination_name,
+                    'country': country,
+                    'category': category,
+                    'description': result['data'].get('description', ''),
+                    'best_time': result['data'].get('best_time', ''),
+                    'cultural_significance': result['data'].get('cultural_significance', ''),
+                    'famous_foods': result['data'].get('famous_foods', ''),
+                    'activities': result['data'].get('activities', ''),
+                }
+                
+                # Si on clique sur "Enregistrer", sauvegarder dans la BD
+                if 'save_destination' in request.POST:
+                    new_dest = Destination(
+                        destination=destination_name,
+                        country=country,
+                        category=category if category else None,
+                        description=generated_data['description'],
+                        best_time=generated_data['best_time'],
+                        cultural_significance=generated_data['cultural_significance'],
+                        famous_foods=generated_data['famous_foods'],
+                    )
+                    new_dest.save()
+                    messages.success(request, f'✅ La destination "{destination_name}" a été créée avec succès grâce à l\'IA!')
+                    return redirect('destination_list')
+                
+                messages.success(request, '✨ Contenu généré par OpenAI avec succès!')
+            else:
+                error = f'❌ Erreur lors de la génération: {result["error"]}'
+    
+    context = {
+        'generated_data': generated_data,
+        'error': error,
+    }
+    
+    return render(request, 'voguevue/destination_ai_generator.html', context)
 
 # --- Recommandation IA ---
 def recommendation_view(request):
@@ -147,7 +289,6 @@ def recommendation_view(request):
     error = None
     search_query = ""
     
-    # Vérifier si une destination est passée dans l'URL
     destination_from_url = request.GET.get('destination', '').strip()
     if destination_from_url:
         search_query = destination_from_url
@@ -155,7 +296,6 @@ def recommendation_view(request):
     if request.method == 'POST':
         search_query = request.POST.get('destination', '').strip()
     
-    # Si on a une recherche (depuis URL ou POST)
     if search_query:
         print(f"🎯 Recherche de recommandations pour: {search_query}")
         result = recommender.recommend(search_query)

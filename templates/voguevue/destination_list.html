@@ -8,10 +8,14 @@
         <h2>📋 Gestion des Destinations</h2>
         <div>
             <a href="{% url 'recommendation' %}" class="btn btn-info me-2">🤖 Recommandation IA</a>
+            <a href="{% url 'destination_ai_generator' %}" class="btn btn-success me-2">
+                <i class="fas fa-robot"></i> ✨ Générateur IA Complet
+            </a>
             <a href="{% url 'add_destination' %}" class="btn btn-primary">➕ Ajouter une destination</a>
         </div>
     </div>
 
+    <!-- Barre de recherche -->
     <form method="get" class="mb-4">
         <div class="input-group" style="max-width: 400px;">
             <input type="text" name="q" class="form-control" placeholder="Rechercher..." value="{{ q }}">
@@ -63,9 +67,8 @@
                     </td>
                     <td>
                         <div class="btn-group btn-group-sm">
-                            <a href="{% url 'edit_destination' destination.id %}" class="btn btn-warning">✏️</a>
-                            <a href="{% url 'delete_destination' destination.id %}" class="btn btn-danger">🗑</a>
-                            <!-- BOUTON RECOMMANDATION IA -->
+                            <a href="{% url 'edit_destination' destination.id %}" class="btn btn-warning" title="Modifier">✏️</a>
+                            <a href="{% url 'delete_destination' destination.id %}" class="btn btn-danger" title="Supprimer">🗑</a>
                             <a href="{% url 'recommendation' %}?destination={{ destination.destination|urlencode }}" 
                                class="btn btn-info" 
                                title="Obtenir des recommandations similaires">🤖</a>
@@ -79,8 +82,24 @@
     {% else %}
     <div class="text-center py-5">
         <p class="text-muted">Aucune destination trouvée.</p>
-        <a href="{% url 'add_destination' %}" class="btn btn-primary">Ajouter la première destination</a>
+        <a href="{% url 'add_destination' %}" class="btn btn-primary me-2">Ajouter la première destination</a>
+        <a href="{% url 'destination_ai_generator' %}" class="btn btn-success">✨ Ou créer avec l'IA</a>
     </div>
     {% endif %}
 </div>
+
+<style>
+    .btn-success {
+        animation: shimmer 3s infinite;
+    }
+    
+    @keyframes shimmer {
+        0%, 100% {
+            box-shadow: 0 0 5px rgba(25, 135, 84, 0.5);
+        }
+        50% {
+            box-shadow: 0 0 20px rgba(25, 135, 84, 0.8);
+        }
+    }
+</style>
 {% endblock %}

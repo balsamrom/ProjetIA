@@ -16,13 +16,19 @@ from django.contrib.messages import constants as messages
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+# API Gemini
 
+OPENAI_API_KEY="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"
+# Media files (pour les images)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-mki!p6gl2mg%@2_rlu3&)k&#mrd3mdk9h%9tpk1n&k$2a==_fe'
+HUGGINGFACE_TOKEN = "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"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

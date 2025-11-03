@@ -1,0 +1,292 @@
+{% extends 'voguevue/base.html' %}
+
+{% block title %}Générateur IA de Destinations{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- En-tête -->
+    <div class="text-center mb-5">
+        <h1 class="display-4">✨ Générateur IA de Destinations</h1>
+        <p class="lead text-muted">Laissez Gemini AI créer une destination complète pour vous</p>
+        <div class="alert alert-info d-inline-block">
+            <i class="fas fa-info-circle"></i> Entrez simplement le nom et le pays, l'IA génère tout le reste !
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if error %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endif %}
+
+    <!-- Formulaire de génération -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-robot"></i> Informations de base</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" id="aiGeneratorForm">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="destination" class="form-label fw-bold">
+                                <i class="fas fa-map-marker-alt text-primary"></i> Nom de la destination *
+                            </label>
+                            <input type="text" 
+                                   class="form-control form-control-lg" 
+                                   id="destination" 
+                                   name="destination" 
+                                   placeholder="Ex: Paris, Tokyo, Maldives..."
+                                   value="{{ request.POST.destination|default:'' }}"
+                                   required>
+                            <small class="form-text text-muted">Le nom de la ville, région ou pays</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="country" class="form-label fw-bold">
+                                <i class="fas fa-flag text-primary"></i> Pays *
+                            </label>
+                            <input type="text" 
+                                   class="form-control form-control-lg" 
+                                   id="country" 
+                                   name="country" 
+                                   placeholder="Ex: France, Japon, Maldives..."
+                                   value="{{ request.POST.country|default:'' }}"
+                                   required>
+                            <small class="form-text text-muted">Le pays où se trouve la destination</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="category" class="form-label fw-bold">
+                                <i class="fas fa-tag text-primary"></i> Catégorie (optionnel)
+                            </label>
+                            <select class="form-select form-select-lg" id="category" name="category">
+                                <option value="">Choisir une catégorie...</option>
+                                <option value="Beach" {% if request.POST.category == "Beach" %}selected{% endif %}>🏖️ Plage</option>
+                                <option value="Mountain" {% if request.POST.category == "Mountain" %}selected{% endif %}>⛰️ Montagne</option>
+                                <option value="City" {% if request.POST.category == "City" %}selected{% endif %}>🏙️ Ville</option>
+                                <option value="Cultural" {% if request.POST.category == "Cultural" %}selected{% endif %}>🏛️ Culturelle</option>
+                                <option value="Adventure" {% if request.POST.category == "Adventure" %}selected{% endif %}>🎒 Aventure</option>
+                                <option value="Relaxation" {% if request.POST.category == "Relaxation" %}selected{% endif %}>🧘 Détente</option>
+                                <option value="Historical" {% if request.POST.category == "Historical" %}selected{% endif %}>📜 Historique</option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg shadow" id="generateBtn">
+                                <i class="fas fa-magic"></i> ✨ Générer avec Gemini AI
+                            </button>
+                            <a href="{% url 'destination_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Retour à la liste
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Résultats générés -->
+    {% if generated_data %}
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-gradient-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-check-circle"></i> Contenu généré par l'IA</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="destination" value="{{ generated_data.destination }}">
+                        <input type="hidden" name="country" value="{{ generated_data.country }}">
+                        <input type="hidden" name="category" value="{{ generated_data.category }}">
+
+                        <!-- Infos de base -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h5 class="text-primary border-bottom pb-2">
+                                    <i class="fas fa-info-circle"></i> Informations générales
+                                </h5>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Destination :</strong> {{ generated_data.destination }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Pays :</strong> {{ generated_data.country }}</p>
+                            </div>
+                            {% if generated_data.category %}
+                            <div class="col-md-6">
+                                <p><strong>Catégorie :</strong> 
+                                    <span class="badge bg-info">{{ generated_data.category }}</span>
+                                </p>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-4">
+                            <h5 class="text-primary border-bottom pb-2">
+                                <i class="fas fa-align-left"></i> Description
+                            </h5>
+                            <div class="alert alert-light">
+                                {{ generated_data.description }}
+                            </div>
+                        </div>
+
+                        <!-- Meilleure période -->
+                        <div class="mb-4">
+                            <h5 class="text-primary border-bottom pb-2">
+                                <i class="fas fa-calendar-alt"></i> Meilleure période pour visiter
+                            </h5>
+                            <div class="alert alert-light">
+                                {{ generated_data.best_time }}
+                            </div>
+                        </div>
+
+                        <!-- Importance culturelle -->
+                        <div class="mb-4">
+                            <h5 class="text-primary border-bottom pb-2">
+                                <i class="fas fa-landmark"></i> Importance culturelle
+                            </h5>
+                            <div class="alert alert-light">
+                                {{ generated_data.cultural_significance }}
+                            </div>
+                        </div>
+
+                        <!-- Plats typiques -->
+                        <div class="mb-4">
+                            <h5 class="text-primary border-bottom pb-2">
+                                <i class="fas fa-utensils"></i> Plats typiques
+                            </h5>
+                            <div class="alert alert-light">
+                                {{ generated_data.famous_foods }}
+                            </div>
+                        </div>
+
+                        <!-- Activités -->
+                        <div class="mb-4">
+                            <h5 class="text-primary border-bottom pb-2">
+                                <i class="fas fa-hiking"></i> Activités recommandées
+                            </h5>
+                            <div class="alert alert-light">
+                                {{ generated_data.activities }}
+                            </div>
+                        </div>
+
+                        <!-- Boutons d'action -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4">
+                            <button type="submit" class="btn btn-outline-warning btn-lg">
+                                <i class="fas fa-redo"></i> Régénérer
+                            </button>
+                            <button type="submit" name="save_destination" class="btn btn-success btn-lg shadow">
+                                <i class="fas fa-save"></i> 💾 Enregistrer cette destination
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- CSS personnalisé -->
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .bg-gradient-success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+    }
+    
+    #generateBtn {
+        font-weight: bold;
+        animation: pulse 2s infinite;
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        border: none;
+    }
+    
+    #generateBtn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(17, 153, 142, 0.3);
+    }
+    
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.02);
+        }
+    }
+    
+    .card {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        border-bottom: none;
+        padding: 1.5rem;
+    }
+    
+    .alert-light {
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        padding: 1rem;
+    }
+    
+    .text-primary {
+        color: #667eea !important;
+    }
+    
+    .border-bottom {
+        border-bottom: 2px solid #e9ecef !important;
+    }
+</style>
+
+<!-- JavaScript pour l'UX -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('aiGeneratorForm');
+        const generateBtn = document.getElementById('generateBtn');
+        
+        form.addEventListener('submit', function(e) {
+            // Animation du bouton
+            generateBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Génération en cours...';
+            generateBtn.disabled = true;
+            
+            // Validation
+            const destination = document.getElementById('destination').value.trim();
+            const country = document.getElementById('country').value.trim();
+            
+            if (!destination || !country) {
+                e.preventDefault();
+                alert('⚠️ Veuillez renseigner le nom de la destination et le pays');
+                generateBtn.innerHTML = '<i class="fas fa-magic"></i> ✨ Générer avec Gemini AI';
+                generateBtn.disabled = false;
+            }
+        });
+    });
+</script>
+{% endblock %}
