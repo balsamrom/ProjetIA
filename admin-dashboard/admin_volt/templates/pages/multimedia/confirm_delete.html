@@ -1,0 +1,24 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+<div class="py-4 d-flex justify-content-between align-items-center">
+  <h2 class="h4">Supprimer le contenu</h2>
+  <a href="{% url 'volt_multimedia_list' %}" class="btn btn-outline-secondary btn-sm">Retour</a>
+</div>
+<div class="card border-0 shadow">
+  <div class="card-body">
+    <p>Êtes-vous sûr de vouloir supprimer ce contenu ? Cette action est irréversible.</p>
+    <div class="mb-3">
+      {% if item.image %}
+        <img src="{{ item.image.url }}" alt="img" style="width:120px;height:120px;object-fit:cover;border-radius:8px;">
+      {% endif %}
+      <div class="mt-2"><strong>{{ item.title|default:'(Sans titre)' }}</strong></div>
+      <div class="text-muted">{{ item.comment }}</div>
+    </div>
+    <form method="post" class="d-flex gap-2">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Supprimer</button>
+      <a href="{% url 'volt_multimedia_list' %}" class="btn btn-secondary">Annuler</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

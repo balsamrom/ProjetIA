@@ -17,6 +17,9 @@ import sys
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+ADMIN_DASH_DIR = BASE_DIR / 'admin-dashboard'
+if ADMIN_DASH_DIR.exists():
+    sys.path.insert(0, str(ADMIN_DASH_DIR))
 
 
 # Quick-start development settings - unsuitable for production
@@ -41,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'voguevue',
+    'admin_volt',
 ]
 
 MIDDLEWARE = [

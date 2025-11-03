@@ -1,0 +1,147 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+
+<div class="py-4 d-flex flex-wrap gap-3 justify-content-between align-items-center">
+  <div>
+    <h2 class="h4 mb-1">Multimédia</h2>
+    <div class="text-muted small">Gérez les contenus partagés par les utilisateurs</div>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'volt_multimedia_create' %}" class="btn btn-primary btn-sm">Nouveau contenu</a>
+  </div>
+  <div class="w-100 d-none d-md-block"></div>
+  <div class="row g-3 w-100">
+    <div class="col-12 col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="icon-shape icon-shape-primary rounded me-3">
+            <svg class="icon" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2V5a2 2 0 00-2-2H4z"/></svg>
+          </div>
+          <div>
+            <div class="text-muted small">Total</div>
+            <div class="h5 mb-0">{{ mm_total }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="icon-shape icon-shape-success rounded me-3">
+            <svg class="icon" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M4 3h12a1 1 0 011 1v9a1 1 0 01-1.447.894L12 12l-3.553 1.894A1 1 0 017 13V4a1 1 0 011-1z"/></svg>
+          </div>
+          <div>
+            <div class="text-muted small">Avec image</div>
+            <div class="h5 mb-0">{{ mm_with_image }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="icon-shape icon-shape-warning rounded me-3">
+            <svg class="icon" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2h2v2zm0-4H9V5h2v4z"/></svg>
+          </div>
+          <div>
+            <div class="text-muted small">Sans image</div>
+            <div class="h5 mb-0">{{ mm_without_image }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card border-0 shadow mb-4">
+  <div class="card-body">
+    <form method="get" class="row g-2 align-items-end mb-3">
+      <div class="col-12 col-md-6">
+        <label class="form-label small text-muted">Recherche</label>
+        <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Titre, commentaire, utilisateur...">
+      </div>
+      <div class="col-8 col-md-3">
+        <label class="form-label small text-muted">Filtre</label>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" value="1" id="has_image" name="has_image" {% if has_image %}checked{% endif %}>
+          <label class="form-check-label" for="has_image">Avec image uniquement</label>
+        </div>
+      </div>
+      <div class="col-4 col-md-3 text-end">
+        <button class="btn btn-outline-secondary">Réinitialiser</button>
+        <button type="submit" class="btn btn-primary">Filtrer</button>
+      </div>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table table-centered table-nowrap mb-0 rounded">
+        <thead class="thead-light">
+          <tr>
+            <th>Image</th>
+            <th>Titre</th>
+            <th>Utilisateur</th>
+            <th>Date</th>
+            <th>Statut</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for it in items %}
+          <tr>
+            <td>
+              {% if it.image %}
+                <img src="{{ it.image.url }}" alt="img" style="width:56px;height:56px;object-fit:cover;border-radius:6px;">
+              {% else %}
+                <span class="badge bg-secondary">Aucune</span>
+              {% endif %}
+            </td>
+            <td class="text-truncate" style="max-width:220px;">{{ it.title|default:'(Sans titre)' }}</td>
+            <td>{{ it.user.username }}</td>
+            <td>{{ it.created_at|date:'Y-m-d H:i' }}</td>
+            <td>
+              {% if it.image %}
+                <span class="badge bg-success">Avec image</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">Sans image</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <a href="{% url 'volt_multimedia_update' it.id %}" class="btn btn-sm btn-outline-primary">Modifier</a>
+              <a href="{% url 'volt_multimedia_delete' it.id %}" class="btn btn-sm btn-outline-danger">Supprimer</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-center">Aucun contenu.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <div class="d-flex justify-content-between align-items-center pt-3">
+      <div class="small text-muted">
+        Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+      </div>
+      <nav>
+        <ul class="pagination pagination-sm mb-0">
+          {% if page_obj.has_previous %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ q }}&has_image={{ has_image }}">Précédent</a></li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">Précédent</span></li>
+          {% endif %}
+          {% for p in page_obj.paginator.page_range %}
+          <li class="page-item {% if p == page_obj.number %}active{% endif %}"><a class="page-link" href="?page={{ p }}&q={{ q }}&has_image={{ has_image }}">{{ p }}</a></li>
+          {% endfor %}
+          {% if page_obj.has_next %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ q }}&has_image={{ has_image }}">Suivant</a></li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">Suivant</span></li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}
