@@ -20,4 +20,10 @@ urlpatterns = [
     # 🆕 APIs IA
     path("api/recommendations", views.get_recommendations_api, name="recommendations_api"),
     path("api/chat", views.get_ai_chat, name="ai_chat"),  # 🤖 Chatbot Gemini
+
+      # 🆕 Générateur d'itinéraires
+    path('itinerary/', views.itinerary_generator, name='itinerary_generator'),
+    
+    # 🆕 API itinéraire
+    path('api/itinerary', views.get_itinerary_api, name='get_itinerary_api'),
 ]

@@ -88,6 +88,9 @@ WSGI_APPLICATION = 'hackathon.wsgi.application'
 # Obtenir une clé gratuite : https://huggingface.co/settings/tokens
 HUGGINGFACE_TOKEN = "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"  # ⚠️ Remplacez par votre token
 
+
+# 🗺️ Eden AI (Itinéraires automatiques) - NOUVEAU
+
 # 🤖 Google Gemini (Chatbot IA)
 # Obtenir une clé gratuite : https://makersuite.google.com/app/apikey
 GROQ_API_KEY = "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"  # Collez votre clé

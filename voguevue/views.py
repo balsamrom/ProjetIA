@@ -410,3 +410,248 @@ def get_recommendations_api(request):
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+    # Ajoutez dans voguevue/views.py après les imports existants
+# Ajoutez dans voguevue/views.py après les imports existants
+
+# 🗺️ Configuration pour Itinéraires (utilise Groq au lieu d'Eden AI)
+ITINERARY_ENABLED = GROQ_ENABLED  # Utilise la clé Groq existante
+if ITINERARY_ENABLED:
+    print("✅ Générateur d'itinéraires configuré (Groq)")
+
+# ==================== NOUVELLES FONCTIONS IA ====================
+
+def generate_smart_itinerary(city, days, interests=None, budget=None):
+    """
+    🗺️ Génère un itinéraire intelligent avec Groq (GRATUIT et ILLIMITÉ)
+    Utilise la même clé API que le chatbot
+    """
+    if not GROQ_ENABLED:
+        return None
+    
+    # Construire le prompt détaillé
+    prompt_parts = [
+        f"Tu es un expert en tourisme tunisien. Crée un itinéraire ULTRA-DÉTAILLÉ de {days} jour(s) à {city}, Tunisie.",
+        "\n📋 STRUCTURE OBLIGATOIRE POUR CHAQUE JOUR:\n"
+    ]
+    
+    for day in range(1, int(days) + 1):
+        prompt_parts.append(f"\n{'='*50}")
+        prompt_parts.append(f"🗓️ JOUR {day} - [Thème du jour]")
+        prompt_parts.append(f"{'='*50}\n")
+        prompt_parts.append("🌅 MATIN (8h-12h):")
+        prompt_parts.append("   • Activité: [Nom précis]")
+        prompt_parts.append("   • Lieu: [Adresse exacte]")
+        prompt_parts.append("   • Durée: [Xh]")
+        prompt_parts.append("   • Prix: [X TND]")
+        prompt_parts.append("   • Conseil: [Astuce pratique]\n")
+        
+        prompt_parts.append("🌞 APRÈS-MIDI (14h-18h):")
+        prompt_parts.append("   • Activité: [Nom précis]")
+        prompt_parts.append("   • Lieu: [Adresse exacte]")
+        prompt_parts.append("   • Durée: [Xh]")
+        prompt_parts.append("   • Prix: [X TND]")
+        prompt_parts.append("   • Conseil: [Astuce pratique]\n")
+        
+        prompt_parts.append("🌙 SOIRÉE (19h-22h):")
+        prompt_parts.append("   • Restaurant: [Nom]")
+        prompt_parts.append("   • Adresse: [Lieu précis]")
+        prompt_parts.append("   • Spécialité: [Plat à essayer]")
+        prompt_parts.append("   • Budget: [X TND]")
+        prompt_parts.append("   • Ambiance: [Description]\n")
+        
+        prompt_parts.append("💡 TIPS DU JOUR:")
+        prompt_parts.append("   • Transport: [Moyen + Prix]")
+        prompt_parts.append("   • Budget total: [X TND]")
+        prompt_parts.append("   • À éviter: [Conseil sécurité]")
+        prompt_parts.append("   • Bon plan: [Astuce locale]")
+    
+    if interests:
+        prompt_parts.append(f"\n\n🎯 Centres d'intérêt: {interests}")
+    
+    if budget:
+        prompt_parts.append(f"💰 Budget: {budget}")
+    
+    prompt_parts.append("\n⚠️ IMPORTANT: Utilise UNIQUEMENT des lieux réels et vérifiables à " + city + ", Tunisie.")
+    prompt_parts.append("Donne des adresses précises, des prix réalistes en TND.")
+    
+    prompt = "\n".join(prompt_parts)
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {GROQ_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "model": "llama-3.3-70b-versatile",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "Tu es un guide touristique expert de la Tunisie avec 20 ans d'expérience. Tu connais tous les lieux, prix et astuces. Réponds UNIQUEMENT en français."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            "temperature": 0.7,
+            "max_tokens": 3000  # Augmenté pour itinéraires longs
+        }
+        
+        response = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            json=payload,
+            headers=headers,
+            timeout=45
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            itinerary = data['choices'][0]['message']['content']
+            
+            if itinerary:
+                print(f"✅ Itinéraire généré pour {city} ({days} jours) via Groq")
+                return itinerary
+        else:
+            print(f"❌ Erreur Groq: {response.status_code}")
+            error_detail = response.json() if response.content else {}
+            print(f"Détails: {error_detail}")
+            
+    except Exception as e:
+        print(f"❌ Erreur génération itinéraire: {e}")
+    
+    return None
+
+
+# ==================== NOUVELLES VUES ====================
+
+def itinerary_generator(request):
+    """
+    🆕 Page de génération d'itinéraires intelligents
+    Utilise Groq au lieu d'Eden AI (100% gratuit)
+    """
+    context = {
+        'itinerary': None,
+        'city': None,
+        'days': None,
+        'error': None,
+        'itinerary_enabled': ITINERARY_ENABLED
+    }
+    
+    if request.method == "POST":
+        city = request.POST.get('city', '').strip()
+        days = request.POST.get('days', '3')
+        interests = request.POST.get('interests', '')
+        budget = request.POST.get('budget', '')
+        
+        if not city:
+            context['error'] = "Veuillez entrer une ville"
+            return render(request, 'main/itinerary.html', context)
+        
+        if not ITINERARY_ENABLED:
+            context['error'] = "Le générateur d'itinéraires n'est pas configuré"
+            return render(request, 'main/itinerary.html', context)
+        
+        try:
+            days_int = int(days)
+            if days_int < 1 or days_int > 14:
+                context['error'] = "La durée doit être entre 1 et 14 jours"
+                return render(request, 'main/itinerary.html', context)
+            
+            # Générer l'itinéraire avec Groq
+            print(f"🚀 Génération itinéraire: {city}, {days_int} jours")
+            itinerary = generate_smart_itinerary(
+                city=city,
+                days=days_int,
+                interests=interests,
+                budget=budget
+            )
+            
+            if itinerary:
+                context['itinerary'] = itinerary
+                context['city'] = city.title()
+                context['days'] = days
+                messages.success(
+                    request,
+                    f"✅ Itinéraire de {days} jours créé pour {city.title()} avec IA Groq!"
+                )
+            else:
+                context['error'] = "Impossible de générer l'itinéraire. Réessayez dans quelques instants."
+                
+        except ValueError:
+            context['error'] = "Durée invalide. Veuillez entrer un nombre entre 1 et 14."
+        except Exception as e:
+            context['error'] = f"Erreur: {str(e)}"
+            print(f"❌ Erreur itinerary_generator: {e}")
+    
+    return render(request, 'main/itinerary.html', context)
+
+
+@csrf_exempt
+def get_itinerary_api(request):
+    """
+    🆕 API endpoint pour générer des itinéraires
+    POST /api/itinerary avec JSON: {"city": "Tunis", "days": 3, "interests": "culture"}
+    Utilise Groq (gratuit illimité)
+    """
+    if not ITINERARY_ENABLED:
+        return JsonResponse({
+            'error': 'Générateur d\'itinéraires non configuré',
+            'success': False
+        }, status=503)
+    
+    if request.method == "POST":
+        try:
+            # Support JSON et FormData
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+            else:
+                data = request.POST
+            
+            city = data.get('city', '').strip()
+            days = int(data.get('days', 3))
+            interests = data.get('interests', '')
+            budget = data.get('budget', '')
+            
+            if not city:
+                return JsonResponse({'error': 'Ville requise'}, status=400)
+            
+            if days < 1 or days > 14:
+                return JsonResponse({'error': 'Durée entre 1 et 14 jours'}, status=400)
+            
+            # Générer l'itinéraire avec Groq
+            itinerary = generate_smart_itinerary(
+                city=city,
+                days=days,
+                interests=interests,
+                budget=budget
+            )
+            
+            if itinerary:
+                return JsonResponse({
+                    'itinerary': itinerary,
+                    'city': city.title(),
+                    'days': days,
+                    'provider': 'Groq (gratuit)',
+                    'success': True
+                })
+            else:
+                return JsonResponse({
+                    'error': 'Impossible de générer l\'itinéraire',
+                    'success': False
+                }, status=500)
+                
+        except ValueError as e:
+            return JsonResponse({
+                'error': f'Données invalides: {str(e)}',
+                'success': False
+            }, status=400)
+        except Exception as e:
+            print(f"❌ Erreur API itinéraire: {e}")
+            return JsonResponse({
+                'error': str(e),
+                'success': False
+            }, status=500)
+    
+    return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
