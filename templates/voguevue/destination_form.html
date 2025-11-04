@@ -1,67 +1,384 @@
-{% extends 'voguevue/base.html' %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/Home CSS/style.css">
+    <link rel="stylesheet" href="/static/css/Home CSS/mobile.css">
+    <link rel="shortcut icon" href="/static/assets/favicon.svg" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>{{ action }} Destination - VoyageVue</title>
+    
+    <style>
+        /* Container principal */
+        .form-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
 
-{% block title %}{{ action }} Destination{% endblock %}
+        /* Header */
+        .form-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
 
-{% block content %}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header bg-dark text-white">
-                    <h4 class="mb-0">{{ action }} une destination</h4>
-                </div>
-                <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">
-                        {% csrf_token %}
+        .form-header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        /* Card du formulaire */
+        .form-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .form-card-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-card-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .form-card-body {
+            padding: 2rem;
+        }
+
+        /* Champs du formulaire */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #f39c12;
+            box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.1);
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        select.form-control {
+            cursor: pointer;
+        }
+
+        input[type="file"].form-control {
+            padding: 0.5rem;
+        }
+
+        /* Image actuelle */
+        .current-image {
+            margin-top: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .current-image img {
+            max-width: 200px;
+            border-radius: 10px;
+            border: 3px solid #f39c12;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .current-image-label {
+            display: block;
+            color: #7f8c8d;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Texte d'aide */
+        .form-text {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-top: 0.25rem;
+        }
+
+        /* Messages d'erreur */
+        .form-error {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Boutons d'action */
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+            flex: 1;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+            transform: translateY(-2px);
+        }
+
+        .btn-info {
+            background: #3498db;
+            color: white;
+            margin-left: auto;
+        }
+
+        .btn-info:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        /* Bouton IA génération */
+        .btn-ai {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            animation: glow 3s infinite;
+        }
+
+        .btn-ai:hover {
+            background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+            transform: translateY(-2px);
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(243, 156, 18, 0.5); }
+            50% { box-shadow: 0 0 25px rgba(243, 156, 18, 0.9); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 0 1rem;
+            }
+
+            .form-header h1 {
+                font-size: 2rem;
+            }
+
+            .form-card-body {
+                padding: 1.5rem;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .form-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .btn-info {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!--===========Nav Bar=================-->
+    <section class="nav-bar">
+        <div class="logo"><a href="/">VoyageVue</a></div>
+        <ul class="menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="{% url 'destination_list' %}">Destinations</a></li>
+            <li><a href="/travels">Travels</a></li>
+            <li><a href="/contact">Contact</a></li>
+            {% if user.is_authenticated %}
+            <li><a href="/profile">Profile</a></li>
+            <li><a href="/logout">Logout</a></li>
+            {% else %}
+            <li><a href="/signin">Sign In</a></li>
+            <li><a href="/signup">Sign Up</a></li>
+            {% endif %}
+        </ul>
+        <div class="mobile">
+            <i class="fa-solid fa-bars"></i>
+        </div>
+    </section>
+
+    <!--===========Contenu Principal=================-->
+    <div class="form-container">
+        <!-- Header -->
+        <div class="form-header">
+            <h1>
+                {% if action == 'Ajouter' %}
+                    ➕ Ajouter une Destination
+                {% else %}
+                    ✏️ Modifier la Destination
+                {% endif %}
+            </h1>
+            <p>Remplissez les informations ci-dessous</p>
+        </div>
+
+        <!-- Formulaire -->
+        <div class="form-card">
+            <div class="form-card-header">
+                <i class="fas fa-edit"></i>
+                <h2>{{ action }} une destination</h2>
+            </div>
+
+            <div class="form-card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}" class="form-label">
+                            {{ field.label }}
+                            {% if field.field.required %}
+                                <span style="color: #e74c3c;">*</span>
+                            {% endif %}
+                        </label>
                         
-                        {% for field in form %}
-                        <div class="mb-3">
-                            <label for="{{ field.id_for_label }}" class="form-label fw-bold">
-                                {{ field.label }}
-                            </label>
-                            
-                            <!-- Affichage spécial pour l'image -->
-                            {% if field.name == 'image' %}
-                                {% if destination.image %}
-                                <div class="mb-2">
-                                    <img src="{{ destination.image.url }}" alt="Image actuelle" 
-                                         style="max-width: 200px; border-radius: 8px; border: 2px solid #dee2e6;">
-                                    <p class="text-muted small mt-1">Image actuelle</p>
-                                </div>
-                                {% endif %}
-                            {% endif %}
-                            
-                            {{ field }}
-                            
-                            {% if field.help_text %}
-                            <div class="form-text">{{ field.help_text }}</div>
-                            {% endif %}
-                            {% if field.errors %}
-                            <div class="text-danger small">
-                                {{ field.errors }}
+                        <!-- Affichage spécial pour l'image -->
+                        {% if field.name == 'image' %}
+                            {% if destination.image %}
+                            <div class="current-image">
+                                <img src="{{ destination.image.url }}" alt="Image actuelle">
+                                <span class="current-image-label">📷 Image actuelle</span>
                             </div>
                             {% endif %}
-                        </div>
-                        {% endfor %}
+                        {% endif %}
                         
-                        <div class="d-flex gap-2 mt-4">
-                            <button type="submit" class="btn btn-success">
-                                💾 {{ action }}
-                            </button>
-                            <a href="{% url 'destination_list' %}" class="btn btn-secondary">
-                                ↩ Retour
-                            </a>
-                            
-                            {% if action == 'Modifier' and destination %}
-                            <button type="submit" name="regenerate_ai" class="btn btn-info ms-auto">
-                                🔄 Régénérer avec IA
-                            </button>
-                            {% endif %}
+                        {{ field }}
+                        
+                        {% if field.help_text %}
+                        <div class="form-text">💡 {{ field.help_text }}</div>
+                        {% endif %}
+                        
+                        {% if field.errors %}
+                        <div class="form-error">
+                            ❌ {{ field.errors }}
                         </div>
-                    </form>
-                </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    
+                    <!-- Boutons d'action -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i>
+                            💾 {{ action }}
+                        </button>
+                        
+                        <a href="{% url 'destination_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i>
+                            ↩ Retour
+                        </a>
+                        
+                        {% if action == 'Modifier' and destination %}
+                        <button type="submit" name="regenerate_ai" class="btn btn-info">
+                            <i class="fas fa-sync-alt"></i>
+                            🔄 Régénérer avec IA
+                        </button>
+                        {% endif %}
+                        
+                        {% if action == 'Ajouter' %}
+                        <button type="submit" name="generate_ai" class="btn btn-ai">
+                            <i class="fas fa-magic"></i>
+                            ✨ Générer avec IA
+                        </button>
+                        {% endif %}
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
+
+    <!--===========Footer=================-->
+    <div class="footer">
+        <div class="links">
+            <h3>Quick Links</h3>
+            <ul>
+                <li>Offers & Discounts</li>
+                <li>Get Coupon</li>
+                <li>Contact Us</li>
+                <li>About</li>
+            </ul>
+        </div>
+        <div class="links">
+            <h3>New Packages</h3>
+            <ul>
+                <li>Nine sisters of east</li>
+                <li>Taj Mahal</li>
+                <li>Gate Way Of India</li>
+                <li>Hampi</li>
+            </ul>
+        </div>
+        <div class="links">
+            <h3>Support</h3>
+            <ul>
+                <li>Frequently Asked Questions</li>
+                <li>Report a Payment Issue</li>
+                <li>Terms & Conditions</li>
+                <li>Privacy Policy</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

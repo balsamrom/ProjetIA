@@ -1,34 +1,332 @@
-{% extends 'voguevue/base.html' %}
 
-{% block title %}Supprimer Destination{% endblock %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/Home CSS/style.css">
+    <link rel="stylesheet" href="/static/css/Home CSS/mobile.css">
+    <link rel="shortcut icon" href="/static/assets/favicon.svg" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>⚠️ Supprimer Destination - VoyageVue</title>
+    
+    <style>
+        /* Container principal */
+        .delete-container {
+            max-width: 600px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+        }
 
-{% block content %}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card border-danger">
-                <div class="card-header bg-danger text-white">
-                    <h4 class="mb-0">⚠️ Confirmation de suppression</h4>
+        /* Carte de confirmation */
+        .delete-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(231, 76, 60, 0.2);
+            overflow: hidden;
+            border: 3px solid #e74c3c;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Header rouge */
+        .card-header-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .card-header-danger h4 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        /* Corps de la carte */
+        .card-body-custom {
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .warning-icon {
+            font-size: 4rem;
+            color: #e74c3c;
+            margin-bottom: 1.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .destination-name {
+            color: #e74c3c;
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: #ffe5e5;
+            border-radius: 10px;
+            border-left: 5px solid #e74c3c;
+        }
+
+        .warning-message {
+            color: #7f8c8d;
+            font-size: 0.95rem;
+            margin-bottom: 2.5rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px dashed #e74c3c;
+        }
+
+        .warning-message i {
+            color: #e74c3c;
+            margin-right: 0.5rem;
+        }
+
+        /* Boutons */
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .btn-custom {
+            padding: 1rem 2.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(231, 76, 60, 0.4);
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(127, 140, 141, 0.3);
+        }
+
+        /* Liste des conséquences */
+        .consequences-list {
+            text-align: left;
+            background: #fff3cd;
+            border-left: 4px solid #f39c12;
+            padding: 1rem 1.5rem;
+            margin: 2rem 0;
+            border-radius: 8px;
+        }
+
+        .consequences-list h6 {
+            color: #856404;
+            font-weight: bold;
+            margin-bottom: 0.8rem;
+        }
+
+        .consequences-list ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .consequences-list li {
+            color: #856404;
+            padding: 0.4rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .consequences-list li:before {
+            content: "⚠️";
+            position: absolute;
+            left: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .delete-container {
+                padding: 0 1rem;
+                margin: 2rem auto;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn-custom {
+                width: 100%;
+            }
+
+            .destination-name {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!--===========Nav Bar=================-->
+    <section class="nav-bar">
+        <div class="logo"><a href="/">VoyageVue</a></div>
+        <ul class="menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/destinations/">Destinations</a></li>
+            <li><a href="/travels">Travels</a></li>
+            <li><a href="/contact">Contact</a></li>
+            {% if user.is_authenticated %}
+            <li><a href="/profile">Profile</a></li>
+            <li><a href="/logout">Logout</a></li>
+            {% else %}
+            <li><a href="/signin">Sign In</a></li>
+            <li><a href="/signup">Sign Up</a></li>
+            {% endif %}
+        </ul>
+        <div class="mobile">
+            <i class="fa-solid fa-bars"></i>
+        </div>
+    </section>
+
+    <!--===========Contenu Principal=================-->
+    <div class="delete-container">
+        <div class="delete-card">
+            <!-- Header -->
+            <div class="card-header-danger">
+                <h4><i class="fas fa-exclamation-triangle"></i> Confirmation de suppression</h4>
+            </div>
+
+            <!-- Corps -->
+            <div class="card-body-custom">
+                <!-- Icône de warning -->
+                <div class="warning-icon">
+                    <i class="fas fa-trash-alt"></i>
                 </div>
-                <div class="card-body text-center">
-                    <p class="fs-5">Êtes-vous sûr de vouloir supprimer :</p>
-                    <h5 class="text-danger mb-4">"{{ destination.destination }}" ?</h5>
-                    <p class="text-muted"><small>Cette action est irréversible.</small></p>
-                    
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="d-flex justify-content-center gap-2">
-                            <button type="submit" class="btn btn-danger">
-                                ✅ Oui, supprimer
-                            </button>
-                            <a href="{% url 'destination_list' %}" class="btn btn-secondary">
-                                ❌ Annuler
-                            </a>
-                        </div>
-                    </form>
+
+                <!-- Question -->
+                <p class="question-text">Êtes-vous vraiment sûr de vouloir supprimer :</p>
+
+                <!-- Nom de la destination -->
+                <div class="destination-name">
+                    "{{ destination.destination }}"
                 </div>
+
+                <!-- Liste des conséquences -->
+                <div class="consequences-list">
+                    <h6><i class="fas fa-exclamation-circle"></i> Attention :</h6>
+                    <ul>
+                        <li>Cette action est <strong>irréversible</strong></li>
+                        <li>Toutes les données seront <strong>définitivement perdues</strong></li>
+                        <li>Les recommandations liées seront affectées</li>
+                    </ul>
+                </div>
+
+                <!-- Message d'avertissement -->
+                <div class="warning-message">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Cette action ne peut pas être annulée.</strong> Réfléchissez bien avant de continuer.
+                </div>
+
+                <!-- Formulaire de confirmation -->
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="button-group">
+                        <button type="submit" class="btn-custom btn-danger">
+                            <i class="fas fa-check"></i> Oui, supprimer définitivement
+                        </button>
+                        <a href="/destinations/" class="btn-custom btn-secondary">
+                            <i class="fas fa-times"></i> Non, annuler
+                        </a>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
+
+    <!--===========Footer=================-->
+    <div class="footer">
+        <div class="links">
+            <h3>Quick Links</h3>
+            <ul>
+                <li>Offers & Discounts</li>
+                <li>Get Coupon</li>
+                <li>Contact Us</li>
+                <li>About</li>
+            </ul>
+        </div>
+        <div class="links">
+            <h3>New Packages</h3>
+            <ul>
+                <li>Nine sisters of east</li>
+                <li>Taj Mahal</li>
+                <li>Gate Way Of India</li>
+                <li>Hampi</li>
+            </ul>
+        </div>
+        <div class="links">
+            <h3>Support</h3>
+            <ul>
+                <li>Frequently Asked Questions</li>
+                <li>Report a Payment Issue</li>
+                <li>Terms & Conditions</li>
+                <li>Privacy Policy</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- JavaScript pour confirmation supplémentaire -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const deleteForm = document.querySelector('form');
+            const deleteBtn = document.querySelector('.btn-danger');
+            
+            deleteForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Double confirmation
+                const confirmed = confirm(
+                    '⚠️ DERNIÈRE CONFIRMATION ⚠️\n\n' +
+                    'Êtes-vous absolument certain de vouloir supprimer "{{ destination.destination }}" ?\n\n' +
+                    'Cette action est IRRÉVERSIBLE !'
+                );
+                
+                if (confirmed) {
+                    // Animation du bouton
+                    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Suppression...';
+                    deleteBtn.disabled = true;
+                    
+                    // Soumettre le formulaire
+                    this.submit();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

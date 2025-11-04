@@ -1,116 +1,433 @@
-{% extends 'voguevue/base.html' %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/Home CSS/style.css">
+    <link rel="stylesheet" href="/static/css/Home CSS/mobile.css">
+    <link rel="shortcut icon" href="/static/assets/favicon.svg" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>🎯 Recommandation IA - VoyageVue</title>
+    
+    <style>
+        /* Container principal */
+        .recommendation-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
 
-{% block title %}Recommandation IA - VoyageVue{% endblock %}
+        /* Carte principale */
+        .main-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
 
-{% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8 mx-auto">
-            <!-- Statut du modèle -->
-            {% if not model_loaded %}
-            <div class="alert alert-warning">
-                ⚠️ Le modèle IA n'est pas chargé. Les recommandations ne fonctionneront pas.
-            </div>
+        .card-header {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            padding: 1.5rem;
+        }
+
+        .card-header h4 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        /* Alerte */
+        .alert {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border-left: 4px solid #f39c12;
+            color: #856404;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            border-left: 4px solid #e74c3c;
+            color: #721c24;
+        }
+
+        /* Formulaire de recherche */
+        .search-form {
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+
+        .input-group button {
+            padding: 1rem 2rem;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .input-group button:hover {
+            background: #229954;
+            transform: translateY(-2px);
+        }
+
+        /* Destination originale */
+        .original-destination {
+            background: linear-gradient(135deg, #3498db20 0%, #2980b920 100%);
+            border: 2px solid #3498db;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .original-destination h5 {
+            color: #3498db;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .original-destination h4 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            padding: 0.5rem 0;
+        }
+
+        .info-item strong {
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+
+        /* Titre des recommandations */
+        .recommendations-title {
+            color: #2c3e50;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #f39c12;
+        }
+
+        /* Cartes de recommandation */
+        .recommendation-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border-left: 4px solid #27ae60;
+        }
+
+        .recommendation-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .rec-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.8rem;
+        }
+
+        .rec-title {
+            color: #27ae60;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .rec-country {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .score-badge {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        /* Badges */
+        .badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-category {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .badge-cost {
+            background: #f39c12;
+            color: white;
+        }
+
+        .badge-safety {
+            background: #3498db;
+            color: white;
+        }
+
+        /* Carte info IA */
+        .ai-info-card {
+            background: #ecf0f1;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .ai-info-card h6 {
+            color: #2c3e50;
+            font-weight: bold;
+            margin-bottom: 0.8rem;
+        }
+
+        .ai-info-card p {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* Texte description */
+        .description-text {
+            color: #7f8c8d;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .description-text small {
+            display: block;
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .recommendation-container {
+                padding: 0 1rem;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .input-group button {
+                width: 100%;
+            }
+
+            .rec-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!--===========Nav Bar=================-->
+    <section class="nav-bar">
+        <div class="logo"><a href="/">VoyageVue</a></div>
+        <ul class="menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/destinations/">Destinations</a></li>
+            <li><a href="/travels">Travels</a></li>
+            <li><a href="/contact">Contact</a></li>
+            {% if user.is_authenticated %}
+            <li><a href="/profile">Profile</a></li>
+            <li><a href="/logout">Logout</a></li>
+            {% else %}
+            <li><a href="/signin">Sign In</a></li>
+            <li><a href="/signup">Sign Up</a></li>
             {% endif %}
+        </ul>
+        <div class="mobile">
+            <i class="fa-solid fa-bars"></i>
+        </div>
+    </section>
 
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">🎯 Recommandation Intelligente de Destinations</h4>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted">
-                        Entrez une destination que vous aimez et notre IA vous recommandera des lieux similaires !
-                        <br><small>Exemples: Paris, Tokyo, Rome, Tunis, New York...</small>
-                    </p>
-                    
-                    <form method="post" class="mb-4">
-                        {% csrf_token %}
-                        <div class="input-group input-group-lg">
-                            <input type="text" name="destination" class="form-control" 
-                                   placeholder="Ex: Paris, Tokyo, Rome..." 
-                                   value="{{ search_query }}" required>
-                            <button type="submit" class="btn btn-success">🔍 Trouver des recommandations</button>
-                        </div>
-                    </form>
+    <!--===========Contenu Principal=================-->
+    <div class="recommendation-container">
+        <!-- Statut du modèle -->
+        {% if not model_loaded %}
+        <div class="alert alert-warning">
+            ⚠️ Le modèle IA n'est pas chargé. Les recommandations ne fonctionneront pas.
+        </div>
+        {% endif %}
 
-                    {% if error %}
-                    <div class="alert alert-danger">
-                        ❌ {{ error }}
-                    </div>
-                    {% endif %}
-
-                    {% if recommendations %}
-                    <div class="recommendation-results">
-                        <!-- Destination originale -->
-                        <div class="original-destination card mb-4 border-primary">
-                            <div class="card-header bg-info text-white">
-                                <h5 class="mb-0">📍 Destination de référence</h5>
-                            </div>
-                            <div class="card-body">
-                                <h4 class="text-primary">{{ recommendations.original_destination.name }}</h4>
-                                <div class="row mt-3">
-                                    <div class="col-md-6">
-                                        <strong>🌍 Pays:</strong> {{ recommendations.original_destination.country }}
-                                    </div>
-                                    <div class="col-md-6">
-                                        <strong>📍 Catégorie:</strong> {{ recommendations.original_destination.category }}
-                                    </div>
-                                    <div class="col-md-6">
-                                        <strong>💰 Coût de vie:</strong> {{ recommendations.original_destination.cost_of_living }}
-                                    </div>
-                                    <div class="col-md-6">
-                                        <strong>🛡️ Sécurité:</strong> {{ recommendations.original_destination.safety }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Recommandations -->
-                        <h5 class="mb-3">🎯 Destinations similaires recommandées :</h5>
-                        
-                        {% for rec in recommendations.recommendations %}
-                        <div class="card mb-3 shadow-sm">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div class="flex-grow-1">
-                                        <h5 class="card-title text-success">
-                                            {{ rec.rank }}. {{ rec.destination }}
-                                            <small class="text-muted">({{ rec.country }})</small>
-                                        </h5>
-                                        <p class="card-text mb-2">
-                                            <span class="badge bg-secondary">{{ rec.category }}</span>
-                                            <span class="badge bg-warning text-dark">💰 {{ rec.cost_of_living }}</span>
-                                            <span class="badge bg-info">🛡️ {{ rec.safety }}</span>
-                                        </p>
-                                    </div>
-                                    <div class="text-end ms-3">
-                                        <span class="badge bg-primary fs-6">
-                                            Score: {{ rec.similarity_score }}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
+        <!-- Carte principale -->
+        <div class="main-card">
+            <div class="card-header">
+                <h4>🎯 Recommandation Intelligente de Destinations</h4>
             </div>
+            <div class="card-body">
+                <p class="description-text">
+                    Entrez une destination que vous aimez et notre IA vous recommandera des lieux similaires !
+                    <small>Exemples: Paris, Tokyo, Rome, Tunis, New York...</small>
+                </p>
+                
+                <!-- Formulaire de recherche -->
+                <form method="post" class="search-form">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        <input type="text" name="destination" 
+                               placeholder="Ex: Paris, Tokyo, Rome..." 
+                               value="{{ search_query }}" required>
+                        <button type="submit">🔍 Trouver des recommandations</button>
+                    </div>
+                </form>
 
-            <!-- Informations sur le modèle -->
-            <div class="card mt-4">
-                <div class="card-header bg-secondary text-white">
-                    <h6 class="mb-0">🤖 À propos de notre IA</h6>
+                <!-- Message d'erreur -->
+                {% if error %}
+                <div class="alert alert-danger">
+                    ❌ {{ error }}
                 </div>
-                <div class="card-body">
-                    <p class="small text-muted mb-0">
-                        Notre modèle analyse 218 destinations basé sur le texte descriptif, 
-                        la catégorie, le pays, le coût de vie et la sécurité pour trouver 
-                        les destinations les plus similaires. Score moyen: 0.474 (Excellent)
-                    </p>
+                {% endif %}
+
+                <!-- Résultats des recommandations -->
+                {% if recommendations %}
+                <div class="recommendation-results">
+                    <!-- Destination originale -->
+                    <div class="original-destination">
+                        <h5>📍 Destination de référence</h5>
+                        <h4>{{ recommendations.original_destination.name }}</h4>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <strong>🌍 Pays:</strong>
+                                {{ recommendations.original_destination.country }}
+                            </div>
+                            <div class="info-item">
+                                <strong>📍 Catégorie:</strong>
+                                {{ recommendations.original_destination.category }}
+                            </div>
+                            <div class="info-item">
+                                <strong>💰 Coût de vie:</strong>
+                                {{ recommendations.original_destination.cost_of_living }}
+                            </div>
+                            <div class="info-item">
+                                <strong>🛡️ Sécurité:</strong>
+                                {{ recommendations.original_destination.safety }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Liste des recommandations -->
+                    <h5 class="recommendations-title">🎯 Destinations similaires recommandées</h5>
+                    
+                    {% for rec in recommendations.recommendations %}
+                    <div class="recommendation-card">
+                        <div class="rec-header">
+                            <div>
+                                <h5 class="rec-title">
+                                    {{ rec.rank }}. {{ rec.destination }}
+                                </h5>
+                                <p class="rec-country">{{ rec.country }}</p>
+                            </div>
+                            <div class="score-badge">
+                                Score: {{ rec.similarity_score }}
+                            </div>
+                        </div>
+                        <div class="badges">
+                            <span class="badge badge-category">{{ rec.category }}</span>
+                            <span class="badge badge-cost">💰 {{ rec.cost_of_living }}</span>
+                            <span class="badge badge-safety">🛡️ {{ rec.safety }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
+                {% endif %}
             </div>
         </div>
+
+        <!-- Informations sur le modèle IA -->
+        <div class="ai-info-card">
+            <h6>🤖 À propos de notre IA</h6>
+            <p>
+                Notre modèle analyse 218 destinations basé sur le texte descriptif, 
+                la catégorie, le pays, le coût de vie et la sécurité pour trouver 
+                les destinations les plus similaires. Score moyen: 0.474 (Excellent)
+            </p>
+        </div>
     </div>
-</div>
-{% endblock %}
+
+    <!--===========Footer=================-->
+    <div class="footer">
+        <div class="links">
+            <h3>Quick Links</h3>
+            <ul>
+                <li>Offers & Discounts</li>
+                <li>Get Coupon</li>
+                <li>Contact Us</li>
+                <li>About</li>
+            </ul>
+        </div>
+        <div class="links">
+            <h3>New Packages</h3>
+            <ul>
+                <li>Nine sisters of east</li>
+                <li>Taj Mahal</li>
+                <li>Gate Way Of India</li>
+                <li>Hampi</li>
+            </ul>
+        </div>
+        <div class="links">
+            <h3>Support</h3>
+            <ul>
+                <li>Frequently Asked Questions</li>
+                <li>Report a Payment Issue</li>
+                <li>Terms & Conditions</li>
+                <li>Privacy Policy</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

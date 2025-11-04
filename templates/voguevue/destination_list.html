@@ -1,265 +1,492 @@
-{% extends 'voguevue/base.html' %}
-{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/Home CSS/style.css">
+    <link rel="stylesheet" href="/static/css/Home CSS/mobile.css">
+    <link rel="shortcut icon" href="/static/assets/favicon.svg" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>🌍 Destinations de Rêve - VoyageVue</title>
+    
+    <style>
+        /* Styles pour les cartes de destinations */
+        .destinations-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
 
-{% block title %}🌍 Destinations de Rêve{% endblock %}
+        .header-section {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
 
-{% block content %}
-<div class="container mt-4">
-    <!-- ===================== HEADER ===================== -->
-    <div class="text-center mb-5">
-        <h1 class="display-4 fw-bold mb-3">🌍 Explorez le Monde</h1>
-        <p class="lead text-muted">Découvrez des destinations extraordinaires</p>
-        
-        <!-- Boutons d'action -->
-        <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
-            <a href="{% url 'recommendation' %}" class="btn btn-info btn-lg">
-                🤖 Recommandation IA
-            </a>
+        .header-section h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
 
-            <a href="{% url 'destination_ai_generator' %}" class="btn btn-success btn-lg ai-btn">
-                <i class="fas fa-magic"></i> ✨ Générateur IA
-            </a>
+        .header-section p {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 2rem;
+        }
 
+        /* Boutons d'action */
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-info {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+            animation: glow 3s infinite;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #e67e22;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #f39c12;
+            border: 2px solid #f39c12;
+        }
+
+        .btn-outline:hover {
+            background: #f39c12;
+            color: white;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(39, 174, 96, 0.5); }
+            50% { box-shadow: 0 0 25px rgba(39, 174, 96, 0.9); }
+        }
+
+        /* Barre de recherche */
+        .search-form {
+            max-width: 600px;
+            margin: 0 auto 3rem;
+        }
+
+        .search-input {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .search-input input {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 1rem;
+        }
+
+        .search-input button {
+            padding: 1rem 2rem;
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .search-input button:hover {
+            background: #1a252f;
+        }
+
+        /* Grille de cartes */
+        .destinations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .destination-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .destination-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+
+        .card-img-wrapper {
+            position: relative;
+            height: 250px;
+            overflow: hidden;
+        }
+
+        .card-img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .destination-card:hover .card-img-wrapper img {
+            transform: scale(1.1);
+        }
+
+        .placeholder-img {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .badge-category {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            padding: 8px 15px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-location {
+            color: #7f8c8d;
+            margin-bottom: 1rem;
+        }
+
+        .card-description {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .card-info {
+            background: #f8f9fa;
+            padding: 0.8rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            border-radius: 8px;
+        }
+
+        .btn-sm.flex-fill {
+            flex: 1;
+        }
+
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        /* Message si aucune destination */
+        .no-results {
+            text-align: center;
+            padding: 5rem 2rem;
+        }
+
+        .no-results i {
+            font-size: 5rem;
+            color: #bdc3c7;
+            margin-bottom: 2rem;
+        }
+
+        .no-results h3 {
+            color: #7f8c8d;
+            margin-bottom: 2rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .destinations-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-section h1 {
+                font-size: 2rem;
+            }
+
+            .search-input {
+                flex-direction: column;
+            }
+
+            .search-input button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!--===========Nav Bar=================-->
+    <section class="nav-bar">
+        <div class="logo"><a href="/">VoyageVue</a></div>
+        <ul class="menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/destinations/">Destinations</a></li>
+            <li><a href="/travels">Travels</a></li>
+            <li><a href="/contact">Contact</a></li>
             {% if user.is_authenticated %}
-            <a href="{% url 'add_destination' %}" class="btn btn-primary btn-lg">
-                ➕ Ajouter une destination
-            </a>
+            <li><a href="/profile">Profile</a></li>
+            <li><a href="/logout">Logout</a></li>
             {% else %}
-            <a href="{% url 'signin' %}" class="btn btn-outline-primary btn-lg">
-                🔐 Connectez-vous pour ajouter
-            </a>
+            <li><a href="/signin">Sign In</a></li>
+            <li><a href="/signup">Sign Up</a></li>
             {% endif %}
+        </ul>
+        <div class="mobile">
+            <i class="fa-solid fa-bars"></i>
         </div>
-    </div>
+    </section>
 
-    <!-- ===================== BARRE DE RECHERCHE ===================== -->
-    <form method="get" class="mb-5">
-        <div class="input-group mx-auto" style="max-width: 600px;">
-            <input type="text" name="q" class="form-control form-control-lg" 
-                   placeholder="🔍 Rechercher une destination ou un pays..." 
-                   value="{{ q }}">
-            <button type="submit" class="btn btn-dark btn-lg">Rechercher</button>
+    <!--===========Contenu Principal=================-->
+    <div class="destinations-container">
+        <!-- Header -->
+        <div class="header-section">
+            <h1>🌍 Explorez le Monde</h1>
+            <p>Découvrez des destinations extraordinaires</p>
+            
+            <!-- Boutons d'action -->
+            <div class="action-buttons">
+                <a href="/recommendation/" class="btn btn-info">
+                    🤖 Recommandation IA
+                </a>
+                <a href="/destinations/ai-generator/" class="btn btn-success">
+                    <i class="fas fa-magic"></i> ✨ Générateur IA
+                </a>
+                {% if user.is_authenticated %}
+                <a href="/destinations/add/" class="btn btn-primary">
+                    ➕ Ajouter une destination
+                </a>
+                {% else %}
+                <a href="/signin" class="btn btn-outline">
+                    🔐 Connectez-vous pour ajouter
+                </a>
+                {% endif %}
+            </div>
         </div>
-    </form>
 
-    <!-- ===================== GRILLE DE CARTES ===================== -->
-    {% if destinations %}
-    <div class="row g-4">
-        {% for destination in destinations %}
-        <div class="col-12 col-md-6 col-lg-4">
-            <div class="card destination-card h-100 shadow-sm">
-                <!-- Image de la destination -->
+        <!-- Barre de recherche -->
+        <form method="get" class="search-form">
+            <div class="search-input">
+                <input type="text" name="q" placeholder="🔍 Rechercher une destination ou un pays..." value="{{ q }}">
+                <button type="submit">Rechercher</button>
+            </div>
+        </form>
+
+        <!-- Grille de cartes -->
+        {% if destinations %}
+        <div class="destinations-grid">
+            {% for destination in destinations %}
+            <div class="destination-card">
+                <!-- Image -->
                 <div class="card-img-wrapper">
                     {% if destination.image %}
-                        <img src="{{ destination.image.url }}" 
-                             class="card-img-top" 
-                             alt="{{ destination.destination }}">
+                    <img src="{{ destination.image.url }}" alt="{{ destination.destination }}">
                     {% else %}
-                        <div class="placeholder-img-large">
-                            <i class="fas fa-mountain fa-4x text-white"></i>
-                            <p class="text-white mt-2">Aucune image</p>
-                        </div>
+                    <div class="placeholder-img">
+                        <i class="fas fa-mountain fa-4x"></i>
+                        <p style="margin-top: 1rem;">Aucune image</p>
+                    </div>
                     {% endif %}
                     
-                    <!-- Badge catégorie -->
                     {% if destination.category %}
                     <span class="badge-category">{{ destination.category }}</span>
                     {% endif %}
                 </div>
 
                 <!-- Corps de la carte -->
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title fw-bold mb-2">{{ destination.destination }}</h5>
-                    <p class="text-muted mb-3">
+                <div class="card-body">
+                    <h2 class="card-title">{{ destination.destination }}</h2>
+                    <p class="card-location">
                         <i class="fas fa-map-marker-alt"></i> {{ destination.country }}
                     </p>
 
                     {% if destination.description %}
-                    <p class="card-text text-secondary small mb-3">
+                    <p class="card-description">
                         {{ destination.description|truncatewords:20 }}
                     </p>
                     {% endif %}
 
-                    <!-- Informations supplémentaires -->
-                    <div class="card-info mb-3">
+                    <!-- Informations -->
+                    {% if destination.best_time or destination.cost_of_living %}
+                    <div class="card-info">
                         {% if destination.best_time %}
                         <div class="info-item">
-                            <i class="fas fa-calendar-alt text-primary"></i>
+                            <i class="fas fa-calendar-alt" style="color: #3498db;"></i>
                             <small><strong>Meilleure période:</strong> {{ destination.best_time }}</small>
                         </div>
                         {% endif %}
 
                         {% if destination.cost_of_living %}
                         <div class="info-item">
-                            <i class="fas fa-dollar-sign text-success"></i>
+                            <i class="fas fa-dollar-sign" style="color: #27ae60;"></i>
                             <small><strong>Coût:</strong> {{ destination.cost_of_living }}</small>
                         </div>
                         {% endif %}
                     </div>
+                    {% endif %}
 
                     <!-- Boutons d'action -->
-                    <div class="mt-auto">
-                        <div class="d-flex gap-2">
-                            <a href="{% url 'recommendation' %}?destination={{ destination.destination|urlencode }}" 
-                               class="btn btn-sm btn-info flex-fill" 
-                               title="Voir des recommandations similaires">
-                                🤖 Similaires
-                            </a>
+                    <div class="card-actions">
+                        <a href="/recommendation/?destination={{ destination.destination|urlencode }}" 
+                           class="btn btn-sm btn-info flex-fill" 
+                           title="Voir des recommandations similaires">
+                            🤖 Similaires
+                        </a>
 
-                            {% if user.is_authenticated %}
-                            <a href="{% url 'edit_destination' destination.id %}" 
-                               class="btn btn-sm btn-warning" 
-                               title="Modifier">
-                                ✏️
-                            </a>
-                            <a href="{% url 'delete_destination' destination.id %}" 
-                               class="btn btn-sm btn-danger" 
-                               title="Supprimer">
-                                🗑️
-                            </a>
-                            {% endif %}
-                        </div>
+                        {% if user.is_authenticated %}
+                        <a href="/destinations/{{ destination.id }}/edit/" 
+                           class="btn btn-sm btn-warning" 
+                           title="Modifier">
+                            ✏️
+                        </a>
+                        <a href="/destinations/{{ destination.id }}/delete/" 
+                           class="btn btn-sm btn-danger" 
+                           title="Supprimer">
+                            🗑️
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
 
-    {% else %}
-    <!-- ===================== MESSAGE SI AUCUNE DESTINATION ===================== -->
-    <div class="text-center py-5">
-        <i class="fas fa-globe-americas fa-5x text-muted mb-4"></i>
-        <h3 class="text-muted mb-4">Aucune destination trouvée</h3>
-
-        {% if user.is_authenticated %}
-        <div class="d-flex flex-wrap justify-content-center gap-3">
-            <a href="{% url 'add_destination' %}" class="btn btn-primary btn-lg">
-                ➕ Ajouter une destination
-            </a>
-            <a href="{% url 'destination_ai_generator' %}" class="btn btn-success btn-lg ai-btn">
-                ✨ Générer avec l'IA
-            </a>
-        </div>
         {% else %}
-        <a href="{% url 'signin' %}" class="btn btn-primary btn-lg">
-            🔐 Connectez-vous pour ajouter des destinations
-        </a>
+        <!-- Message si aucune destination -->
+        <div class="no-results">
+            <i class="fas fa-globe-americas"></i>
+            <h3>Aucune destination trouvée</h3>
+
+            {% if user.is_authenticated %}
+            <div class="action-buttons">
+                <a href="/destinations/add/" class="btn btn-primary">
+                    ➕ Ajouter une destination
+                </a>
+                <a href="/destinations/ai-generator/" class="btn btn-success">
+                    ✨ Générer avec l'IA
+                </a>
+            </div>
+            {% else %}
+            <a href="/signin" class="btn btn-primary">
+                🔐 Connectez-vous pour ajouter des destinations
+            </a>
+            {% endif %}
+        </div>
         {% endif %}
     </div>
-    {% endif %}
-</div>
 
-<!-- ===================== STYLES PERSONNALISÉS ===================== -->
-<style>
-    /* Cartes de destination */
-    .destination-card {
-        border: none;
-        border-radius: 15px;
-        overflow: hidden;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        background: white;
-    }
-
-    .destination-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 15px 40px rgba(0,0,0,0.15) !important;
-    }
-
-    /* Conteneur d'image */
-    .card-img-wrapper {
-        position: relative;
-        height: 250px;
-        overflow: hidden;
-    }
-
-    .card-img-top {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.5s ease;
-    }
-
-    .destination-card:hover .card-img-top {
-        transform: scale(1.1);
-    }
-
-    /* Placeholder pour images manquantes */
-    .placeholder-img-large {
-        width: 100%;
-        height: 250px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-    }
-
-    /* Badge catégorie */
-    .badge-category {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        background: rgba(255, 255, 255, 0.95);
-        color: #333;
-        padding: 8px 15px;
-        border-radius: 25px;
-        font-weight: 600;
-        font-size: 0.85rem;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-
-    /* Informations dans la carte */
-    .card-info {
-        background: #f8f9fa;
-        padding: 10px;
-        border-radius: 8px;
-    }
-
-    .info-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 5px;
-    }
-
-    .info-item:last-child {
-        margin-bottom: 0;
-    }
-
-    /* Animation du bouton IA */
-    .ai-btn {
-        animation: glow 3s infinite;
-        position: relative;
-        overflow: hidden;
-    }
-
-    @keyframes glow {
-        0%, 100% {
-            box-shadow: 0 0 10px rgba(25, 135, 84, 0.5);
-        }
-        50% {
-            box-shadow: 0 0 25px rgba(25, 135, 84, 0.9);
-        }
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .card-img-wrapper {
-            height: 200px;
-        }
-        
-        .display-4 {
-            font-size: 2rem;
-        }
-    }
-
-    /* Titre de la page */
-    .display-4 {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-</style>
-{% endblock %}
+    <!--===========Footer=================-->
+    <div class="footer">
+        <div class="links">
+            <h3>Quick Links</h3>
+            <ul>
+                <li>Offers & Discounts</li>
+                <li>Get Coupon</li>
+                <li>Contact Us</li>
+                <li>About</li>
+            </ul>
+        </div>
+        <div class="links">
+            <h3>New Packages</h3>
+            <ul>
+                <li>Nine sisters of east</li>
+                <li>Taj Mahal</li>
+                <li>Gate Way Of India</li>
+                <li>Hampi</li>
+            </ul>
+        </div>
+        <div class="links">
+            <h3>Support</h3>
+            <ul>
+                <li>Frequently Asked Questions</li>
+                <li>Report a Payment Issue</li>
+                <li>Terms & Conditions</li>
+                <li>Privacy Policy</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
