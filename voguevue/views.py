@@ -12,6 +12,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from .recommendation import recommender
 import json
 from .hug_face_service import hf_service
+from .unsplash_service import unsplash_service  # ← NOUVEAU
+from django.core.files.base import ContentFile  # ← NOUVEAU
 
 # ==================== VUES EXISTANTES ====================
 def index(request):
@@ -120,11 +122,62 @@ def destination_list(request):
 def add_destination(request):
     """
     🔒 Seulement pour utilisateurs CONNECTÉS
-    Permet d'ajouter une destination avec génération IA optionnelle
+    Permet d'ajouter une destination avec génération IA et Unsplash
     """
     if request.method == 'POST':
+        
+        # 📸 NOUVEAU : Recherche photo Unsplash
+        if 'search_photo_unsplash' in request.POST:
+            destination_name = request.POST.get('destination', '').strip()
+            country = request.POST.get('country', '').strip()
+            category = request.POST.get('category', '').strip()
+            
+            if not destination_name or not country:
+                messages.error(request, '❌ Veuillez renseigner le nom et le pays')
+                form = DestinationForm()
+                return render(request, 'voguevue/destination_form.html', {'form': form, 'action': 'Ajouter'})
+            
+            print(f"📸 Recherche photo Unsplash pour: {destination_name}, {country}")
+            
+            # Appeler Unsplash API
+            result = unsplash_service.get_photo_for_destination(destination_name, country)
+            
+            if result['success']:
+                # Stocker l'image dans la session temporairement
+                request.session['unsplash_photo'] = {
+                    'filename': result['filename'],
+                    'data': result['image_file'].getvalue().hex(),
+                    'photographer': result.get('photographer', ''),
+                    'photographer_url': result.get('photographer_url', '')
+                }
+                
+                # Pré-remplir le formulaire
+                form = DestinationForm(initial={
+                    'destination': destination_name,
+                    'country': country,
+                    'category': category
+                })
+                
+                messages.success(request, f'✅ Photo trouvée sur Unsplash par {result["photographer"]}!')
+                
+                return render(request, 'voguevue/destination_form.html', {
+                    'form': form,
+                    'action': 'Ajouter',
+                    'unsplash_photo_preview': True,
+                    'photographer': result['photographer'],
+                    'photographer_url': result['photographer_url']
+                })
+            else:
+                messages.error(request, f'❌ {result["error"]}')
+                form = DestinationForm(initial={
+                    'destination': destination_name,
+                    'country': country,
+                    'category': category
+                })
+                return render(request, 'voguevue/destination_form.html', {'form': form, 'action': 'Ajouter'})
+        
         # Vérifier si c'est une demande de génération IA
-        if 'generate_ai' in request.POST:
+        elif 'generate_ai' in request.POST:
             destination_name = request.POST.get('destination', '').strip()
             country = request.POST.get('country', '').strip()
             category = request.POST.get('category', '').strip()
@@ -175,7 +228,20 @@ def add_destination(request):
         else:
             form = DestinationForm(request.POST, request.FILES)
             if form.is_valid():
-                form.save()
+                destination = form.save(commit=False)
+                
+                # Si une photo Unsplash a été trouvée, l'utiliser
+                if 'unsplash_photo' in request.session and not request.FILES.get('image'):
+                    unsplash_data = request.session['unsplash_photo']
+                    image_data = bytes.fromhex(unsplash_data['data'])
+                    destination.image.save(
+                        unsplash_data['filename'],
+                        ContentFile(image_data),
+                        save=False
+                    )
+                    del request.session['unsplash_photo']
+                
+                destination.save()
                 messages.success(request, '✅ Destination ajoutée avec succès!')
                 return redirect('destination_list')
             else:

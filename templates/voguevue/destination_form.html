@@ -6,18 +6,21 @@
     <link rel="stylesheet" href="/static/css/Home CSS/style.css">
     <link rel="stylesheet" href="/static/css/Home CSS/mobile.css">
     <link rel="shortcut icon" href="/static/assets/favicon.svg" type="image/x-icon">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <title>{{ action }} Destination - VoyageVue</title>
     
     <style>
-        /* Container principal */
+        body {
+            background: #f5f7fa;
+            color: #31344b;
+        }
+
         .form-container {
             max-width: 900px;
             margin: 2rem auto;
             padding: 0 2rem;
         }
 
-        /* Header */
         .form-header {
             text-align: center;
             margin-bottom: 2rem;
@@ -25,28 +28,26 @@
 
         .form-header h1 {
             font-size: 2.5rem;
-            font-weight: bold;
-            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            color: #31344b;
             margin-bottom: 0.5rem;
         }
 
         .form-header p {
-            color: #666;
+            color: #6c757d;
             font-size: 1.1rem;
         }
 
-        /* Card du formulaire */
         .form-card {
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 0.5rem 1rem rgba(49, 52, 75, 0.1);
             overflow: hidden;
+            border: 1px solid #e6e7ee;
         }
 
         .form-card-header {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            background: linear-gradient(135deg, #262833 0%, #31344b 100%);
             color: white;
             padding: 1.5rem;
             display: flex;
@@ -57,13 +58,13 @@
         .form-card-header h2 {
             margin: 0;
             font-size: 1.5rem;
+            font-weight: 600;
         }
 
         .form-card-body {
             padding: 2rem;
         }
 
-        /* Champs du formulaire */
         .form-group {
             margin-bottom: 1.5rem;
         }
@@ -71,7 +72,7 @@
         .form-label {
             display: block;
             font-weight: 600;
-            color: #2c3e50;
+            color: #31344b;
             margin-bottom: 0.5rem;
             font-size: 0.95rem;
         }
@@ -79,16 +80,19 @@
         .form-control {
             width: 100%;
             padding: 0.75rem;
-            border: 2px solid #ddd;
+            border: 1px solid #d1d7e0;
             border-radius: 8px;
             font-size: 1rem;
-            transition: border-color 0.3s ease;
+            transition: all 0.3s ease;
+            background: #f5f7fa;
+            color: #31344b;
         }
 
         .form-control:focus {
             outline: none;
-            border-color: #f39c12;
-            box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.1);
+            border-color: #525480;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(82, 84, 128, 0.1);
         }
 
         textarea.form-control {
@@ -103,9 +107,9 @@
 
         input[type="file"].form-control {
             padding: 0.5rem;
+            background: white;
         }
 
-        /* Image actuelle */
         .current-image {
             margin-top: 0.5rem;
             margin-bottom: 1rem;
@@ -114,32 +118,29 @@
         .current-image img {
             max-width: 200px;
             border-radius: 10px;
-            border: 3px solid #f39c12;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border: 2px solid #e6e7ee;
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
         }
 
         .current-image-label {
             display: block;
-            color: #7f8c8d;
+            color: #6c757d;
             font-size: 0.85rem;
             margin-top: 0.5rem;
         }
 
-        /* Texte d'aide */
         .form-text {
             font-size: 0.85rem;
-            color: #7f8c8d;
+            color: #6c757d;
             margin-top: 0.25rem;
         }
 
-        /* Messages d'erreur */
         .form-error {
-            color: #e74c3c;
+            color: #dc3545;
             font-size: 0.85rem;
             margin-top: 0.25rem;
         }
 
-        /* Boutons d'action */
         .form-actions {
             display: flex;
             gap: 1rem;
@@ -149,7 +150,7 @@
 
         .btn {
             padding: 0.8rem 1.5rem;
-            border-radius: 25px;
+            border-radius: 8px;
             text-decoration: none;
             font-weight: 600;
             transition: all 0.3s ease;
@@ -162,55 +163,87 @@
         }
 
         .btn-success {
-            background: #27ae60;
+            background: #28a745;
             color: white;
             flex: 1;
         }
 
         .btn-success:hover {
-            background: #229954;
+            background: #218838;
             transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1rem rgba(40, 167, 69, 0.3);
         }
 
         .btn-secondary {
-            background: #95a5a6;
+            background: #6c757d;
             color: white;
         }
 
         .btn-secondary:hover {
-            background: #7f8c8d;
+            background: #5a6268;
             transform: translateY(-2px);
         }
 
         .btn-info {
-            background: #3498db;
+            background: #17a2b8;
             color: white;
             margin-left: auto;
         }
 
         .btn-info:hover {
-            background: #2980b9;
+            background: #138496;
             transform: translateY(-2px);
         }
 
-        /* Bouton IA génération */
-        .btn-ai {
-            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        .btn-photo {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
             color: white;
-            animation: glow 3s infinite;
+        }
+
+        .btn-photo:hover {
+            background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+            transform: translateY(-2px);
+        }
+
+        .btn-ai {
+            background: linear-gradient(135deg, #525480 0%, #31344b 100%);
+            color: white;
         }
 
         .btn-ai:hover {
-            background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+            background: linear-gradient(135deg, #31344b 0%, #262833 100%);
             transform: translateY(-2px);
         }
 
-        @keyframes glow {
-            0%, 100% { box-shadow: 0 0 10px rgba(243, 156, 18, 0.5); }
-            50% { box-shadow: 0 0 25px rgba(243, 156, 18, 0.9); }
+        .unsplash-preview {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #28a745;
         }
 
-        /* Responsive */
+        .unsplash-preview h4 {
+            color: #28a745;
+            margin-bottom: 0.5rem;
+        }
+
+        .unsplash-preview p {
+            color: #31344b;
+            margin: 0.25rem 0;
+        }
+
+        .unsplash-preview a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .unsplash-preview a:hover {
+            text-decoration: underline;
+        }
+
         @media (max-width: 768px) {
             .form-container {
                 padding: 0 1rem;
@@ -240,7 +273,6 @@
     </style>
 </head>
 <body>
-    <!--===========Nav Bar=================-->
     <section class="nav-bar">
         <div class="logo"><a href="/">VoyageVue</a></div>
         <ul class="menu">
@@ -261,9 +293,7 @@
         </div>
     </section>
 
-    <!--===========Contenu Principal=================-->
     <div class="form-container">
-        <!-- Header -->
         <div class="form-header">
             <h1>
                 {% if action == 'Ajouter' %}
@@ -275,7 +305,6 @@
             <p>Remplissez les informations ci-dessous</p>
         </div>
 
-        <!-- Formulaire -->
         <div class="form-card">
             <div class="form-card-header">
                 <i class="fas fa-edit"></i>
@@ -291,11 +320,10 @@
                         <label for="{{ field.id_for_label }}" class="form-label">
                             {{ field.label }}
                             {% if field.field.required %}
-                                <span style="color: #e74c3c;">*</span>
+                                <span style="color: #dc3545;">*</span>
                             {% endif %}
                         </label>
                         
-                        <!-- Affichage spécial pour l'image -->
                         {% if field.name == 'image' %}
                             {% if destination.image %}
                             <div class="current-image">
@@ -319,8 +347,22 @@
                     </div>
                     {% endfor %}
                     
-                    <!-- Boutons d'action -->
+                    {% if unsplash_photo_preview %}
+                    <div class="unsplash-preview">
+                        <h4>✅ Photo trouvée sur Unsplash !</h4>
+                        <p>📷 Photo par <a href="{{ photographer_url }}" target="_blank">{{ photographer }}</a> sur <a href="https://unsplash.com" target="_blank">Unsplash</a></p>
+                        <p style="color: #28a745; font-weight: 600; margin-top: 1rem;">✨ La photo sera automatiquement ajoutée quand vous enregistrerez.</p>
+                    </div>
+                    {% endif %}
+                    
                     <div class="form-actions">
+                        {% if action == 'Ajouter' %}
+                        <button type="submit" name="search_photo_unsplash" class="btn btn-photo">
+                            <i class="fas fa-camera"></i>
+                            📸 Trouver une Photo
+                        </button>
+                        {% endif %}
+                        
                         <button type="submit" class="btn btn-success">
                             <i class="fas fa-save"></i>
                             💾 {{ action }}
@@ -350,7 +392,6 @@
         </div>
     </div>
 
-    <!--===========Footer=================-->
     <div class="footer">
         <div class="links">
             <h3>Quick Links</h3>
